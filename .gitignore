@@ -1,0 +1,7 @@
+data/
+results/
+__pycache__/
+*.pyc
+.agent-security/
+mace.html
+madsurvey.html
