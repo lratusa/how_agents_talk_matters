@@ -1,0 +1,101 @@
+{
+  "C0": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 19,
+      "correct_to_correct": 81
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C1": {
+    "counts": {
+      "wrong_to_correct": 1,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 18,
+      "correct_to_correct": 81
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.05263157894736842,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C2": {
+    "counts": {
+      "wrong_to_correct": 4,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 15,
+      "correct_to_correct": 80
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.21052631578947367,
+    "correct_to_wrong_rate": 0.012345679012345678
+  },
+  "C3": {
+    "counts": {
+      "wrong_to_correct": 5,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 14,
+      "correct_to_correct": 80
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.2631578947368421,
+    "correct_to_wrong_rate": 0.012345679012345678
+  },
+  "C4": {
+    "counts": {
+      "wrong_to_correct": 2,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 17,
+      "correct_to_correct": 80
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.10526315789473684,
+    "correct_to_wrong_rate": 0.012345679012345678
+  },
+  "C5": {
+    "counts": {
+      "wrong_to_correct": 3,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 16,
+      "correct_to_correct": 81
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.15789473684210525,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C6": {
+    "counts": {
+      "wrong_to_correct": 3,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 16,
+      "correct_to_correct": 81
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.15789473684210525,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C7": {
+    "counts": {
+      "wrong_to_correct": 3,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 16,
+      "correct_to_correct": 80
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.15789473684210525,
+    "correct_to_wrong_rate": 0.012345679012345678
+  },
+  "C9": {
+    "counts": {
+      "wrong_to_correct": 4,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 15,
+      "correct_to_correct": 80
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.21052631578947367,
+    "correct_to_wrong_rate": 0.012345679012345678
+  }
+}

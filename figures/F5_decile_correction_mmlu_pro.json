@@ -1,0 +1,513 @@
+{
+  "decile_edges": [
+    -0.0,
+    0.0317,
+    0.0453,
+    0.0564,
+    0.0677,
+    0.0795,
+    0.0954,
+    0.1153,
+    0.1336,
+    0.168,
+    1.0
+  ],
+  "by_condition": {
+    "C3": {
+      "deciles": [
+        {
+          "decile": 1,
+          "dist_range": [
+            -0.0,
+            0.0317
+          ],
+          "n": 38,
+          "n_reviewee_wrong": 2,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 2,
+          "dist_range": [
+            0.0317,
+            0.0453
+          ],
+          "n": 42,
+          "n_reviewee_wrong": 5,
+          "p_detect_given_wrong": 0.4,
+          "p_corrected_given_wrong": 0.2,
+          "p_false_opposition": 0.02702702702702703
+        },
+        {
+          "decile": 3,
+          "dist_range": [
+            0.0453,
+            0.0564
+          ],
+          "n": 42,
+          "n_reviewee_wrong": 4,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 4,
+          "dist_range": [
+            0.0564,
+            0.0677
+          ],
+          "n": 38,
+          "n_reviewee_wrong": 4,
+          "p_detect_given_wrong": 0.5,
+          "p_corrected_given_wrong": 0.5,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 5,
+          "dist_range": [
+            0.0677,
+            0.0795
+          ],
+          "n": 50,
+          "n_reviewee_wrong": 10,
+          "p_detect_given_wrong": 0.1,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.025
+        },
+        {
+          "decile": 6,
+          "dist_range": [
+            0.0795,
+            0.0954
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 14,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.038461538461538464
+        },
+        {
+          "decile": 7,
+          "dist_range": [
+            0.0954,
+            0.1153
+          ],
+          "n": 42,
+          "n_reviewee_wrong": 12,
+          "p_detect_given_wrong": 0.25,
+          "p_corrected_given_wrong": 0.08333333333333333,
+          "p_false_opposition": 0.03333333333333333
+        },
+        {
+          "decile": 8,
+          "dist_range": [
+            0.1153,
+            0.1336
+          ],
+          "n": 36,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.6666666666666666,
+          "p_corrected_given_wrong": 0.2222222222222222,
+          "p_false_opposition": 0.037037037037037035
+        },
+        {
+          "decile": 9,
+          "dist_range": [
+            0.1336,
+            0.168
+          ],
+          "n": 36,
+          "n_reviewee_wrong": 10,
+          "p_detect_given_wrong": 0.6,
+          "p_corrected_given_wrong": 0.3,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 10,
+          "dist_range": [
+            0.168,
+            1.0
+          ],
+          "n": 36,
+          "n_reviewee_wrong": 10,
+          "p_detect_given_wrong": 0.3,
+          "p_corrected_given_wrong": 0.2,
+          "p_false_opposition": 0.0
+        }
+      ]
+    },
+    "C4": {
+      "deciles": [
+        {
+          "decile": 1,
+          "dist_range": [
+            -0.0,
+            0.0317
+          ],
+          "n": 64,
+          "n_reviewee_wrong": 4,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 2,
+          "dist_range": [
+            0.0317,
+            0.0453
+          ],
+          "n": 48,
+          "n_reviewee_wrong": 8,
+          "p_detect_given_wrong": 0.375,
+          "p_corrected_given_wrong": 0.25,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 3,
+          "dist_range": [
+            0.0453,
+            0.0564
+          ],
+          "n": 50,
+          "n_reviewee_wrong": 5,
+          "p_detect_given_wrong": 0.2,
+          "p_corrected_given_wrong": 0.2,
+          "p_false_opposition": 0.022222222222222223
+        },
+        {
+          "decile": 4,
+          "dist_range": [
+            0.0564,
+            0.0677
+          ],
+          "n": 36,
+          "n_reviewee_wrong": 6,
+          "p_detect_given_wrong": 0.16666666666666666,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 5,
+          "dist_range": [
+            0.0677,
+            0.0795
+          ],
+          "n": 34,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.08
+        },
+        {
+          "decile": 6,
+          "dist_range": [
+            0.0795,
+            0.0954
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.1111111111111111,
+          "p_corrected_given_wrong": 0.1111111111111111,
+          "p_false_opposition": 0.03225806451612903
+        },
+        {
+          "decile": 7,
+          "dist_range": [
+            0.0954,
+            0.1153
+          ],
+          "n": 32,
+          "n_reviewee_wrong": 13,
+          "p_detect_given_wrong": 0.46153846153846156,
+          "p_corrected_given_wrong": 0.3076923076923077,
+          "p_false_opposition": 0.10526315789473684
+        },
+        {
+          "decile": 8,
+          "dist_range": [
+            0.1153,
+            0.1336
+          ],
+          "n": 34,
+          "n_reviewee_wrong": 11,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.043478260869565216
+        },
+        {
+          "decile": 9,
+          "dist_range": [
+            0.1336,
+            0.168
+          ],
+          "n": 34,
+          "n_reviewee_wrong": 8,
+          "p_detect_given_wrong": 0.125,
+          "p_corrected_given_wrong": 0.125,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 10,
+          "dist_range": [
+            0.168,
+            1.0
+          ],
+          "n": 28,
+          "n_reviewee_wrong": 7,
+          "p_detect_given_wrong": 0.42857142857142855,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.047619047619047616
+        }
+      ]
+    },
+    "C5": {
+      "deciles": [
+        {
+          "decile": 1,
+          "dist_range": [
+            -0.0,
+            0.0317
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 2,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 2,
+          "dist_range": [
+            0.0317,
+            0.0453
+          ],
+          "n": 36,
+          "n_reviewee_wrong": 2,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 3,
+          "dist_range": [
+            0.0453,
+            0.0564
+          ],
+          "n": 32,
+          "n_reviewee_wrong": 3,
+          "p_detect_given_wrong": 0.3333333333333333,
+          "p_corrected_given_wrong": 0.3333333333333333,
+          "p_false_opposition": 0.034482758620689655
+        },
+        {
+          "decile": 4,
+          "dist_range": [
+            0.0564,
+            0.0677
+          ],
+          "n": 48,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.2222222222222222,
+          "p_corrected_given_wrong": 0.1111111111111111,
+          "p_false_opposition": 0.05128205128205128
+        },
+        {
+          "decile": 5,
+          "dist_range": [
+            0.0677,
+            0.0795
+          ],
+          "n": 24,
+          "n_reviewee_wrong": 6,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 6,
+          "dist_range": [
+            0.0795,
+            0.0954
+          ],
+          "n": 44,
+          "n_reviewee_wrong": 8,
+          "p_detect_given_wrong": 0.25,
+          "p_corrected_given_wrong": 0.125,
+          "p_false_opposition": 0.08333333333333333
+        },
+        {
+          "decile": 7,
+          "dist_range": [
+            0.0954,
+            0.1153
+          ],
+          "n": 42,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.1111111111111111,
+          "p_corrected_given_wrong": 0.1111111111111111,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 8,
+          "dist_range": [
+            0.1153,
+            0.1336
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 12,
+          "p_detect_given_wrong": 0.25,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 9,
+          "dist_range": [
+            0.1336,
+            0.168
+          ],
+          "n": 48,
+          "n_reviewee_wrong": 15,
+          "p_detect_given_wrong": 0.4,
+          "p_corrected_given_wrong": 0.26666666666666666,
+          "p_false_opposition": 0.030303030303030304
+        },
+        {
+          "decile": 10,
+          "dist_range": [
+            0.168,
+            1.0
+          ],
+          "n": 46,
+          "n_reviewee_wrong": 14,
+          "p_detect_given_wrong": 0.42857142857142855,
+          "p_corrected_given_wrong": 0.14285714285714285,
+          "p_false_opposition": 0.03125
+        }
+      ]
+    },
+    "C6": {
+      "deciles": [
+        {
+          "decile": 1,
+          "dist_range": [
+            -0.0,
+            0.0317
+          ],
+          "n": 18,
+          "n_reviewee_wrong": 0,
+          "p_detect_given_wrong": null,
+          "p_corrected_given_wrong": null,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 2,
+          "dist_range": [
+            0.0317,
+            0.0453
+          ],
+          "n": 34,
+          "n_reviewee_wrong": 2,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 3,
+          "dist_range": [
+            0.0453,
+            0.0564
+          ],
+          "n": 34,
+          "n_reviewee_wrong": 3,
+          "p_detect_given_wrong": 0.3333333333333333,
+          "p_corrected_given_wrong": 0.3333333333333333,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 4,
+          "dist_range": [
+            0.0564,
+            0.0677
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 5,
+          "p_detect_given_wrong": 0.2,
+          "p_corrected_given_wrong": 0.2,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 5,
+          "dist_range": [
+            0.0677,
+            0.0795
+          ],
+          "n": 48,
+          "n_reviewee_wrong": 12,
+          "p_detect_given_wrong": 0.0,
+          "p_corrected_given_wrong": 0.0,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 6,
+          "dist_range": [
+            0.0795,
+            0.0954
+          ],
+          "n": 40,
+          "n_reviewee_wrong": 6,
+          "p_detect_given_wrong": 0.16666666666666666,
+          "p_corrected_given_wrong": 0.16666666666666666,
+          "p_false_opposition": 0.058823529411764705
+        },
+        {
+          "decile": 7,
+          "dist_range": [
+            0.0954,
+            0.1153
+          ],
+          "n": 44,
+          "n_reviewee_wrong": 9,
+          "p_detect_given_wrong": 0.1111111111111111,
+          "p_corrected_given_wrong": 0.1111111111111111,
+          "p_false_opposition": 0.02857142857142857
+        },
+        {
+          "decile": 8,
+          "dist_range": [
+            0.1153,
+            0.1336
+          ],
+          "n": 46,
+          "n_reviewee_wrong": 15,
+          "p_detect_given_wrong": 0.3333333333333333,
+          "p_corrected_given_wrong": 0.13333333333333333,
+          "p_false_opposition": 0.03225806451612903
+        },
+        {
+          "decile": 9,
+          "dist_range": [
+            0.1336,
+            0.168
+          ],
+          "n": 44,
+          "n_reviewee_wrong": 15,
+          "p_detect_given_wrong": 0.4,
+          "p_corrected_given_wrong": 0.13333333333333333,
+          "p_false_opposition": 0.0
+        },
+        {
+          "decile": 10,
+          "dist_range": [
+            0.168,
+            1.0
+          ],
+          "n": 52,
+          "n_reviewee_wrong": 13,
+          "p_detect_given_wrong": 0.6153846153846154,
+          "p_corrected_given_wrong": 0.38461538461538464,
+          "p_false_opposition": 0.0
+        }
+      ]
+    }
+  }
+}

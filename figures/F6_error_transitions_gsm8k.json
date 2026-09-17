@@ -1,0 +1,101 @@
+{
+  "C0": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 95
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C1": {
+    "counts": {
+      "wrong_to_correct": 1,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 4,
+      "correct_to_correct": 95
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.2,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C2": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 95
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C3": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 94
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.010526315789473684
+  },
+  "C4": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 94
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.010526315789473684
+  },
+  "C5": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 94
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.010526315789473684
+  },
+  "C6": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 95
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C7": {
+    "counts": {
+      "wrong_to_correct": 1,
+      "correct_to_wrong": 0,
+      "wrong_to_wrong": 4,
+      "correct_to_correct": 95
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.2,
+    "correct_to_wrong_rate": 0.0
+  },
+  "C9": {
+    "counts": {
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 1,
+      "wrong_to_wrong": 5,
+      "correct_to_correct": 94
+    },
+    "n": 100,
+    "wrong_to_correct_rate": 0.0,
+    "correct_to_wrong_rate": 0.010526315789473684
+  }
+}

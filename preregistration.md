@@ -165,6 +165,19 @@ FINAL ANSWER: <letter>
 **Amendment 5 (2026-09-17, pre-full-run):** full-run scope may be reduced to fit the remaining DeepSeek budget (~¥188); any scope reduction (question counts, seed counts, dropped optional conditions such as C7) will be decided by a fixed rule — protect the primary comparisons (C5 vs C3/C4/C1/C9) on MMLU-Pro and SuperGPQA first — and documented here before execution, not chosen based on results.
 
 **Amendment 6 (2026-09-17, pre-full-run, budget-driven):** thinking mode is DISABLED for all calls (`thinking: {"type": "disabled"}`). deepseek-flash = DeepSeek-V4.1-Flash defaults to thinking mode whose hidden reasoning tokens dominate cost (~5.5M output tokens per 100-question pilot block ≈ $7 vs. ~$0.7 in non-thinking mode); the full study is infeasible within budget otherwise. Non-thinking also matches the design requirement of no hidden chain-of-thought: the visible concise justification is the sole reasoning artifact. Validation probe under the frozen prompt (60 MMLU-Pro + 60 SuperGPQA): 83.3% / 70.0% accuracy, 0–1 unparsed — both within the 40–85% band. Applies identically to every condition; max_tokens revert to 1500 (solve/review/debate) / 2500 (synthesis). All earlier thinking-mode pilot data are pipeline-validation artifacts only. The pilot is re-run in non-thinking mode before any full run.
+
+**Amendment 7 (2026-09-17, pre-full-run, budget- and pilot-driven scope freeze):**
+
+1. **GSM8K dropped from full runs.** Pilot single-agent accuracy 95% (C1 96%) — ceiling-saturated per the >90% rule. The 100q pilot block is retained as a sanity artifact only.
+2. **λ for D3 fixed at 0.5.** Pilot distance-ablation (C5, 100q): MMLU-Pro D1=84, D2=85, D3λ{.25,.5,.75}=83/84/85, D4=82; SuperGPQA D1=64, D2=65, D3λ{.25,.5,.75}=64/68/65. Differences are within noise; λ=0.5 chosen as the pilot-best on the higher-headroom benchmark and midpoint otherwise.
+3. **C7 (vanilla debate) excluded from full runs** (optional per design; measured in both pilots; no evidence of superiority: 83%/67%, not above C1/C5). Saves ~20% of budget for primary comparisons.
+4. **Full-run scope (fits ≈$23 remaining budget at off-peak rates):**
+   - MMLU-Pro: 500q × seeds {0,1,2} × conditions {C0,C1,C2,C3,C4,C5,C6,C9}.
+   - SuperGPQA: 500q × seeds {0,1} × same conditions (2 seeds, budget).
+   - N ablation: MMLU-Pro 200q, seed 0, N∈{2,6,8} × {C1,C2,C3,C4,C5,C6,C9} (N=4 covered by main runs).
+   - Pairing-seed variance: MMLU-Pro 200q, seed 0, pairing seeds {1,2} × {C3,C5}.
+   - Distance ablations: C5 under D2, D3(λ=0.5), D4 on MMLU-Pro 200q + SuperGPQA 200q, seed 0.
+   - All runs use fixed SAMPLING_SEED=42 question selection; n=200 and n=500 sets are drawn independently per run by the frozen sampler.
 - **Full:** MMLU-Pro 500q (stratified), SuperGPQA 500q (stratified), GSM8K 300q. Experimental seeds: 3 full seeds on MMLU-Pro; 1 seed (seed 0) on SuperGPQA/GSM8K unless pilot variance indicates otherwise. RGFM pairing-seed variance: 3 pairing seeds on a 200q MMLU-Pro subset. N ablation {2,4,6,8} on the same 200q subset (conditions C1–C6 + C9).
 - Power note: n=500 paired questions gives ~80% power to detect a ~4–5pp paired accuracy difference given ~25% discordance (McNemar approximation). Smaller effects will be reported with CIs without claiming significance.
 

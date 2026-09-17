@@ -1,0 +1,116 @@
+{
+  "mmlu_pro": {
+    "C0": {
+      "total_tokens": 44846,
+      "accuracy": 0.81
+    },
+    "C1": {
+      "total_tokens": 181997,
+      "accuracy": 0.82
+    },
+    "C2": {
+      "total_tokens": 292238,
+      "accuracy": 0.84
+    },
+    "C3": {
+      "total_tokens": 895029,
+      "accuracy": 0.85
+    },
+    "C4": {
+      "total_tokens": 895512,
+      "accuracy": 0.82
+    },
+    "C5": {
+      "total_tokens": 917341,
+      "accuracy": 0.84
+    },
+    "C6": {
+      "total_tokens": 900696,
+      "accuracy": 0.84
+    },
+    "C7": {
+      "total_tokens": 889457,
+      "accuracy": 0.83
+    },
+    "C9": {
+      "total_tokens": 842198,
+      "accuracy": 0.84
+    }
+  },
+  "supergpqa": {
+    "C0": {
+      "total_tokens": 56527,
+      "accuracy": 0.61
+    },
+    "C1": {
+      "total_tokens": 237925,
+      "accuracy": 0.62
+    },
+    "C2": {
+      "total_tokens": 408042,
+      "accuracy": 0.64
+    },
+    "C3": {
+      "total_tokens": 1187044,
+      "accuracy": 0.66
+    },
+    "C4": {
+      "total_tokens": 1196303,
+      "accuracy": 0.66
+    },
+    "C5": {
+      "total_tokens": 1207838,
+      "accuracy": 0.64
+    },
+    "C6": {
+      "total_tokens": 1200815,
+      "accuracy": 0.68
+    },
+    "C7": {
+      "total_tokens": 1215860,
+      "accuracy": 0.67
+    },
+    "C9": {
+      "total_tokens": 1145005,
+      "accuracy": 0.64
+    }
+  },
+  "gsm8k": {
+    "C0": {
+      "total_tokens": 24891,
+      "accuracy": 0.95
+    },
+    "C1": {
+      "total_tokens": 96119,
+      "accuracy": 0.96
+    },
+    "C2": {
+      "total_tokens": 168724,
+      "accuracy": 0.95
+    },
+    "C3": {
+      "total_tokens": 557787,
+      "accuracy": 0.94
+    },
+    "C4": {
+      "total_tokens": 550015,
+      "accuracy": 0.94
+    },
+    "C5": {
+      "total_tokens": 559661,
+      "accuracy": 0.94
+    },
+    "C6": {
+      "total_tokens": 555814,
+      "accuracy": 0.95
+    },
+    "C7": {
+      "total_tokens": 527739,
+      "accuracy": 0.96
+    },
+    "C9": {
+      "total_tokens": 537312,
+      "accuracy": 0.94
+    }
+  }
+}
