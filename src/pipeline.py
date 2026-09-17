@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from . import config, matching, prompts
+from . import nli
 from .client import _sha256
 from .datasets import is_mcq
 from .parsing import (parse_answer, parse_review_verdict, parse_updated_answer,
@@ -150,8 +151,10 @@ class Pipeline:
             call = await self.client.chat(prompt, config.MAX_TOKENS_SOLVE)
             return q, i, prompt, mcq, call
 
-        results = await asyncio.gather(*[one(*t) for t in tasks])
-        for q, i, prompt, mcq, call in results:
+        # Incremental writes (as_completed): a crash mid-stage keeps all
+        # completed records, so restarts never redo finished calls.
+        for fut in asyncio.as_completed([one(*t) for t in tasks]):
+            q, i, prompt, mcq, call = await fut
             rec = base_record(
                 q["qid"], q["benchmark"], "shared", self.seed, None,
                 "initial", {"agent_idx": i}, prompt, call,
@@ -164,23 +167,50 @@ class Pipeline:
     # -- Stage B: embeddings + distance matrices -----------------------------
 
     def stage_b(self):
+        """Distance matrix per (qid, seed) under config.DISTANCE_ID:
+        D1 cosine over CONCLUSION+JUSTIFICATION embeddings (primary);
+        D2 cosine over justification-only embeddings;
+        D3 hybrid lambda*D1 + (1-lambda)*answer-disagreement;
+        D4 symmetric NLI contradiction probability.
+        One distance id per run dir (ablations use separate run dirs)."""
+        dist_id = config.DISTANCE_ID
+        existing = {r.get("distance_id") for r in self.distances.records.values()}
+        if existing and existing != {dist_id}:
+            raise RuntimeError(
+                "run dir already contains distance_id %s; use a separate run "
+                "dir per distance ablation" % sorted(existing))
         done = 0
         for q in self.questions:
             if self.distances.get(qid=q["qid"], seed=self.seed):
                 continue
             recs = self._initials(q["qid"])
-            texts = [
-                "CONCLUSION: %s\nJUSTIFICATION: %s"
-                % (self._answer_or_unparsed(r), r["justification"])
-                for r in recs
-            ]
-            vecs = self.embedder.embed_texts(texts)
-            dist = matching.cosine_distance_matrix(vecs)
+            answers = [self._answer_or_unparsed(r) for r in recs]
+            justs = [r["justification"] for r in recs]
+            texts = ["CONCLUSION: %s\nJUSTIFICATION: %s" % (a, j)
+                     for a, j in zip(answers, justs)]
+            if dist_id in ("D1", "D3"):
+                vecs = self.embedder.embed_texts(texts)
+                dist = matching.cosine_distance_matrix(vecs)
+            elif dist_id == "D2":
+                dist = matching.cosine_distance_matrix(
+                    self.embedder.embed_texts(justs))
+            elif dist_id == "D4":
+                dist = nli.contradiction_matrix(justs).tolist()
+            else:
+                raise RuntimeError("unknown DISTANCE_ID %s" % dist_id)
+            if dist_id == "D3":
+                n = len(recs)
+                disagree = [[1.0 if answers[i] != answers[j] else 0.0
+                             for j in range(n)] for i in range(n)]
+                lam = config.LAMBDA_HYBRID
+                dist = [[lam * dist[i][j] + (1 - lam) * disagree[i][j]
+                         for j in range(n)] for i in range(n)]
             self.distances.add({
                 "qid": q["qid"], "benchmark": q["benchmark"],
                 "condition": "shared", "seed": self.seed, "pairing_seed": None,
                 "stage": "distance", "n_agents": self.n,
-                "metric": "cosine", "distance_id": "D1",
+                "metric": "cosine", "distance_id": dist_id,
+                "lambda_hybrid": config.LAMBDA_HYBRID if dist_id == "D3" else None,
                 "embedding_model": getattr(self.embedder, "model_name",
                                            "unknown"),
                 "embedding_keys": [_sha256(t) for t in texts],
@@ -266,8 +296,8 @@ class Pipeline:
             call = await self.client.chat(prompt, config.MAX_TOKENS_SOLVE)
             return q, cond, pseed, reviewer, reviewee, prompt, mcq, call
 
-        results = await asyncio.gather(*[one(*t) for t in tasks])
-        for q, cond, pseed, reviewer, reviewee, prompt, mcq, call in results:
+        for fut in asyncio.as_completed([one(*t) for t in tasks]):
+            q, cond, pseed, reviewer, reviewee, prompt, mcq, call = await fut
             rec = base_record(
                 q["qid"], q["benchmark"], cond, self.seed, pseed, "review",
                 {"reviewer_idx": reviewer, "reviewee_idx": reviewee},
@@ -304,8 +334,8 @@ class Pipeline:
             call = await self.client.chat(prompt, config.MAX_TOKENS_SOLVE)
             return q, i, prompt, mcq, call
 
-        results = await asyncio.gather(*[one(*t) for t in tasks])
-        for q, i, prompt, mcq, call in results:
+        for fut in asyncio.as_completed([one(*t) for t in tasks]):
+            q, i, prompt, mcq, call = await fut
             rec = base_record(
                 q["qid"], q["benchmark"], "C7", self.seed, None, "debate",
                 {"agent_idx": i}, prompt, call,
@@ -382,8 +412,8 @@ class Pipeline:
             call = await self.client.chat(prompt, config.MAX_TOKENS_SYNTH)
             return q, cond, pseed, prompt, mcq, call
 
-        results = await asyncio.gather(*[one(*t) for t in tasks])
-        for q, cond, pseed, prompt, mcq, call in results:
+        for fut in asyncio.as_completed([one(*t) for t in tasks]):
+            q, cond, pseed, prompt, mcq, call = await fut
             rec = base_record(
                 q["qid"], q["benchmark"], cond, self.seed, pseed, "synth",
                 {}, prompt, call,
@@ -417,4 +447,8 @@ class Pipeline:
 def make_run_id(benchmark, n_questions, seed, pairing_seed, n_agents, model, mock):
     tag = "%s__n%d__seed%d__pseed%d__N%d__%s" % (
         benchmark, n_questions, seed, pairing_seed, n_agents, model)
+    if config.DISTANCE_ID != "D1":
+        tag += "__%s" % config.DISTANCE_ID
+        if config.DISTANCE_ID == "D3":
+            tag += "l%d" % int(round(config.LAMBDA_HYBRID * 100))
     return tag + ("__mock" if mock else "")

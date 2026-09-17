@@ -36,22 +36,41 @@ class ChatClient:
         self.api_key = api_key or load_api_key()
         self.max_retries = max_retries
         self.timeout = timeout
-        self._sem = asyncio.Semaphore(max_concurrency)
-        self._client = None
+        self._max_conc = max_concurrency
+        # Loop-local primitives: the pipeline runs stages in separate
+        # asyncio.run() loops, so semaphores/httpx clients must be created
+        # per running loop (a Semaphore created outside a loop binds to the
+        # first loop and breaks subsequent ones).
+        self._sems = {}
+        self._clients = {}
         self.calls_made = 0  # diagnostic counter (used by smoke tests)
 
+    def _sem(self):
+        loop = asyncio.get_running_loop()
+        if loop not in self._sems:
+            self._sems[loop] = asyncio.Semaphore(self._max_conc)
+        return self._sems[loop]
+
     async def _session(self):
-        if self._client is None:
-            self._client = httpx.AsyncClient(
+        loop = asyncio.get_running_loop()
+        if loop not in self._clients:
+            self._clients[loop] = httpx.AsyncClient(
                 timeout=self.timeout,
                 headers={"Authorization": "Bearer %s" % self.api_key},
             )
-        return self._client
+        return self._clients[loop]
 
     async def close(self):
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
+        # Best-effort cleanup: clients/semaphores belong to their own
+        # (possibly already closed) loops; failures here are harmless noise
+        # on Windows proactor loops, so swallow them.
+        for client in self._clients.values():
+            try:
+                await client.aclose()
+            except Exception:
+                pass
+        self._clients = {}
+        self._sems = {}
 
     async def chat(self, prompt, max_tokens):
         """Single user-message call. Returns dict(content, model, usage, latency_s)."""
@@ -63,7 +82,7 @@ class ChatClient:
             "max_tokens": max_tokens,
             # no seed: provider does not support it (prereg §1)
         }
-        async with self._sem:
+        async with self._sem():
             client = await self._session()
             last_err = None
             for attempt in range(self.max_retries):

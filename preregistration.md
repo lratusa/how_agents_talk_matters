@@ -6,13 +6,7 @@
 
 Selection rule (executed before freezing): single-agent probe of `deepseek-flash` and `deepseek-v4-pro` (DeepSeek API, T=0.8, top_p=0.95) on 60 stratified MMLU-Pro + 60 random SuperGPQA questions; choose the model whose mean single-agent accuracy falls in the 40–85% band, preferring the cheaper one if both qualify.
 
-**Chosen primary model:** `deepseek-flash` (DeepSeek official API `https://api.deepseek.com/v1`; the account exposes exactly `deepseek-flash` and `deepseek-v4-pro`). Probe results (2026-09-17, 60 MMLU-Pro + 60 SuperGPQA, T=0.8, max_tokens=1000): flash — MMLU-Pro 58.3%, SuperGPQA 33.3%, 36 s/120 calls; v4-pro — MMLU-Pro 51.7%, SuperGPQA 18.3%, 161 s/120 calls. Both in/near the 40–85% band on MMLU-Pro (SuperGPQA deliberately harder for headroom); flash chosen for accuracy + 4.5× throughput. The served model name returned by the API is recorded in every raw record.
-
-**Model character (verified pre-pilot):** `deepseek-flash` is a reasoning model — responses contain hidden `reasoning_content` plus a short visible `content` ending in `FINAL ANSWER:`; the visible content serves as the "concise justification summary" required by the design (no hidden CoT is requested or used). Stochasticity verified empirically: identical prompt at T=0.8 produced distinct outputs on repeated calls.
-
-**Amendment 1 (2026-09-17, pre-pilot):** max_tokens raised from 1000/1500 to **4000 (solve/review/debate) / 6000 (synthesis)**. Justification: hidden reasoning tokens count against max_tokens; at 1000, >30% of probe calls truncated with empty content. This changes token budgets only, not prompts or hypotheses.
-
-**Decoding (all agents, all conditions):** temperature 0.8, top_p 0.95, max_tokens 4000 (solve/review/debate), 6000 (synthesis). No seed parameter (not supported by the provider); stochastic sampling is the diversity source, replicated across experimental seeds.
+**Chosen primary model:** ~~deepseek-flash~~ → superseded by **`glm-4-plus`** per Amendment 4 (§9), a resource-constraint-driven change made during the pilot phase; probe data for both models recorded below and in `data/pilot/probe_results.jsonl`. Original probe (2026-09-17, 60 MMLU-Pro + 60 SuperGPQA, T=0.8, max_tokens=1000): deepseek-flash — MMLU-Pro 58.3%, SuperGPQA 33.3%, 36 s/120 calls; deepseek-v4-pro — MMLU-Pro 51.7%, SuperGPQA 18.3%, 161 s/120 calls. glm-4-plus probe (max_tokens=4000): MMLU-Pro 68.3%, SuperGPQA 41.7%, unparsed 1/60.
 
 ## 2. Embedding model (pinned)
 
@@ -165,6 +159,8 @@ FINAL ANSWER: <letter>
 - **Pilot:** ~100 questions × {MMLU-Pro, SuperGPQA, GSM8K}, single experimental seed 0. Used for bug detection, baseline estimation, λ tuning, and benchmark selection. Pilot results are not reported as final evidence.
 
 **Amendment 3 (2026-09-17, pre-pilot):** question sampling uses a FIXED sampling seed (42) independent of the experimental seed, so all experimental seeds evaluate the SAME question IDs (enabling paired analysis across seeds); experimental seeds re-replicate only stochastic generation, pairing, and shuffles (the provider exposes no seed parameter).
+
+**Amendment 4 (2026-09-17, during pilot, constraint-driven):** primary model changed from `deepseek-flash` to **`glm-4-plus`** (Zhipu BigModel API, `https://open.bigmodel.cn/api/paas/v4`). Cause: the DeepSeek account balance was exhausted after the first pilot benchmark (HTTP 402, balance −11.49 CNY) and a BigModel resource pack was about to expire (user directive). This change was driven by an external resource constraint, NOT by pilot results; condition-level pilot rankings played no role. Probe of glm-4-plus under the frozen solve prompt (T=0.8, same 60+60 questions): MMLU-Pro 68.3%, SuperGPQA 41.7%, unparsed 1/60 — within the 40–85% band. Stochasticity verified (distinct surfaces on repeated identical calls at T=0.8); the model is non-reasoning, so max_tokens revert to 1500 (solve/review/debate) / 2500 (synthesis). glm-5.3-flash (73.3%/55.0%) was rejected for a 25% parse-failure rate on SuperGPQA. The MMLU-Pro deepseek-flash pilot is retained as a pipeline-validation artifact only and is never mixed into glm-4-plus results. The pilot is re-run in full under glm-4-plus.
 - **Full:** MMLU-Pro 500q (stratified), SuperGPQA 500q (stratified), GSM8K 300q. Experimental seeds: 3 full seeds on MMLU-Pro; 1 seed (seed 0) on SuperGPQA/GSM8K unless pilot variance indicates otherwise. RGFM pairing-seed variance: 3 pairing seeds on a 200q MMLU-Pro subset. N ablation {2,4,6,8} on the same 200q subset (conditions C1–C6 + C9).
 - Power note: n=500 paired questions gives ~80% power to detect a ~4–5pp paired accuracy difference given ~25% discordance (McNemar approximation). Smaller effects will be reported with CIs without claiming significance.
 

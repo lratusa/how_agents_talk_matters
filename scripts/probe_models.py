@@ -17,16 +17,17 @@ DATA = ROOT / "data" / "benchmarks"
 OUT = ROOT / "data" / "pilot"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# DeepSeek key: read from the user's existing project env (authorized by user).
-def load_key():
+# Keys: read from the user's existing project env (authorized by user).
+def load_key(name):
     env = Path(r"D:/pc-project/Jinshang_LLM/new_implementation/.env.local")
     for line in env.read_text(encoding="utf-8-sig").splitlines():
-        if line.startswith("DEEPSEEK_API_KEY="):
+        if line.startswith(name + "="):
             return line.split("=", 1)[1].strip()
-    raise RuntimeError("DEEPSEEK_API_KEY not found")
+    raise RuntimeError("%s not found" % name)
 
-API = "https://api.deepseek.com/v1/chat/completions"
-KEY = load_key()
+API = os.environ.get("PROBE_API", "https://api.deepseek.com/v1/chat/completions")
+KEY = os.environ.get("PROBE_KEY") or load_key(
+    os.environ.get("PROBE_KEY_NAME", "DEEPSEEK_API_KEY"))
 
 SOLVE_PROMPT = """Solve the following problem. Think step by step, then give a concise justification (at most 120 words) of the key reasoning. End your response with a single line exactly of the form:
 
@@ -61,7 +62,8 @@ async def call(client, model, prompt, sem, max_retries=5):
                 r = await client.post(API, json={
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.8, "top_p": 0.95, "max_tokens": 1000,
+                    "temperature": 0.8, "top_p": 0.95,
+                    "max_tokens": int(os.environ.get("PROBE_MAX_TOKENS", "4000")),
                 }, headers={"Authorization": f"Bearer {KEY}"}, timeout=180)
                 if r.status_code == 200:
                     d = r.json()

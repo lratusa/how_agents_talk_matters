@@ -33,6 +33,15 @@ def parse_args(argv=None):
     p.add_argument("--model", default=config.MODEL)
     p.add_argument("--mock", action="store_true",
                    help="deterministic offline mock; no API/Ollama calls")
+    p.add_argument("--distance-id", default=config.DISTANCE_ID,
+                   choices=["D1", "D2", "D3", "D4"],
+                   help="distance ablation (prereg §8); non-D1 uses its own run dir")
+    p.add_argument("--lambda-hybrid", type=float, default=config.LAMBDA_HYBRID,
+                   help="lambda for D3 hybrid distance")
+    p.add_argument("--reuse-initials-from", default=None,
+                   help="path to a run dir whose initial.jsonl is copied in, "
+                        "so ablation runs share the exact same cached initial "
+                        "responses (prereg §18)")
     p.add_argument("--max-concurrency", type=int, default=16)
     p.add_argument("--no-evaluate", action="store_true")
     return p.parse_args(argv)
@@ -40,6 +49,9 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
+    # Distance ablation wiring (must happen before make_run_id).
+    config.DISTANCE_ID = args.distance_id
+    config.LAMBDA_HYBRID = args.lambda_hybrid
     conditions = [c.strip() for c in args.conditions.split(",") if c.strip()]
     unknown = set(conditions) - set(config.ALL_CONDITIONS)
     if unknown:
@@ -55,6 +67,14 @@ def main(argv=None):
     run_id = make_run_id(args.benchmark, len(questions), args.seed,
                          args.pairing_seed, args.n_agents, model, args.mock)
     run_dir = os.path.join(config.RUNS_DIR, run_id)
+    os.makedirs(run_dir, exist_ok=True)
+    if args.reuse_initials_from:
+        src = os.path.join(args.reuse_initials_from, "initial.jsonl")
+        dst = os.path.join(run_dir, "initial.jsonl")
+        if not os.path.exists(dst):
+            import shutil
+            shutil.copyfile(src, dst)
+            print("reused cached initials from %s" % src)
     print("run dir: %s" % run_dir)
 
     pipe = Pipeline(questions, client, embedder, run_dir,

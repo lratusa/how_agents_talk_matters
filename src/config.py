@@ -15,24 +15,26 @@ BENCHMARK_FILES = {
     "math500": os.path.join(BENCH_DIR, "math500_test.jsonl"),
 }
 
-# API key file (read-only, outside the project; has a UTF-8 BOM).
+# API endpoint/key (prereg §1 Amendment 4): DeepSeek balance exhausted
+# mid-pilot (-11.49 CNY, HTTP 402) and a BigModel resource pack was about
+# to expire (user instruction 2026-09-17); primary provider switched to
+# Zhipu BigModel glm-4-plus. Constraint-driven, not results-driven.
 ENV_KEY_FILE = r"D:/pc-project/Jinshang_LLM/new_implementation/.env.local"
-ENV_KEY_NAME = "DEEPSEEK_API_KEY"
+ENV_KEY_NAME = os.environ.get("FPRR_KEY_NAME", "BIGMODEL_API_KEY")
 
-API_BASE = "https://api.deepseek.com/v1/chat/completions"
-# Primary model: default deepseek-flash, overridable via env DEEPSEEK_MODEL
-# or run_experiment.py --model. (Prereg §1 leaves the slot to be filled by
-# the probe; the default here is the cheaper candidate.)
-MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-flash")
+API_BASE = os.environ.get(
+    "FPRR_API_BASE", "https://open.bigmodel.cn/api/paas/v4/chat/completions")
+# Primary model: glm-4-plus (probe: MMLU-Pro 68.3%, SuperGPQA 41.7%,
+# unparsed 1/60, stochastic at T=0.8). Overridable via --model.
+MODEL = os.environ.get("DEEPSEEK_MODEL", "glm-4-plus")
 
-# Decoding (prereg §1 as amended 2026-09-17 pre-pilot): identical for all
-# agents and all conditions. deepseek-flash is a reasoning model whose
-# hidden reasoning tokens count against max_tokens; 1000 caused truncation
-# (empty content) in >30% of probe calls, so budgets were raised pre-pilot.
+# Decoding (prereg §1 Amendments 1+4): identical for all agents/conditions.
+# glm-4-plus is non-reasoning; modest token budgets suffice (probe mean
+# ~500 completion tokens/call, truncation negligible).
 TEMPERATURE = 0.8
 TOP_P = 0.95
-MAX_TOKENS_SOLVE = 4000   # solve + review + debate update
-MAX_TOKENS_SYNTH = 6000   # synthesis
+MAX_TOKENS_SOLVE = 1500   # solve + review + debate update
+MAX_TOKENS_SYNTH = 2500   # synthesis
 # No seed parameter: provider does not support it (prereg §1).
 
 # Embeddings (prereg §2): bge-m3 via local Ollama, 1024-dim.
@@ -40,6 +42,13 @@ OLLAMA_BASE = "http://localhost:11434"
 EMBED_MODEL = "bge-m3"
 EMBED_DIM = 1024
 EMBED_CACHE = os.path.join(CACHE_DIR, "embeddings.jsonl")
+
+# Distance ablations (prereg §8): D1 conclusion+justification cosine (primary),
+# D2 justification-only cosine, D3 hybrid lambda*d_sem + (1-lambda)*disagree,
+# D4 NLI contradiction (roberta-large-mnli, symmetric mean).
+DISTANCE_ID = os.environ.get("DISTANCE_ID", "D1")
+LAMBDA_HYBRID = float(os.environ.get("LAMBDA_HYBRID", "0.5"))
+NLI_MODEL = "roberta-large-mnli"
 
 N_AGENTS_DEFAULT = 4  # prereg §5 (N=4 primary; {2,4,6,8} ablation)
 
