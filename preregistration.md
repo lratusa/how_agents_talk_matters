@@ -200,3 +200,22 @@ Outlier amplification; correct-majority disruption; false opposition (style ≠ 
 ## 13. Reproducibility
 
 JSONL raw records for every call (question ID, prompts, raw outputs, parsed outputs, usage, latency, timestamps, condition, seed). Cached initial responses reused across conditions. Embedding vectors and distance matrices saved. Code versioned in git. No manual answer edits; parser fixes after freezing apply uniformly and are logged.
+
+## Amendment 8 — Final scope and exploratory labeling (2026-09-18)
+
+- **Run**: MMLU-Pro 500q × seeds {0,1,2}; SuperGPQA 500q × seeds {0,1,2,3}; distance
+  ablation C5 under D2/D3(λ=0.5)/D4 on 200q seed-0 subsets of both benchmarks
+  (D3/D4 reuse D2's cached initials), **except MMLU-Pro D4**, which was not run
+  (API budget exhausted).
+- **Not run (budget)**: N ∈ {2,6,8} agent-count ablation; pairing-seed variance
+  (pseeds 1,2); MMLU-Pro D4. Their designs remain frozen in §8/§9; absence is
+  reported as a limitation, not silently dropped.
+- **Exploratory labeling**: the distance-metric ablation was pre-registered as a
+  mechanism analysis, not a primary hypothesis test. The D4 (NLI-contradiction)
+  result on SuperGPQA (C5 68.0% vs C1 63.0%, +5.0pp [+2.0, +8.5]; D4−D2 paired
+  +3.0pp [+0.5, +6.0], McNemar p=0.077, 7 vs 1 discordant pairs, n=200, single
+  seed) is reported as **exploratory** and is not part of the Holm-corrected
+  primary family. It does not change the primary Result-D classification.
+- Distance-ablation initials are freshly sampled for the 200-question subsets
+  and therefore differ from the main 500-question runs' initials; cross-set
+  accuracy comparisons are not made.

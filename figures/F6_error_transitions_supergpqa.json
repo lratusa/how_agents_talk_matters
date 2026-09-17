@@ -3,99 +3,88 @@
     "counts": {
       "wrong_to_correct": 0,
       "correct_to_wrong": 0,
-      "wrong_to_wrong": 39,
-      "correct_to_correct": 61
+      "wrong_to_wrong": 878,
+      "correct_to_correct": 1122
     },
-    "n": 100,
+    "n": 2000,
     "wrong_to_correct_rate": 0.0,
     "correct_to_wrong_rate": 0.0
   },
   "C1": {
     "counts": {
-      "wrong_to_correct": 3,
-      "correct_to_wrong": 2,
-      "wrong_to_wrong": 36,
-      "correct_to_correct": 59
+      "wrong_to_correct": 112,
+      "correct_to_wrong": 39,
+      "wrong_to_wrong": 766,
+      "correct_to_correct": 1083
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.07692307692307693,
-    "correct_to_wrong_rate": 0.03278688524590164
+    "n": 2000,
+    "wrong_to_correct_rate": 0.1275626423690205,
+    "correct_to_wrong_rate": 0.034759358288770054
   },
   "C2": {
     "counts": {
-      "wrong_to_correct": 8,
-      "correct_to_wrong": 5,
-      "wrong_to_wrong": 31,
-      "correct_to_correct": 56
+      "wrong_to_correct": 165,
+      "correct_to_wrong": 60,
+      "wrong_to_wrong": 713,
+      "correct_to_correct": 1062
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.20512820512820512,
-    "correct_to_wrong_rate": 0.08196721311475409
+    "n": 2000,
+    "wrong_to_correct_rate": 0.18792710706150342,
+    "correct_to_wrong_rate": 0.053475935828877004
   },
   "C3": {
     "counts": {
-      "wrong_to_correct": 9,
-      "correct_to_wrong": 4,
-      "wrong_to_wrong": 30,
-      "correct_to_correct": 57
+      "wrong_to_correct": 154,
+      "correct_to_wrong": 65,
+      "wrong_to_wrong": 724,
+      "correct_to_correct": 1057
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.23076923076923078,
-    "correct_to_wrong_rate": 0.06557377049180328
+    "n": 2000,
+    "wrong_to_correct_rate": 0.17539863325740318,
+    "correct_to_wrong_rate": 0.057932263814616754
   },
   "C4": {
     "counts": {
-      "wrong_to_correct": 10,
-      "correct_to_wrong": 5,
-      "wrong_to_wrong": 29,
-      "correct_to_correct": 56
+      "wrong_to_correct": 158,
+      "correct_to_wrong": 71,
+      "wrong_to_wrong": 720,
+      "correct_to_correct": 1051
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.2564102564102564,
-    "correct_to_wrong_rate": 0.08196721311475409
+    "n": 2000,
+    "wrong_to_correct_rate": 0.17995444191343962,
+    "correct_to_wrong_rate": 0.06327985739750445
   },
   "C5": {
     "counts": {
-      "wrong_to_correct": 5,
-      "correct_to_wrong": 2,
-      "wrong_to_wrong": 34,
-      "correct_to_correct": 59
+      "wrong_to_correct": 151,
+      "correct_to_wrong": 76,
+      "wrong_to_wrong": 727,
+      "correct_to_correct": 1046
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.1282051282051282,
-    "correct_to_wrong_rate": 0.03278688524590164
+    "n": 2000,
+    "wrong_to_correct_rate": 0.17198177676537585,
+    "correct_to_wrong_rate": 0.0677361853832442
   },
   "C6": {
     "counts": {
-      "wrong_to_correct": 10,
-      "correct_to_wrong": 3,
-      "wrong_to_wrong": 29,
-      "correct_to_correct": 58
+      "wrong_to_correct": 156,
+      "correct_to_wrong": 75,
+      "wrong_to_wrong": 722,
+      "correct_to_correct": 1047
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.2564102564102564,
-    "correct_to_wrong_rate": 0.04918032786885246
-  },
-  "C7": {
-    "counts": {
-      "wrong_to_correct": 8,
-      "correct_to_wrong": 2,
-      "wrong_to_wrong": 31,
-      "correct_to_correct": 59
-    },
-    "n": 100,
-    "wrong_to_correct_rate": 0.20512820512820512,
-    "correct_to_wrong_rate": 0.03278688524590164
+    "n": 2000,
+    "wrong_to_correct_rate": 0.1776765375854214,
+    "correct_to_wrong_rate": 0.06684491978609626
   },
   "C9": {
     "counts": {
-      "wrong_to_correct": 7,
-      "correct_to_wrong": 4,
-      "wrong_to_wrong": 32,
-      "correct_to_correct": 57
+      "wrong_to_correct": 147,
+      "correct_to_wrong": 79,
+      "wrong_to_wrong": 731,
+      "correct_to_correct": 1043
     },
-    "n": 100,
-    "wrong_to_correct_rate": 0.1794871794871795,
-    "correct_to_wrong_rate": 0.06557377049180328
+    "n": 2000,
+    "wrong_to_correct_rate": 0.1674259681093394,
+    "correct_to_wrong_rate": 0.07040998217468805
   }
 }
