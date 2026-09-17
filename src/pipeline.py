@@ -447,6 +447,8 @@ class Pipeline:
 def make_run_id(benchmark, n_questions, seed, pairing_seed, n_agents, model, mock):
     tag = "%s__n%d__seed%d__pseed%d__N%d__%s" % (
         benchmark, n_questions, seed, pairing_seed, n_agents, model)
+    if config.THINKING_DISABLED:
+        tag += "__nothink"  # Amendment 6: never mix thinking/non-thinking caches
     if config.DISTANCE_ID != "D1":
         tag += "__%s" % config.DISTANCE_ID
         if config.DISTANCE_ID == "D3":

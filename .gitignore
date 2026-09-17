@@ -5,3 +5,4 @@ __pycache__/
 .agent-security/
 mace.html
 madsurvey.html
+GLM_API_KEY.txt

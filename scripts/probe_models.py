@@ -28,6 +28,7 @@ def load_key(name):
 API = os.environ.get("PROBE_API", "https://api.deepseek.com/v1/chat/completions")
 KEY = os.environ.get("PROBE_KEY") or load_key(
     os.environ.get("PROBE_KEY_NAME", "DEEPSEEK_API_KEY"))
+EXTRA = json.loads(os.environ.get("PROBE_EXTRA", "{}"))  # e.g. thinking toggle
 
 SOLVE_PROMPT = """Solve the following problem. Think step by step, then give a concise justification (at most 120 words) of the key reasoning. End your response with a single line exactly of the form:
 
@@ -59,12 +60,14 @@ async def call(client, model, prompt, sem, max_retries=5):
     async with sem:
         for attempt in range(max_retries):
             try:
-                r = await client.post(API, json={
+                payload = {
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.8, "top_p": 0.95,
                     "max_tokens": int(os.environ.get("PROBE_MAX_TOKENS", "4000")),
-                }, headers={"Authorization": f"Bearer {KEY}"}, timeout=180)
+                }
+                payload.update(EXTRA)
+                r = await client.post(API, json=payload, headers={"Authorization": f"Bearer {KEY}"}, timeout=180)
                 if r.status_code == 200:
                     d = r.json()
                     return d["choices"][0]["message"]["content"], d.get("usage", {})

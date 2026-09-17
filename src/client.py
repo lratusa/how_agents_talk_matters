@@ -31,7 +31,7 @@ class ChatClient:
     on 429/5xx/timeouts, per-call usage + latency capture."""
 
     def __init__(self, model=None, max_concurrency=16, api_key=None,
-                 max_retries=6, timeout=120.0):
+                 max_retries=12, timeout=120.0):
         self.model = model or config.MODEL
         self.api_key = api_key or load_api_key()
         self.max_retries = max_retries
@@ -82,6 +82,9 @@ class ChatClient:
             "max_tokens": max_tokens,
             # no seed: provider does not support it (prereg §1)
         }
+        if config.THINKING_DISABLED:
+            payload["thinking"] = {"type": "disabled"}  # Amendment 6
+        payload.update(config.EXTRA_PAYLOAD)
         async with self._sem():
             client = await self._session()
             last_err = None
@@ -119,7 +122,8 @@ class ChatClient:
                         retryable = code == 429 or code >= 500
                     if not retryable or attempt == self.max_retries - 1:
                         raise
-                    sleep = min(2.0 ** attempt + random.random(), 60.0)
+                    sleep = min(4.0 * (2.0 ** attempt) + random.random() * 5,
+                                180.0)
                     await asyncio.sleep(sleep)
             raise last_err  # unreachable
 
