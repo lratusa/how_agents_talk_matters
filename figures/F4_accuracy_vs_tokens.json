@@ -1,36 +1,70 @@
 {
-  "supergpqa": {
-    "C0": {
-      "total_tokens": 1199256,
-      "accuracy": 0.561
-    },
-    "C1": {
-      "total_tokens": 4761868,
-      "accuracy": 0.5975
-    },
-    "C2": {
-      "total_tokens": 8143960,
-      "accuracy": 0.6135
-    },
-    "C3": {
-      "total_tokens": 23768656,
-      "accuracy": 0.6055
-    },
-    "C4": {
-      "total_tokens": 23743990,
-      "accuracy": 0.6045
-    },
-    "C5": {
-      "total_tokens": 23872844,
-      "accuracy": 0.5985
-    },
-    "C6": {
-      "total_tokens": 23915913,
-      "accuracy": 0.6015
-    },
-    "C9": {
-      "total_tokens": 22710326,
-      "accuracy": 0.595
-    }
+ "mmlu_pro": {
+  "C0": {
+   "total_tokens": 604407,
+   "accuracy": 0.8293333333333334
+  },
+  "C1": {
+   "total_tokens": 2408828,
+   "accuracy": 0.8453333333333334
+  },
+  "C2": {
+   "total_tokens": 3819431,
+   "accuracy": 0.8366666666666667
+  },
+  "C3": {
+   "total_tokens": 11800192,
+   "accuracy": 0.8446666666666667
+  },
+  "C4": {
+   "total_tokens": 11777530,
+   "accuracy": 0.8453333333333334
+  },
+  "C5": {
+   "total_tokens": 11892774,
+   "accuracy": 0.8393333333333334
+  },
+  "C6": {
+   "total_tokens": 11947238,
+   "accuracy": 0.8446666666666667
+  },
+  "C9": {
+   "total_tokens": 11256283,
+   "accuracy": 0.8393333333333334
   }
+ },
+ "supergpqa": {
+  "C0": {
+   "total_tokens": 1199256,
+   "accuracy": 0.561
+  },
+  "C1": {
+   "total_tokens": 4761868,
+   "accuracy": 0.5975
+  },
+  "C2": {
+   "total_tokens": 8143960,
+   "accuracy": 0.6135
+  },
+  "C3": {
+   "total_tokens": 23768656,
+   "accuracy": 0.6055
+  },
+  "C4": {
+   "total_tokens": 23743990,
+   "accuracy": 0.6045
+  },
+  "C5": {
+   "total_tokens": 23872844,
+   "accuracy": 0.5985
+  },
+  "C6": {
+   "total_tokens": 23915913,
+   "accuracy": 0.6015
+  },
+  "C9": {
+   "total_tokens": 22710326,
+   "accuracy": 0.595
+  }
+ }
 }

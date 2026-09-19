@@ -27,9 +27,12 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import figplots  # noqa: E402  publication-style figure bodies (pubstyle)
+import pubstyle as ps  # noqa: E402
 
 from src import analysis, config
 from src.datasets import is_mcq, load_benchmark
@@ -427,42 +430,14 @@ def _f(v):
 
 def _save(fig, name, data):
     os.makedirs(FIGDIR, exist_ok=True)
-    fig.savefig(os.path.join(FIGDIR, name + ".png"), dpi=300,
-                bbox_inches="tight")
-    fig.savefig(os.path.join(FIGDIR, name + ".pdf"), bbox_inches="tight")
-    plt.close(fig)
+    ps.save_fig(fig, os.path.join(FIGDIR, name))
     analysis.write_json(data, os.path.join(FIGDIR, name + ".json"))
-    print("  figure: %s" % name)
 
 
 def fig1_architecture():
-    fig, ax = plt.subplots(figsize=(11, 3.2))
-    ax.axis("off")
-    stages = [
-        ("Stage A", "N independent\ninitial samples\n(T=0.8, top_p=0.95)"),
-        ("Stage B", "bge-m3 embeddings\nCONCLUSION +\nJUSTIFICATION\ncosine distance matrix"),
-        ("Stage C", "Perfect matching\nrandom / nearest /\nRGFM / max-weight"),
-        ("Stage D", "Reciprocal\npeer review\n(both directions)"),
-        ("Stage E", "Synthesizer\nanonymized S1..Sk\nsingle best answer"),
-    ]
-    w, h, y = 0.16, 0.55, 0.28
-    for i, (title, body) in enumerate(stages):
-        x = 0.03 + i * 0.195
-        ax.add_patch(FancyBboxPatch((x, y), w, h,
-                                    boxstyle="round,pad=0.012",
-                                    fc="#eef3fb", ec="#345", lw=1.4))
-        ax.text(x + w / 2, y + h - 0.12, title, ha="center", va="center",
-                fontsize=11, fontweight="bold", color="#234")
-        ax.text(x + w / 2, y + h / 2 - 0.09, body, ha="center", va="center",
-                fontsize=8.2, color="#333")
-        if i < len(stages) - 1:
-            ax.add_patch(FancyArrowPatch((x + w + 0.012, y + h / 2),
-                                         (x + 0.195 + 0.005, y + h / 2),
-                                         arrowstyle="-|>", mutation_scale=16,
-                                         lw=1.5, color="#345"))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    _save(fig, "F1_architecture", {"stages": [s[0] for s in stages]})
+    fig = figplots.plot_f1_architecture(None)
+    _save(fig, "F1_architecture",
+          {"stages": ["Stage A", "Stage B", "Stage C", "Stage D", "Stage E"]})
 
 
 def fig2_question(obs, bench):
@@ -480,101 +455,39 @@ def fig2_question(obs, bench):
         print("  F2: no split-disagreement question found; skipped")
         return None
     o = cand
-    fig, axes = plt.subplots(1, 4, figsize=(15, 4.2))
-    im = axes[0].imshow(o["dist"], cmap="viridis", vmin=0)
-    axes[0].set_title("D1 cosine distance\nqid=%s" % o["qid"], fontsize=9)
-    axes[0].set_xticks(range(4)); axes[0].set_yticks(range(4))
-    for i in range(4):
-        for j in range(4):
-            axes[0].text(j, i, "%.2f" % o["dist"][i, j], ha="center",
-                         va="center", fontsize=8,
-                         color="white" if o["dist"][i, j] > 0.5 else "black")
-    fig.colorbar(im, ax=axes[0], fraction=0.046)
-    angles = np.linspace(0, 2 * np.pi, 4, endpoint=False) + np.pi / 4
-    pos = {i: (np.cos(a), np.sin(a)) for i, a in enumerate(angles)}
-    for ax, cond, title in zip(axes[1:], ("C3", "C4", "C5"),
-                               ("C3 random", "C4 nearest", "C5 RGFM")):
-        pairs = o["matchings"].get(cond)
-        ax.set_title(title, fontsize=10)
-        ax.axis("off")
-        if not pairs:
-            continue
-        for i, j in pairs:
-            x = [pos[i][0], pos[j][0]]; y = [pos[i][1], pos[j][1]]
-            ax.plot(x, y, "-", lw=2.5, color="#345", zorder=1)
-        for i in range(4):
-            ax.scatter(*pos[i], s=900, zorder=2,
-                       c="#2ca02c" if o["agent_correct"][i] else "#d62728",
-                       edgecolors="black")
-            ax.text(pos[i][0], pos[i][1], "%d\n%s" % (i, o["agent_answers"][i]),
-                    ha="center", va="center", fontsize=9, color="white",
-                    fontweight="bold", zorder=3)
-        ax.set_xlim(-1.5, 1.5); ax.set_ylim(-1.5, 1.5)
-    fig.suptitle("Nodes: agent index / answer; green=correct, red=wrong "
-                 "(post hoc); edges = matched pairs", fontsize=9)
     data = {"qid": o["qid"], "seed": o["seed"],
             "agent_answers": o["agent_answers"],
             "agent_correct": o["agent_correct"],
             "dist": o["dist"].tolist(),
             "matchings": {c: o["matchings"].get(c) for c in ("C3", "C4", "C5")}}
+    fig = figplots.plot_f2_distance_matchings(data, bench)
     _save(fig, "F2_distance_matchings_%s" % bench, data)
     return o["qid"]
 
 
 def fig3_accuracy(all_res):
-    nb = len(all_res)
-    fig, axes = plt.subplots(1, nb, figsize=(6.2 * nb, 4.5), sharey=True)
-    if nb == 1:
-        axes = [axes]
     data = {}
-    for ax, (bench, res) in zip(axes, all_res.items()):
+    for bench, res in all_res.items():
         conds = [c for c in analysis.CONDITION_ORDER if c in res["accuracy"]]
-        accs = [res["accuracy"][c]["pooled"]["accuracy"] for c in conds]
-        los = [a - res["accuracy"][c]["pooled"]["ci95"][0]
-               for c, a in zip(conds, accs)]
-        his = [res["accuracy"][c]["pooled"]["ci95"][1] - a
-               for c, a in zip(conds, accs)]
-        colors = ["#d62728" if c == "C5" else "#4c72b0" for c in conds]
-        ax.bar(range(len(conds)), accs, yerr=[los, his], capsize=4,
-               color=colors, edgecolor="black", linewidth=0.6)
-        ax.set_xticks(range(len(conds)))
-        ax.set_xticklabels(conds, rotation=45)
-        ax.set_title("%s (n=%d)" % (bench, res["n_observations"]))
-        ax.set_ylim(0, 1)
-        ax.grid(axis="y", alpha=0.3)
         data[bench] = {c: res["accuracy"][c]["pooled"] for c in conds}
-    axes[0].set_ylabel("accuracy")
-    fig.suptitle("Accuracy by condition (95% bootstrap CI); C5 = FPRR", y=1.0)
-    fig.tight_layout()
+    fig = figplots.plot_f3_accuracy(data)
     _save(fig, "F3_accuracy_by_condition", data)
 
 
 def fig4_accuracy_vs_tokens(all_res):
-    fig, ax = plt.subplots(figsize=(7.5, 6))
     data = {}
-    markers = ["o", "s", "^", "D"]
-    for bi, (bench, res) in enumerate(all_res.items()):
+    for bench, res in all_res.items():
         data[bench] = {}
         for cond in analysis.CONDITION_ORDER:
             if cond not in res["tokens"] or cond not in res["accuracy"]:
                 continue
             tok = res["tokens"][cond]["total_tokens"]
-            acc = res["accuracy"][cond]["pooled"]["accuracy"]
             if not tok:
                 continue
-            ax.scatter(tok / 1e6, acc, marker=markers[bi % len(markers)],
-                       s=90 if cond != "C5" else 200,
-                       c="#d62728" if cond == "C5" else None,
-                       edgecolors="black", zorder=3,
-                       label="%s %s" % (bench, cond))
-            ax.annotate(cond, (tok / 1e6, acc), textcoords="offset points",
-                        xytext=(6, 4), fontsize=8)
-            data[bench][cond] = {"total_tokens": tok, "accuracy": acc}
-    ax.set_xlabel("total tokens (millions)")
-    ax.set_ylabel("accuracy")
-    ax.grid(alpha=0.3)
-    ax.set_title("Accuracy vs token cost (one point per condition/benchmark)")
-    fig.tight_layout()
+            data[bench][cond] = {
+                "total_tokens": tok,
+                "accuracy": res["accuracy"][cond]["pooled"]["accuracy"]}
+    fig = figplots.plot_f4_accuracy_vs_tokens(data)
     _save(fig, "F4_accuracy_vs_tokens", data)
 
 
@@ -583,26 +496,11 @@ def fig5_decile_correction(res, bench):
     if not mech.get("by_condition"):
         print("  F5: no mechanistic data; skipped")
         return
-    fig, ax = plt.subplots(figsize=(7.5, 5))
-    data = {}
-    for cond, d in sorted(mech["by_condition"].items()):
-        xs = [r["decile"] for r in d["deciles"]]
-        ys = [r["p_corrected_given_wrong"] for r in d["deciles"]]
-        ns = [r["n_reviewee_wrong"] for r in d["deciles"]]
-        ax.plot(xs, [np.nan if y is None else y for y in ys],
-                marker="o", label=cond,
-                lw=2.4 if cond == "C5" else 1.2)
-        data[cond] = {"deciles": d["deciles"]}
-    ax.set_xlabel("pair cosine-distance decile (1=nearest, 10=farthest)")
-    ax.set_ylabel("P(error corrected in updated answer | reviewee wrong)")
-    ax.set_xticks(range(1, 11))
-    ax.set_ylim(0, 1)
-    ax.grid(alpha=0.3)
-    ax.legend()
-    ax.set_title("Distance-decile vs correction probability — %s" % bench)
-    fig.tight_layout()
-    _save(fig, "F5_decile_correction_%s" % bench,
-          {"decile_edges": mech["decile_edges"], "by_condition": data})
+    data = {"decile_edges": mech["decile_edges"],
+            "by_condition": {cond: {"deciles": d["deciles"]}
+                             for cond, d in sorted(mech["by_condition"].items())}}
+    fig = figplots.plot_f5_decile_rates(data, bench)
+    _save(fig, "F5_decile_correction_%s" % bench, data)
 
 
 def fig6_error_transitions(res, bench):
@@ -611,29 +509,8 @@ def fig6_error_transitions(res, bench):
     if not conds:
         print("  F6: no transitions; skipped")
         return
-    cats = ["wrong_to_correct", "wrong_to_wrong",
-            "correct_to_correct", "correct_to_wrong"]
-    labels = ["wrong→correct", "wrong→wrong", "correct→correct", "correct→wrong"]
-    colors = ["#2ca02c", "#bbbbbb", "#4c72b0", "#d62728"]
-    fig, ax = plt.subplots(figsize=(8.5, 5))
-    bottoms = np.zeros(len(conds))
-    data = {}
-    for cat, lab, col in zip(cats, labels, colors):
-        vals = []
-        for cond in conds:
-            d = ct[cond]
-            vals.append(d["counts"][cat] / d["n"] if d["n"] else 0)
-        ax.bar(range(len(conds)), vals, bottom=bottoms, label=lab,
-               color=col, edgecolor="black", linewidth=0.5)
-        bottoms += np.array(vals)
-    for cond in conds:
-        data[cond] = ct[cond]
-    ax.set_xticks(range(len(conds)))
-    ax.set_xticklabels(conds, rotation=45)
-    ax.set_ylabel("fraction of questions")
-    ax.set_title("C0 (agent-0) → final correctness transitions — %s" % bench)
-    ax.legend(fontsize=8, ncol=2)
-    fig.tight_layout()
+    data = {cond: ct[cond] for cond in conds}
+    fig = figplots.plot_f6_error_transitions(data, bench)
     _save(fig, "F6_error_transitions_%s" % bench, data)
 
 

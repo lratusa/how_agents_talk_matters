@@ -1,90 +1,90 @@
 {
-  "C0": {
-    "counts": {
-      "wrong_to_correct": 0,
-      "correct_to_wrong": 0,
-      "wrong_to_wrong": 878,
-      "correct_to_correct": 1122
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.0,
-    "correct_to_wrong_rate": 0.0
+ "C0": {
+  "counts": {
+   "wrong_to_correct": 0,
+   "correct_to_wrong": 0,
+   "wrong_to_wrong": 878,
+   "correct_to_correct": 1122
   },
-  "C1": {
-    "counts": {
-      "wrong_to_correct": 112,
-      "correct_to_wrong": 39,
-      "wrong_to_wrong": 766,
-      "correct_to_correct": 1083
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.1275626423690205,
-    "correct_to_wrong_rate": 0.034759358288770054
+  "n": 2000,
+  "wrong_to_correct_rate": 0.0,
+  "correct_to_wrong_rate": 0.0
+ },
+ "C1": {
+  "counts": {
+   "wrong_to_correct": 112,
+   "correct_to_wrong": 39,
+   "wrong_to_wrong": 766,
+   "correct_to_correct": 1083
   },
-  "C2": {
-    "counts": {
-      "wrong_to_correct": 165,
-      "correct_to_wrong": 60,
-      "wrong_to_wrong": 713,
-      "correct_to_correct": 1062
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.18792710706150342,
-    "correct_to_wrong_rate": 0.053475935828877004
+  "n": 2000,
+  "wrong_to_correct_rate": 0.1275626423690205,
+  "correct_to_wrong_rate": 0.034759358288770054
+ },
+ "C2": {
+  "counts": {
+   "wrong_to_correct": 165,
+   "correct_to_wrong": 60,
+   "wrong_to_wrong": 713,
+   "correct_to_correct": 1062
   },
-  "C3": {
-    "counts": {
-      "wrong_to_correct": 154,
-      "correct_to_wrong": 65,
-      "wrong_to_wrong": 724,
-      "correct_to_correct": 1057
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.17539863325740318,
-    "correct_to_wrong_rate": 0.057932263814616754
+  "n": 2000,
+  "wrong_to_correct_rate": 0.18792710706150342,
+  "correct_to_wrong_rate": 0.053475935828877004
+ },
+ "C3": {
+  "counts": {
+   "wrong_to_correct": 154,
+   "correct_to_wrong": 65,
+   "wrong_to_wrong": 724,
+   "correct_to_correct": 1057
   },
-  "C4": {
-    "counts": {
-      "wrong_to_correct": 158,
-      "correct_to_wrong": 71,
-      "wrong_to_wrong": 720,
-      "correct_to_correct": 1051
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.17995444191343962,
-    "correct_to_wrong_rate": 0.06327985739750445
+  "n": 2000,
+  "wrong_to_correct_rate": 0.17539863325740318,
+  "correct_to_wrong_rate": 0.057932263814616754
+ },
+ "C4": {
+  "counts": {
+   "wrong_to_correct": 158,
+   "correct_to_wrong": 71,
+   "wrong_to_wrong": 720,
+   "correct_to_correct": 1051
   },
-  "C5": {
-    "counts": {
-      "wrong_to_correct": 151,
-      "correct_to_wrong": 76,
-      "wrong_to_wrong": 727,
-      "correct_to_correct": 1046
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.17198177676537585,
-    "correct_to_wrong_rate": 0.0677361853832442
+  "n": 2000,
+  "wrong_to_correct_rate": 0.17995444191343962,
+  "correct_to_wrong_rate": 0.06327985739750445
+ },
+ "C5": {
+  "counts": {
+   "wrong_to_correct": 151,
+   "correct_to_wrong": 76,
+   "wrong_to_wrong": 727,
+   "correct_to_correct": 1046
   },
-  "C6": {
-    "counts": {
-      "wrong_to_correct": 156,
-      "correct_to_wrong": 75,
-      "wrong_to_wrong": 722,
-      "correct_to_correct": 1047
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.1776765375854214,
-    "correct_to_wrong_rate": 0.06684491978609626
+  "n": 2000,
+  "wrong_to_correct_rate": 0.17198177676537585,
+  "correct_to_wrong_rate": 0.0677361853832442
+ },
+ "C6": {
+  "counts": {
+   "wrong_to_correct": 156,
+   "correct_to_wrong": 75,
+   "wrong_to_wrong": 722,
+   "correct_to_correct": 1047
   },
-  "C9": {
-    "counts": {
-      "wrong_to_correct": 147,
-      "correct_to_wrong": 79,
-      "wrong_to_wrong": 731,
-      "correct_to_correct": 1043
-    },
-    "n": 2000,
-    "wrong_to_correct_rate": 0.1674259681093394,
-    "correct_to_wrong_rate": 0.07040998217468805
-  }
+  "n": 2000,
+  "wrong_to_correct_rate": 0.1776765375854214,
+  "correct_to_wrong_rate": 0.06684491978609626
+ },
+ "C9": {
+  "counts": {
+   "wrong_to_correct": 147,
+   "correct_to_wrong": 79,
+   "wrong_to_wrong": 731,
+   "correct_to_correct": 1043
+  },
+  "n": 2000,
+  "wrong_to_correct_rate": 0.1674259681093394,
+  "correct_to_wrong_rate": 0.07040998217468805
+ }
 }

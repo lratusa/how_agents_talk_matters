@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="（作者姓名占位） （作者单位占位，城市 邮编）" />
+  <title>谁应审谁？ 基于回答条件化的异配互惠互审用于测试时大语言模型推理 Who Should Review Whom? Response-Conditioned Disassortative Peer Review for Test-Time LLM Reasoning</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">谁应审谁？<br />
+基于回答条件化的异配互惠互审用于测试时大语言模型推理<br />
+<span>Who Should Review Whom? Response-Conditioned Disassortative Peer Review<br />
+for Test-Time LLM Reasoning</span></h1>
+<p class="author">（作者姓名占位）<br />
+（作者单位占位，城市 邮编）</p>
+<p class="date">2026 年 9 月</p>
+</header>
+<p><strong>关键词：</strong> 大语言模型；多智能体系统；同行互审；互审拓扑；测试时扩展；认识信用分配</p>
+<p><strong>Keywords:</strong> large language models; multi-agent systems; peer review; review topology; test-time scaling; epistemic credit assignment</p>
+<h1 id="sec:intro">引言</h1>
+<p>对固定语言模型重复进行随机推理，可以在不改动模型权重的情况下显著提升答题准确率：对独立采样做自洽投票 [1] 与采样—投票扩展 [4] 是其中的经典范例。自然的下一步是让采样实例相互<em>交流</em>：多智能体辩论 [2] 与同行互审方案 [25] 允许同一模型的各实例在聚合之前互相批评对方的答案。</p>
+<p>然而，同质智能体之间的交流存在结构性弱点。同一检查点的各实例在同一提示下并非独立出错：它们共享训练数据、归纳偏置与失败模式，因此其样本形成<em>相关推理簇</em>——共享假设、策略与误解的一组组答案。广播式交流因而倾向于强化多数观点，而多数观点恰恰最可能承载共同错误。实证上，辩论常常无法超越简单投票 [6, 7]，而裁剪或保留消息的多样性感知变体仍以广播方式交流 [5, 10]。</p>
+<p>本文提出一个据我们所知尚未被实验单独隔离出来的问题：</p>
+<blockquote>
+<p><em>谁应审谁？</em>给定同一模型的 <span class="math inline">\(N\)</span> 个独立回答，在模型、提示与推理预算完全相同的条件下，两两互审的<strong>拓扑</strong>——具体而言，将每个智能体与其语义上最<em>不同</em>的同伴配对——能否比随机配对、基于相似性的配对、辩论或投票提取出更多正确答案？</p>
+</blockquote>
+<p>我们将该问题具体化为<strong>最远配对互惠互审（Farthest-Pair Reciprocal Review, FPRR）</strong>：对每个回答（结论 + 简要理由）做嵌入，计算两两余弦距离矩阵，构造一个将相距较远的回答配对的完美匹配（随机贪心最远匹配，RGFM，并以精确最大权重匹配作为变体），在每一对内部进行配对限定的互惠互审，最后由全部回答与评审合成最终答案。该流水线无需训练、无需检索，全程只用一个冻结模型与一套冻结提示。</p>
+<p>关键在于，我们的设计分离了路由规则的因果贡献：所有配对条件消费<em>完全相同的缓存初始回答</em>，因此差异不能归因于重采样运气；算力匹配的自审对照则将拓扑效应与单纯多花费推理算力区分开来。</p>
+<h4 id="贡献">贡献。</h4>
+<ul>
+<li><p>我们将回答条件化的互审拓扑形式化，并给出首个关于异配（最远配对）互惠互审的对照研究，涵盖精确最大权重匹配、随机贪心匹配、最近配对与随机配对在相同回答集上的比较。</p></li>
+<li><p>一项预注册的零结果及其机制分解：在相同回答集上，最远配对互审在两个基准上与随机配对、最近配对、精确最大权重匹配、多数投票和算力匹配自审的差距均在 <span class="math inline">\(\pm 1\)</span> 个百分点以内；配对距离单调预测错误<em>检出</em>，但不能预测错误<em>纠正</em>。</p></li>
+<li><p>对「什么信息穿过了异配边」的机制分析：分阶段的检出/修复/采纳回归、正向与反向互审漏斗、配对组成效应、基于迁移的有益迁移率，以及量化的失败模式（有效备选答案失稳、共同误解、裁判失败）。</p></li>
+<li><p>一条全程记录、基于缓存回答的实验流水线（带种子的配对、确定性解析、配对自助统计），将路由规则与重采样运气相隔离，并可端到端复现。</p></li>
+</ul>
+<h1 id="sec:related">相关工作</h1>
+<h4 id="测试时扩展与采样集成">测试时扩展与采样集成。</h4>
+<p>自洽 [1] 通过多数投票聚合多条思维链；Li 等 [4] 表明仅靠投票，准确率就随智能体数量扩展（他们的相似性度量选择<em>最</em>相似的样本——与我们的极性相反）。对单智能体轨迹池做嵌入相似性剪枝（Slim-SC [29]、SSDP [30]、DeepPrune [31]）提升了效率，但不构建任何智能体间交流。DIVSE [32] 在提示层面做多样化。以上方法均不以回答级距离作为<em>交流拓扑</em>的条件。</p>
+<h4 id="多智能体辩论">多智能体辩论。</h4>
+<p>Du 等 [2] 建立了同质实例之间的广播式辩论；ReConcile [3] 使用异质模型与置信度加权共识。对照复现削弱了相关论断：辩论的收益是有条件的，常常仅与自智能体基线持平 [6]；投票可以胜过辩论 [7]；在受控逻辑任务下，智能体的辩论行为本身也值得怀疑 [8]。这些工作全部使用广播或固定拓扑。</p>
+<h4 id="辩论中的多样性">辩论中的多样性。</h4>
+<p>Estornell 与 Liu [5] 计算回答嵌入与两两距离，诊断回音室效应，并剪枝到最大多样性子集——但幸存回答仍然广播；没有配对，也没有互惠互审。DAR [10] 通过 LLM 过滤器保留存在分歧的子集用于广播（嵌入仅作为评估指标出现）。Demystifying MAD [9] 通过最大化唯一答案<em>数量</em>初始化池，并用 GRPO 训练置信度。S<span class="math inline">\(^2\)</span>-MAD [11] 使用回答余弦相似性但极性相反（抑制冗余的相似观点）。RMoA [12] 以最远点式采样选择回答作为<em>聚合输入</em>，而非互审伙伴。这一文献中的多样性用于剪枝、加权、保留或初始化——从不构建一对一的互审图。</p>
+<h4 id="距离条件化拓扑">距离条件化拓扑。</h4>
+<p>CortexDebate [13] 与本文最接近，它将输出余弦不相似度纳入稀疏辩论图的边权（信任公式复合、异质模型、阈值化广播图、多数投票）。DySCo [14] 将推理嵌入余弦距离列为五种可选边信号之一，配合单向 top-<span class="math inline">\(k\)</span> 批评。DyTopo [15] 按需求/供给描述符的<em>相似性</em>路由。MACE [16] 通过 bandit 以 n-gram 多样性作为同伴选择的条件。学习型拓扑方法（GPTSwarm [17]、DyLAN [18]、AgentPrune [19]、G-Designer [20]、MacNet [21]、Graph-GRPO [22]、Guided Topology Diffusion [23]、Codebook Agent [24]）以查询、角色或学习到的值为条件——从不以当前回答之间的距离为条件——且通常需要训练。</p>
+<h4 id="同行互审与配对">同行互审与配对。</h4>
+<p>Xu 等 [25] 在全连接图上实现互惠互审；PiCO [26] 将智能体两两配对互评，但配对是随机的（实际效果相当于我们的随机配对对照）；一种锦标赛方案 [27] 按技能排名配对。一项覆盖 141 项研究的综述 [28] 报告 <span class="math inline">\(88.7\%\)</span> 为静态拓扑，其分类体系中不存在任何嵌入距离配对。我们的方法所占据的空白交叉点——回答距离 <span class="math inline">\(\rightarrow\)</span> 最远完美匹配 <span class="math inline">\(\rightarrow\)</span> 互惠配对限定互审 <span class="math inline">\(\rightarrow\)</span> 合成，全程免训练、作用于同质同提示样本——记录于我们的新颖性门槛报告（<code>NOVELTY_GATE.md</code>），该报告考察了 40 余篇论文（全文方法部分精读），并对 [2] 的 2<span>,</span>235 篇施引文献做了引用滚雪球。</p>
+<h1 id="sec:method">方法</h1>
+<h2 id="问题设定">问题设定</h2>
+<p>对每个问题 <span class="math inline">\(x\)</span>，<span class="math inline">\(N\)</span>（偶数）个同质智能体——同一检查点、同一系统提示、同一问题文本与同一解码配置——独立产生回答 <span class="math inline">\(r_i = (\text{answer}_i, \text{justification}_i)\)</span>, <span class="math inline">\(i=1,\dots,N\)</span>, 其中理由是简洁的可见推理摘要（不请求也不使用隐藏思维链）。独立随机采样是唯一的多样性来源。</p>
+<h2 id="回答表示与距离">回答表示与距离</h2>
+<p>每个回答被嵌入为 <span class="math inline">\(e_i = f(\text{CONCLUSION: answer}_i \mathbin{\Vert} \text{JUSTIFICATION: justification}_i)\)</span>，使用固定的句子编码器 <span class="math inline">\(f\)</span>（bge-m3，1024 维，Ollama 摘要 <code>790764642607</code>）。问题文本从不参与嵌入，因为相同的问题文本会主导相似性。主距离为余弦距离 <span class="math inline">\(d_{ij} = 1 - \cos(e_i, e_j)\)</span>（度量 D1）。消融：D2（仅用理由的嵌入）、D3（混合 <span class="math inline">\(\lambda d_{ij} + (1-\lambda)\mathbf{1}[a_i \neq a_j]\)</span>，<span class="math inline">\(\lambda\)</span> 仅在预实验上调定）、D4（对称化 NLI 矛盾概率，roberta-large-mnli）。</p>
+<h2 id="配对算法">配对算法</h2>
+<div class="algorithm">
+<div class="algorithmic">
+<p>距离矩阵 <span class="math inline">\(d \in \mathbb{R}^{N\times N}\)</span>，带种子的伪随机数发生器 <span class="math inline">\(U \gets \{1,\dots,N\}\)</span>; <span class="math inline">\(M \gets \emptyset\)</span> 从 <span class="math inline">\(U\)</span> 中均匀抽取 <span class="math inline">\(i\)</span>（带种子） <span class="math inline">\(j \gets \arg\max_{k \in U \setminus \{i\}} d_{ik}\)</span> <span class="math inline">\(M \gets M \cup \{(i,j)\}\)</span>; <span class="math inline">\(U \gets U \setminus \{i,j\}\)</span> 完美匹配 <span class="math inline">\(M\)</span></p>
+</div>
+</div>
+<p>FPRR 采用 RGFM（算法 <a href="#alg:rgfm" data-reference-type="ref" data-reference="alg:rgfm">[alg:rgfm]</a>）；记录种子是因为贪心规则依赖顺序。对照：<strong>随机</strong>（带种子的随机完美匹配）、<strong>最近</strong>（同一循环改用 <span class="math inline">\(\arg\min\)</span>）、<strong>最大权重</strong>（精确最大权重完美匹配 <span class="math inline">\(M^* = \arg\max_M \sum_{(i,j)\in M} d_{ij}\)</span>，对 <span class="math inline">\((N-1)!!\)</span> 个匹配穷举；<span class="math inline">\(N \le 8\)</span>）。</p>
+<h2 id="互惠互审">互惠互审</h2>
+<p>对每一对 <span class="math inline">\((i,j) \in M\)</span>，智能体 <span class="math inline">\(i\)</span> 审 <span class="math inline">\(j\)</span>、<span class="math inline">\(j\)</span> 审 <span class="math inline">\(i\)</span>。互审者只看到问题、自己的答案与理由、对方的答案与理由——除此之外什么也没有：没有其他智能体的答案、没有真值、没有嵌入距离、也没有任何关于配对如何形成的信息。互审提示（冻结，跨配对条件完全一致）要求互审者独立核查同伴，列出正确主张、具体错误与未验证假设，并以裁定（<code>PEER CORRECT</code>/<code>PEER INCORRECT</code>）和更新后的自身答案结尾。措辞明确禁止预设任何一方正确，以同时抑制谄媚与反射性反对。</p>
+<h2 id="最终合成">最终合成</h2>
+<p>一次合成器调用（同一模型）接收问题、全部匿名候选答案（经带种子的逐题打乱后标记为 S1…SN）以及——对互审条件——全部成对评审。它永远看不到真值、条件名、距离或配对信息。其指令：不要把重复出现的主张当作独立证据；评估论证质量；利用批评定位错误；在有依据时恢复正确的少数派解法；忽略修辞性的自信。所有互审条件使用同一个合成器提示。</p>
+<h2 id="算力核算">算力核算</h2>
+<p>每题，FPRR 花费 <span class="math inline">\(N\)</span> 次初始生成 <span class="math inline">\(+\)</span> <span class="math inline">\(N\)</span> 次互审调用 <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> 次合成调用。算力匹配对照（C9）将完全相同的预算用于对同一批缓存初始回答的 <span class="math inline">\(N\)</span> 次自审 <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> 次合成。</p>
+<h1 id="sec:setup">实验设置</h1>
+<h4 id="模型">模型。</h4>
+<p>所有智能体与合成器使用同一个冻结的服务模型：<code>deepseek-flash</code>（DeepSeek-V4.1-Flash），经 DeepSeek API，温度 <span class="math inline">\(0.8\)</span>，top-<span class="math inline">\(p\)</span> <span class="math inline">\(0.95\)</span>，最大 token 1500（解题/互审）/ 2500（合成），关闭思考模式，使可见理由成为唯一的推理产物；服务商不暴露种子参数。随机性经实证验证（相同调用重复产生不同输出）。模型在所有智能体与条件间同质；不修改任何权重。</p>
+<h4 id="基准">基准。</h4>
+<p>MMLU-Pro [35]（测试集，12<span>,</span>032 题，CC-BY-4.0）与 SuperGPQA [36]（26<span>,</span>526 题，ODC-BY；采样使用）为主基准；GSM8K [37]（测试集）作健全性检查（预实验：单智能体 <span class="math inline">\(95\%\)</span> <span class="math inline">\(\Rightarrow\)</span> 天花板饱和，不纳入完整运行）；MATH-500 保留备用。GPQA-Diamond 与 LiveBench 在本环境中无法访问（访问受限）；SuperGPQA 充当近期的研究生级基准。题目 ID 由分层采样器（采样种子 42）固定，并在所有条件与种子间共享。</p>
+<h4 id="条件">条件。</h4>
+<p>C0 单个回答；C1 对 <span class="math inline">\(N{=}4\)</span> 个缓存回答做多数投票；C2 缓存回答 <span class="math inline">\(\rightarrow\)</span> 合成器（无互审）；C3/C4/C5/C6 = 在<em>同一</em>批缓存回答上分别按随机 / 最近 / RGFM / 最大权重配对做互惠互审；C9 算力匹配自审；C7 一轮广播辩论（仅预实验）。所有配对条件在每个（题目, 种子）上消费完全相同的初始回答。</p>
+<h4 id="样本量与种子">样本量与种子。</h4>
+<p>预实验：每个基准 100 题。完整：MMLU-Pro 500 题 <span class="math inline">\(\times\)</span> 3 个实验种子；SuperGPQA 500 题 <span class="math inline">\(\times\)</span> 4 个种子。距离度量消融（D2/D3/D4 下的 C5，200 题子集，种子 0，其中 D3/D4 在每个基准内复用 D2 的缓存初始回答）除 MMLU-Pro D4 外全部完成；<span class="math inline">\(N \in \{2,4,6,8\}\)</span> 消融与配对种子方差研究（预注册，修订案 8）因预算原因未运行（§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>）。</p>
+<h4 id="统计">统计。</h4>
+<p>精确答案准确率，使用冻结的确定性解析器（最后一行 <code>FINAL ANSWER:</code>；解析失败 <span class="math inline">\(\Rightarrow\)</span> 判错）。准确率差值的 <span class="math inline">\(95\%\)</span> 置信区间采用配对自助法（对题目重采样 10<span>,</span>000 次）；对 C5 与 {C3, C4, C1, C9} 的对比做连续性校正 McNemar 检验，并做 Holm–Bonferroni 校正。假设 H1–H6 已在任何完整测试评估之前预注册（见 <code>preregistration.md</code>，含全部修订案）。</p>
+<h4 id="污染">污染。</h4>
+<p>GSM8K 与 MATH 年代久远且曝光严重，我们不以它们支撑任何论断。MMLU-Pro（2024 年 6 月）、尤其是 SuperGPQA（2025 年 1 月）晚于大部分训练数据；SuperGPQA 的研究生级题目与模型在该基准上的中段准确率（预实验单智能体 <span class="math inline">\(61\%\)</span>）使其成为更灵敏的仪器。我们仍将残余污染视为一项局限：它只会抬高绝对数值，且对所有条件作用相同，因此配对差值依然可解释。</p>
+<h4 id="可复现性">可复现性。</h4>
+<p>每次 API 调用均记录到 JSONL（题目 ID、完整提示、原始输出、解析字段、token 用量、延迟、时间戳、条件、种子）。初始回答被缓存并跨条件共享；配对/匹配决策只依赖距离，从不依赖金标签。代码与配置有版本管理（git）；分析脚本是确定性的（带种子自助法）。</p>
+<h1 id="sec:results">主要结果</h1>
+<p>图 <a href="#fig:architecture" data-reference-type="ref" data-reference="fig:architecture">1</a> 回顾了流水线（第 <a href="#sec:method" data-reference-type="ref" data-reference="sec:method">3</a> 节）；本节中所有配对条件在每个（题目, 种子）上消费完全相同的缓存初始回答。</p>
+<figure>
+<img src="../figures/F1_architecture.png" id="fig:architecture" style="width:90.0%" alt="F1_architecture" /><figcaption aria-hidden="true">流水线概览：<span class="math inline">\(N\)</span> 个缓存初始回答、bge-m3 距离矩阵、配对规则（随机 / 最近 / RGFM / 最大权重）、互惠配对限定互审，以及对全部回答与评审的最终合成。</figcaption>
+</figure>
+<h2 id="总体准确率">总体准确率</h2>
+<p>表 <a href="#tab:mmlu-acc" data-reference-type="ref" data-reference="tab:mmlu-acc">1</a> 报告 MMLU-Pro 上的准确率（500 题 <span class="math inline">\(\times\)</span> 3 个实验种子，<span class="math inline">\(n=1500\)</span> 条合并观测）。所有 <span class="math inline">\(N{=}4\)</span> 聚合条件聚集在 0.8 个百分点的带内（0.837–0.845）；FPRR（C5，0.839）与算力匹配自审对照（C9，0.839）同处该带底部，比随机配对、最近配对、最大权重匹配与纯多数投票（均为 0.845）低 0.6 个百分点。图 <a href="#fig:accuracy" data-reference-type="ref" data-reference="fig:accuracy">2</a> 直观展示了这些几乎相同的准确率。</p>
+<div id="tab:mmlu-acc">
+<table>
+<caption>MMLU-Pro 各条件准确率（500 题 <span class="math inline">\(\times\)</span> 3 种子；<span class="math inline">\(n=1500\)</span> 合并）。<span class="math inline">\(95\%\)</span> CI 为对题目的配对自助区间；各种子准确率各为 <span class="math inline">\(n=500\)</span>。合并观测在种子间共享题目，因此 CI 轻度反保守；各种子数值呈现相同排序。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">条件</td>
+<td style="text-align: left;">名称</td>
+<td style="text-align: center;">合并准确率</td>
+<td style="text-align: center;">95% CI</td>
+<td style="text-align: center;" colspan="2">各种子准确率</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">s0 / s1</td>
+<td style="text-align: center;">s2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">单个回答</td>
+<td style="text-align: center;">0.829</td>
+<td style="text-align: center;">[0.810, 0.848]</td>
+<td style="text-align: center;">0.824 / 0.834</td>
+<td style="text-align: center;">0.830</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">多数投票</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.844 / 0.844</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">集成 + 合成</td>
+<td style="text-align: center;">0.837</td>
+<td style="text-align: center;">[0.818, 0.855]</td>
+<td style="text-align: center;">0.838 / 0.840</td>
+<td style="text-align: center;">0.832</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">随机配对</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.846 / 0.850</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">最近配对</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.842 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.844 / 0.836</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">最大权重匹配</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.826, 0.863]</td>
+<td style="text-align: center;">0.840 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">自审（算力匹配）</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.838 / 0.838</td>
+<td style="text-align: center;">0.842</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:mmlu-paired">
+<table>
+<caption>MMLU-Pro 上 C5（FPRR）与各对照的配对比较（<span class="math inline">\(n=1500\)</span>）。diff = C5 减去对照，单位为百分点（pp）；CI = <span class="math inline">\(95\%\)</span> 配对自助区间；<span class="math inline">\(p\)</span> = 连续性校正 McNemar；<span class="math inline">\(p_{\mathrm{Holm}}\)</span> = 对主要族 {C3, C4, C1, C9} 的 Holm–Bonferroni 校正。中线以下为校正族之外的次要比较。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">比较</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C3（随机）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.3\)</span>, <span class="math inline">\(0.2\)</span>]</td>
+<td style="text-align: center;">13/21</td>
+<td style="text-align: center;">0.230</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C4（最近）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">19/28</td>
+<td style="text-align: center;">0.243</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C1（投票）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">18/27</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C9（自审）</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(0.8\)</span>]</td>
+<td style="text-align: center;">19/19</td>
+<td style="text-align: center;">0.871</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C0（单个）</td>
+<td style="text-align: center;"><span class="math inline">\(+1.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.1\)</span>, <span class="math inline">\(2.1\)</span>]</td>
+<td style="text-align: center;">41/26</td>
+<td style="text-align: center;">0.087</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C2（无互审）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.7\)</span>, <span class="math inline">\(1.2\)</span>]</td>
+<td style="text-align: center;">27/23</td>
+<td style="text-align: center;">0.671</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C6（最大权重）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">16/24</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>表 <a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a> 给出配对分析。每个主要比较的自助置信区间都跨零，四个 Holm 校正 <span class="math inline">\(p\)</span> 值全部为 <span class="math inline">\(0.920\)</span>：FPRR 与随机配对（H1）、最近配对（H2）、多数投票（H3）或算力匹配自审对照之间均无可检测的差异。相对单回答基线，FPRR 提升 <span class="math inline">\(+1.0\)</span>pp，但未达显著（<span class="math inline">\(p=0.087\)</span>，未校正）。</p>
+<p>SuperGPQA（500 题 <span class="math inline">\(\times\)</span> 4 种子，<span class="math inline">\(n=2000\)</span> 合并）在更低的准确率上讲述了同一个故事，且带有一处更尖锐的转折（表 <a href="#tab:sg-acc" data-reference-type="ref" data-reference="tab:sg-acc">3</a>）。FPRR（0.599）与随机配对（0.606）、最近配对（0.605）、最大权重匹配（0.602）、多数投票（0.598）、自审（0.595）不可区分——甚至还略低；四个主要 Holm 校正 <span class="math inline">\(p\)</span> 值均 <span class="math inline">\(\ge 0.987\)</span>（表 <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>）。在这个更难的基准上，每个 <span class="math inline">\(N{=}4\)</span> 条件都明显超过单回答基线（C0，0.561；C5 对 C0：<span class="math inline">\(+3.8\)</span>pp，95% CI [<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>]，<span class="math inline">\(p&lt;0.001\)</span>），因此集成机制本身确有收益。但无互审的合成器条件 C2（0.614）是最好的条件，且此处的损失不再是噪声：<strong>C2 以 <span class="math inline">\(1.5\)</span>pp 胜过 C5，自助置信区间不含零</strong>（<span class="math inline">\([-2.6, -0.4]\)</span>，McNemar <span class="math inline">\(p=0.010\)</span>；属 Holm 校正族之外的次要比较，且在跨种子相关性下是反保守的）。在更难的基准上，相对直接合成同一批缓存答案，互惠互审带来了虽小但统计上可检出的净损失——与 §<a href="#sec:btr" data-reference-type="ref" data-reference="sec:btr">7.4</a> 的迁移分析一致（BTR <span class="math inline">\(= 0.383\)</span>）。</p>
+<div id="tab:sg-acc">
+<table>
+<caption>SuperGPQA 各条件准确率（500 题 <span class="math inline">\(\times\)</span> 4 种子；<span class="math inline">\(n=2000\)</span> 合并）。<span class="math inline">\(95\%\)</span> CI 为对题目的配对自助区间；各种子准确率各为 <span class="math inline">\(n=500\)</span>。合并观测在种子间共享题目，因此 CI 轻度反保守；各种子数值呈现相同排序。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">条件</th>
+<th style="text-align: left;">名称</th>
+<th style="text-align: center;">合并准确率</th>
+<th style="text-align: center;">95% CI</th>
+<th style="text-align: center;">各种子准确率 (s0/s1/s2/s3)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">单个回答</td>
+<td style="text-align: center;">0.561</td>
+<td style="text-align: center;">[0.539, 0.583]</td>
+<td style="text-align: center;">0.546 / 0.572 / 0.568 / 0.558</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">多数投票</td>
+<td style="text-align: center;">0.598</td>
+<td style="text-align: center;">[0.576, 0.619]</td>
+<td style="text-align: center;">0.594 / 0.604 / 0.588 / 0.604</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">集成 + 合成</td>
+<td style="text-align: center;">0.614</td>
+<td style="text-align: center;">[0.593, 0.635]</td>
+<td style="text-align: center;">0.616 / 0.622 / 0.608 / 0.608</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">随机配对</td>
+<td style="text-align: center;">0.606</td>
+<td style="text-align: center;">[0.584, 0.627]</td>
+<td style="text-align: center;">0.594 / 0.598 / 0.616 / 0.614</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">最近配对</td>
+<td style="text-align: center;">0.605</td>
+<td style="text-align: center;">[0.583, 0.625]</td>
+<td style="text-align: center;">0.598 / 0.604 / 0.602 / 0.614</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.599</td>
+<td style="text-align: center;">[0.577, 0.620]</td>
+<td style="text-align: center;">0.598 / 0.602 / 0.596 / 0.598</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">最大权重匹配</td>
+<td style="text-align: center;">0.602</td>
+<td style="text-align: center;">[0.580, 0.623]</td>
+<td style="text-align: center;">0.594 / 0.606 / 0.608 / 0.598</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">自审（算力匹配）</td>
+<td style="text-align: center;">0.595</td>
+<td style="text-align: center;">[0.573, 0.616]</td>
+<td style="text-align: center;">0.602 / 0.586 / 0.588 / 0.604</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:sg-paired">
+<table>
+<caption>SuperGPQA 上 C5（FPRR）的配对比较（<span class="math inline">\(n=2000\)</span>，4 个种子合并）。各列含义同表 <a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a>。注意次要比较 C5 对 C2：<span class="math inline">\(-1.5\)</span>pp 且 CI 不含零（<span class="math inline">\(p=0.010\)</span>，未校正）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">比较</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C3（随机）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.8\)</span>, <span class="math inline">\(+0.4\)</span>]</td>
+<td style="text-align: center;">56/70</td>
+<td style="text-align: center;">0.247</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C4（最近）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.7\)</span>, <span class="math inline">\(+0.5\)</span>]</td>
+<td style="text-align: center;">54/66</td>
+<td style="text-align: center;">0.315</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C1（投票）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.1\)</span>, <span class="math inline">\(+1.3\)</span>]</td>
+<td style="text-align: center;">72/70</td>
+<td style="text-align: center;">0.933</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C9（自审）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.4\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(+1.5\)</span>]</td>
+<td style="text-align: center;">68/61</td>
+<td style="text-align: center;">0.597</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C0（单个）</td>
+<td style="text-align: center;"><span class="math inline">\(+3.8\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>]</td>
+<td style="text-align: center;">151/76</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;\)</span>0.0001</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 对 C2（无互审）</td>
+<td style="text-align: center;"><span class="math inline">\(-1.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]</td>
+<td style="text-align: center;">49/79</td>
+<td style="text-align: center;">0.010</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 对 C6（最大权重）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+<td style="text-align: center;">54/60</td>
+<td style="text-align: center;">0.640</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="../figures/F3_accuracy_by_condition.png" id="fig:accuracy" style="width:85.0%" alt="F3_accuracy_by_condition" /><figcaption aria-hidden="true">两个基准上各条件的准确率（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。每个基准内所有 <span class="math inline">\(N{=}4\)</span> 条件在统计上不可区分，唯一例外是无互审合成（C2）在 SuperGPQA 上超过 FPRR。</figcaption>
+</figure>
+<h2 id="成本">成本</h2>
+<p>互审昂贵，且在此一无所获（表 <a href="#tab:tokens" data-reference-type="ref" data-reference="tab:tokens">5</a>，图 <a href="#fig:tokens" data-reference-type="ref" data-reference="fig:tokens">3</a>）。在 MMLU-Pro 上，C5 消耗 <span class="math inline">\(11.89\)</span>M token——单回答基线的 <span class="math inline">\(19.7\times\)</span>、多数投票的 <span class="math inline">\(4.9\times\)</span>——准确率却比投票<em>低</em> 0.6pp；每百万 token 的准确率从 1.37（C0）、0.35（C1）降至所有互审条件的 0.07。SuperGPQA 在每种子可比的 token 成本下呈现相同模式（C5 在 <span class="math inline">\(4\)</span> 个种子上共 <span class="math inline">\(23.87\)</span>M），且互审还显著落后于无互审合成。</p>
+<div id="tab:tokens">
+<table>
+<caption>总 token 用量与每百万 token 准确率（acc/Mtok；SuperGPQA 的 acc/Mtok 由合并总量计算）。SuperGPQA 列：<span class="math inline">\(n=2000\)</span>，4 个种子合并。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: center;" colspan="2">MMLU-Pro (<span class="math inline">\(n=1500\)</span>)</td>
+<td style="text-align: center;" colspan="2">SuperGPQA (<span class="math inline">\(n=2000\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">tokens (M)</td>
+<td style="text-align: center;">acc/Mtok</td>
+<td style="text-align: center;">tokens (M)</td>
+<td style="text-align: center;">acc/Mtok</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.60</td>
+<td style="text-align: center;">1.37</td>
+<td style="text-align: center;">1.20</td>
+<td style="text-align: center;">0.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: center;">2.41</td>
+<td style="text-align: center;">0.35</td>
+<td style="text-align: center;">4.76</td>
+<td style="text-align: center;">0.13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">3.82</td>
+<td style="text-align: center;">0.22</td>
+<td style="text-align: center;">8.14</td>
+<td style="text-align: center;">0.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">11.80</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.77</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">11.78</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.74</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">11.89</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.87</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">11.95</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.92</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">11.26</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">22.71</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="../figures/F4_accuracy_vs_tokens.png" id="fig:tokens" style="width:85.0%" alt="F4_accuracy_vs_tokens" /><figcaption aria-hidden="true">准确率与总 token 消耗。互审条件（C3–C6, C9）占据一个昂贵的高原；投票（C1）在成本—准确率权衡上全面占优。</figcaption>
+</figure>
+<h2 id="h1h3-的裁定">H1–H3 的裁定</h2>
+<p><strong>H1（FPRR <span class="math inline">\(&gt;\)</span> 随机配对）：不支持。</strong> MMLU-Pro 上 <span class="math inline">\(-0.5\)</span>pp，SuperGPQA 上 <span class="math inline">\(-0.7\)</span>pp；两个 CI 均跨零（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。 <strong>H2（FPRR <span class="math inline">\(&gt;\)</span> 最近配对）：不支持。</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(-0.6\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。 <strong>H3（FPRR <span class="math inline">\(&gt;\)</span> 多数投票）：不支持。</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(+0.1\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>）。 精确最大权重匹配（C6）不优于贪心 RGFM；算力匹配自审对照（C9）在两个基准上几乎精确复现 FPRR 的准确率，因此该零结果不能归因于匹配次优或互审算力本身。</p>
+<h1 id="sec:ablations">消融实验</h1>
+<h4 id="配对规则c3c6相同初始回答">配对规则（C3–C6，相同初始回答）。</h4>
+<p>由于四个配对条件互审的是<em>同一</em>批缓存初始回答，它们之间的任何准确率差异都只能归因于匹配本身。而这样的差异基本不存在：MMLU-Pro 上 C3/C4/C5/C6 为 0.845 / 0.845 / 0.839 / 0.845（离散度 0.6pp）；SuperGPQA（<span class="math inline">\(n=2000\)</span>，4 种子）上为 0.606 / 0.605 / 0.599 / 0.602（离散度 0.7pp）。精确最大权重匹配（C6）与贪心 RGFM（C5）不可区分；极性相反的最近配对（C4）与随机配对持平。图 <a href="#fig:matchings" data-reference-type="ref" data-reference="fig:matchings">5</a> 直观展示四种规则如何以截然不同的方式连接同一批回答；连线方式对准确率没有影响。</p>
+<p><img src="../figures/F2_distance_matchings_mmlu_pro.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="F2_distance_matchings_mmlu_pro" /> <img src="../figures/F2_distance_matchings_supergpqa.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="F2_distance_matchings_supergpqa" /></p>
+<h4 id="互审与不互审c2合成器与投票c1">互审与不互审（C2）、合成器与投票（C1）。</h4>
+<p>在 MMLU-Pro 上，互审条件（0.839–0.845）与无互审合成器条件 C2（0.837）相差在 0.8pp 以内，C1 投票（0.845）以极低得多的成本追平最好的互审条件。在 SuperGPQA 上排序反转：C2（0.614）是最好的条件，<em>高于</em>所有互审条件（0.599–0.606），C1 为 0.598——且四个种子下差距在统计上可检出（C5 对 C2：<span class="math inline">\(-1.5\)</span>pp，95% CI [<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]，<span class="math inline">\(p=0.010\)</span> 未校正；表 <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>）。因此，互惠互审相对任何一个聚合基线都不增值——在更难的基准上反而略有减值。</p>
+<h4 id="算力匹配c9">算力匹配（C9）。</h4>
+<p>相同调用预算下的自审几乎精确复现 FPRR（MMLU-Pro 0.839 对 0.839；SuperGPQA 0.595 对 0.599；C5 对 C9 差值 <span class="math inline">\(0.0\)</span>pp / <span class="math inline">\(+0.4\)</span>pp，<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>）。把互审预算花在自我批评上与花在同伴互审上恰好一样好——也一样有限，因此该零结果是<em>路由</em>的零结果，而非预算的零结果。</p>
+<h4 id="距离度量d1d4与预实验-lambda">距离度量（D1–D4）与预实验 <span class="math inline">\(\lambda\)</span>。</h4>
+<p>按预注册，混合距离 D3 的 <span class="math inline">\(\lambda\)</span> 在完整运行之前固定为 <span class="math inline">\(0.5\)</span>（它是余量更高基准上的预实验最优值，其余情形下取中点；C5 下的预实验距离消融，每基准 100 题，种子 0；预实验数据仅用于调参，不作为证据报告）。表 <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a> 报告完整的 200 题距离消融（D2/D3/D4 下的 C5，种子 0；每个基准内 D3/D4 复用 D2 的缓存初始回答，因此跨度量的配对比较分离了各度量所诱导的拓扑）。该分析是<em>探索性</em>的（预注册修订案 8：机制性分析，位于 Holm 校正主要族之外）。</p>
+<p>在 SuperGPQA 上，感知分歧的度量优于纯语义距离：D4（NLI 矛盾）达 <span class="math inline">\(0.680\)</span>，D2（结论+理由余弦）为 <span class="math inline">\(0.650\)</span>，配对差值 D4 <span class="math inline">\(-\)</span> D2 为 <span class="math inline">\(+3.0\)</span>pp，自助 CI 不含零（<span class="math inline">\([+0.5, +6.0]\)</span>）——但仅有 <span class="math inline">\(7\)</span> 对 <span class="math inline">\(1\)</span> 道不一致题目（McNemar <span class="math inline">\(p=0.077\)</span>）、单种子、200 题：信号真实但脆弱，需要复现。机制与 §<a href="#sec:mechanism" data-reference-type="ref" data-reference="sec:mechanism">7</a> 一致：D4 下多数腐化率较 D2 下降六倍（<span class="math inline">\(0.008\)</span> 对 <span class="math inline">\(0.048\)</span>；D3：<span class="math inline">\(0.024\)</span>），而纠正率是三种度量中最高的（<span class="math inline">\(0.289\)</span> 对 D2 的 <span class="math inline">\(0.268\)</span>；互审级错误反对裁定率持平，<span class="math inline">\(0.047\)</span>–<span class="math inline">\(0.052\)</span>）——NLI 矛盾比嵌入余弦更接近<em>认识上的</em>对立，因此 D4 下的最远配对挑起的争执更经常值得一吵。在 MMLU-Pro 上所有度量差异均为零（D2/D3 彼此之间以及与投票的差距均在 <span class="math inline">\(0.5\)</span>pp 以内）：饱和的基准没有为任何路由信号留下余量。MMLU-Pro D4 未运行（预算）。</p>
+<div id="tab:dist-ablation">
+<table>
+<caption>C5 下的距离度量消融（每基准 200 题，种子 0；探索性，修订案 8）。每个基准内所有度量互审完全相同的缓存初始回答，因此配对差值分离了度量诱导的拓扑。C1（多数投票）在相同回答集上计算。差值单位为百分点；<span class="math inline">\(p\)</span> 值为连续性校正 McNemar，未校正。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">基准</th>
+<th style="text-align: left;">度量</th>
+<th style="text-align: center;">C5 准确率</th>
+<th style="text-align: center;">C1 准确率</th>
+<th style="text-align: center;">C5 <span class="math inline">\(-\)</span> C1 [95% CI], <span class="math inline">\(p\)</span></th>
+<th style="text-align: center;">与 D2 配对 [95% CI], <span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D2（余弦）</td>
+<td style="text-align: center;">0.650 [0.585, 0.715]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-2.0\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.45\)</span></td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.670 [0.605, 0.735]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+4.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+7.5\)</span>], <span class="math inline">\(0.061\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-0.5\)</span>, <span class="math inline">\(+5.0\)</span>], <span class="math inline">\(0.29\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D4（NLI 矛盾）</td>
+<td style="text-align: center;">0.680 [0.615, 0.745]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+5.0\)</span> [<span class="math inline">\(+2.0\)</span>, <span class="math inline">\(+8.5\)</span>], <span class="math inline">\(0.009\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+3.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.077\)</span> (7:1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D2（余弦）</td>
+<td style="text-align: center;">0.860 [0.810, 0.905]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+1.5\)</span>], NS</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.865 [0.815, 0.910]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+3.0\)</span>], NS</td>
+<td style="text-align: center;"><span class="math inline">\(+0.5\)</span> [<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(+2.5\)</span>], <span class="math inline">\(1.0\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D4（NLI 矛盾）</td>
+<td style="text-align: center;" colspan="4"><em>未运行（预算）</em></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="智能体数量-n-与配对种子方差">智能体数量 <span class="math inline">\(N\)</span> 与配对种子方差。</h4>
+<p>未运行（预算）。<span class="math inline">\(N \in \{2,6,8\}\)</span> 消融与配对种子方差研究（C3/C5 的配对种子 1、2，MMLU-Pro 200 题子集）已在预注册中设计并冻结（修订案 8），但未能在剩余 API 预算内执行；我们将其如实报告为缺失而非默默丢弃，并将其缺失计为一项局限（§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>）。</p>
+<h1 id="sec:mechanism">机制分析</h1>
+<p>总体零结果引出一个更尖锐的问题：异配边是否携带<em>任何</em>额外信号？若有，它死在哪里？我们将互审阶段分解为两条方向相反的链（图 <a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>）：<em>正向链</em>——题目至少有一个错误初始答案（E0），互审者检出该错误（E1），提出正确修复（E2），最终答案正确（E3）；<em>反向链</em>——题目至少有一个正确初始答案（C0），互审者错误反对正确的同伴（C1），正确的互审者失稳而更改或怀疑有效答案（C2），最终答案错误（C3）。</p>
+<figure>
+<img src="../figures/F8_repair_funnels.png" id="fig:funnels" style="width:95.0%" alt="F8_repair_funnels" /><figcaption aria-hidden="true">两个基准上的双层题目级漏斗（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。正向链 E0<span class="math inline">\(\to\)</span>E3（错误暴露 <span class="math inline">\(\to\)</span> 检出 <span class="math inline">\(\to\)</span> 提出修复 <span class="math inline">\(\to\)</span> 最终正确）与反向链 C0<span class="math inline">\(\to\)</span>C3（存在正确答案 <span class="math inline">\(\to\)</span> 错误反对 <span class="math inline">\(\to\)</span> 失稳 <span class="math inline">\(\to\)</span> 最终错误）。检出随配对距离上升；解决不随距离上升；反向链在异配配对下变得更重。</figcaption>
+</figure>
+<h2 id="sec:fwd">正向链：距离买来错误暴露</h2>
+<p>FPRR 确实把互审流量转移到可能发生分歧的配对上。按互审者—被审者正误统计有向互审，C5 将 <span class="math inline">\(412/6000\)</span>（<span class="math inline">\(6.9\%\)</span>）的 MMLU-Pro 互审置于正误混合的配对上，随机配对为 <span class="math inline">\(328\)</span>（<span class="math inline">\(5.5\%\)</span>），最近配对为 <span class="math inline">\(320\)</span>（<span class="math inline">\(5.3\%\)</span>）——跨错误边相对增加 <span class="math inline">\(25\)</span>–<span class="math inline">\(30\%\)</span>，与精确最大权重匹配持平（C6：<span class="math inline">\(416\)</span>，<span class="math inline">\(6.9\%\)</span>）。SuperGPQA 上转移更小：C5 将 <span class="math inline">\(1270/8000\)</span>（<span class="math inline">\(15.9\%\)</span>）的互审置于混合配对，随机配对为 <span class="math inline">\(1194\)</span>（<span class="math inline">\(14.9\%\)</span>），最近配对为 <span class="math inline">\(1098\)</span>（<span class="math inline">\(13.7\%\)</span>）（C6：<span class="math inline">\(1330\)</span>，<span class="math inline">\(16.6\%\)</span>）。</p>
+<p>表 <a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a> 将 C5 全部互审按配对距离十分位分层，表 <a href="#tab:review-outcomes" data-reference-type="ref" data-reference="tab:review-outcomes">8</a> 给出总体互审级结果。在两个基准、全部四种配对规则下，检出率随距离陡峭上升，仅有小幅局部非单调（图 <a href="#fig:deciles" data-reference-type="ref" data-reference="fig:deciles">8</a>）：C5 下，P（裁定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被审者错误）在 MMLU-Pro 上从最低十分位的 <span class="math inline">\(0.000\)</span> 升至最高十分位的 <span class="math inline">\(0.379\)</span>，在 SuperGPQA 上从 <span class="math inline">\(0.050\)</span> 升至 <span class="math inline">\(0.361\)</span>；C3–C6 最高十分位检出率横跨 <span class="math inline">\(0.368\)</span>–<span class="math inline">\(0.436\)</span>（MMLU-Pro）与 <span class="math inline">\(0.301\)</span>–<span class="math inline">\(0.361\)</span>（SuperGPQA）。互审对错误答案的检出也远高于自审（C9：<span class="math inline">\(0.091\)</span> / <span class="math inline">\(0.135\)</span>，C3–C6 为 <span class="math inline">\(0.19\)</span>–<span class="math inline">\(0.26\)</span>）。注意在 MMLU-Pro 上取得最高检出率的是 C6 而非 C5（<span class="math inline">\(0.227\)</span>），但它与 C3/C4 的准确率持平：超出随机基线的额外检出在任何路由规则下都没有总体回报。</p>
+<div id="tab:deciles">
+<table>
+<caption>两个基准上 C5（FPRR）按配对距离十分位分层的互审行为（MMLU-Pro：6000 条互审；SuperGPQA：8000 条互审，4 种子）。det = P（裁定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被审者错误）；cor = P（错误被纠正 <span class="math inline">\(\mid\)</span> 被审者错误）；f.o. = P（错误反对 <span class="math inline">\(\mid\)</span> 被审者正确）。十分位区间为余弦距离；边在 C3–C6 上合并。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"></td>
+<td style="text-align: center;" colspan="4">MMLU-Pro (6000 条互审)</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (8000 条互审)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"> 十分位</td>
+<td style="text-align: center;">距离区间</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;">距离区间</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">[0.000, 0.028]</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.000, 0.034]</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.027</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">[0.028, 0.043]</td>
+<td style="text-align: center;">0.073</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.034, 0.051]</td>
+<td style="text-align: center;">0.083</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.018</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">[0.043, 0.056]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.006</td>
+<td style="text-align: center;">[0.051, 0.066]</td>
+<td style="text-align: center;">0.178</td>
+<td style="text-align: center;">0.079</td>
+<td style="text-align: center;">0.030</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">[0.056, 0.069]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">[0.066, 0.078]</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.123</td>
+<td style="text-align: center;">0.039</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">[0.069, 0.081]</td>
+<td style="text-align: center;">0.105</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">[0.078, 0.090]</td>
+<td style="text-align: center;">0.229</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.079</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">[0.081, 0.094]</td>
+<td style="text-align: center;">0.200</td>
+<td style="text-align: center;">0.130</td>
+<td style="text-align: center;">0.023</td>
+<td style="text-align: center;">[0.090, 0.104]</td>
+<td style="text-align: center;">0.258</td>
+<td style="text-align: center;">0.129</td>
+<td style="text-align: center;">0.065</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">[0.094, 0.111]</td>
+<td style="text-align: center;">0.156</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">[0.104, 0.119]</td>
+<td style="text-align: center;">0.279</td>
+<td style="text-align: center;">0.155</td>
+<td style="text-align: center;">0.072</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">[0.111, 0.130]</td>
+<td style="text-align: center;">0.236</td>
+<td style="text-align: center;">0.127</td>
+<td style="text-align: center;">0.030</td>
+<td style="text-align: center;">[0.119, 0.138]</td>
+<td style="text-align: center;">0.262</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">[0.130, 0.161]</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.103</td>
+<td style="text-align: center;">0.043</td>
+<td style="text-align: center;">[0.138, 0.168]</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">0.151</td>
+<td style="text-align: center;">0.090</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">[0.161, 1.000]</td>
+<td style="text-align: center;">0.379</td>
+<td style="text-align: center;">0.209</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">[0.168, 1.000]</td>
+<td style="text-align: center;">0.361</td>
+<td style="text-align: center;">0.171</td>
+<td style="text-align: center;">0.097</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:review-outcomes">
+<table>
+<caption>互审级结果。det = P（裁定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被审者错误）；f.o. = P（错误反对 <span class="math inline">\(\mid\)</span> 被审者正确）。SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 种子)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> 条互审</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> 条互审</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3 随机</td>
+<td style="text-align: center;">5928</td>
+<td style="text-align: center;">0.202</td>
+<td style="text-align: center;">0.012</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.241</td>
+<td style="text-align: center;">0.054</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4 最近</td>
+<td style="text-align: center;">5918</td>
+<td style="text-align: center;">0.192</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">7568</td>
+<td style="text-align: center;">0.231</td>
+<td style="text-align: center;">0.057</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 FPRR</td>
+<td style="text-align: center;">5912</td>
+<td style="text-align: center;">0.212</td>
+<td style="text-align: center;">0.020</td>
+<td style="text-align: center;">7570</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.063</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6 最大权重</td>
+<td style="text-align: center;">5902</td>
+<td style="text-align: center;">0.227</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.254</td>
+<td style="text-align: center;">0.062</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9 自审</td>
+<td style="text-align: center;">5943</td>
+<td style="text-align: center;">0.091</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">7668</td>
+<td style="text-align: center;">0.135</td>
+<td style="text-align: center;">0.037</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="../figures/F5_decile_correction_mmlu_pro.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="F5_decile_correction_mmlu_pro" /> <img src="../figures/F5_decile_correction_supergpqa.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="F5_decile_correction_supergpqa" /></p>
+<h4 id="分阶段回归错误暴露与解决">分阶段回归：错误暴露与解决。</h4>
+<p>为定位距离<em>究竟</em>作用于何处，我们在配对距离上拟合三个 logistic 回归（C3–C6 合并互审）：检出错误的被审者、在检出条件下提出正确修复、在存在修复条件下最终答案正确（表 <a href="#tab:stage-reg" data-reference-type="ref" data-reference="tab:stage-reg">9</a>）。MMLU-Pro 上只有检出阶段对距离敏感（<span class="math inline">\(\beta = +12.2\)</span>，<span class="math inline">\(p&lt;0.0001\)</span>）；向修复（<span class="math inline">\(p=0.20\)</span>）与采纳（<span class="math inline">\(p=0.84\)</span>）的传播是平的。SuperGPQA 上三个阶段全部显著（<span class="math inline">\(\beta = +7.5\)</span>、<span class="math inline">\(+1.7\)</span>、<span class="math inline">\(+7.3\)</span>；<span class="math inline">\(p\)</span> 分别为 <span class="math inline">\(&lt;0.0001\)</span>、<span class="math inline">\(0.016\)</span>、<span class="math inline">\(&lt;0.0001\)</span>）——距离在那里确实传播到了解决——但总体准确率仍不动，因为反向链（§<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a>）随同一距离放大。因此精确的陈述是：<em>距离改善错误暴露；错误暴露是否传播为解决，取决于具体情形。</em></p>
+<div id="tab:stage-reg">
+<table>
+<caption>正向链事件对配对余弦距离的分阶段 logistic 回归（C3–C6 合并互审；SuperGPQA：4 种子）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">基准</th>
+<th style="text-align: left;">阶段（结果）</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(\beta_{\mathrm{dist}}\)</span> (SE)</th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P（检出 <span class="math inline">\(\mid\)</span> 被审者错误）</td>
+<td style="text-align: center;">4040</td>
+<td style="text-align: center;"><span class="math inline">\(+12.20\)</span> (0.75)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P（正确修复 <span class="math inline">\(\mid\)</span> 已检出）</td>
+<td style="text-align: center;">796</td>
+<td style="text-align: center;"><span class="math inline">\(+1.64\)</span> (1.29)</td>
+<td style="text-align: center;"><span class="math inline">\(0.203\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P（最终正确 <span class="math inline">\(\mid\)</span> 存在修复）</td>
+<td style="text-align: center;">321</td>
+<td style="text-align: center;"><span class="math inline">\(-0.52\)</span> (2.66)</td>
+<td style="text-align: center;"><span class="math inline">\(0.844\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P（检出 <span class="math inline">\(\mid\)</span> 被审者错误）</td>
+<td style="text-align: center;">14124</td>
+<td style="text-align: center;"><span class="math inline">\(+7.54\)</span> (0.37)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P（正确修复 <span class="math inline">\(\mid\)</span> 已检出）</td>
+<td style="text-align: center;">3161</td>
+<td style="text-align: center;"><span class="math inline">\(+1.68\)</span> (0.70)</td>
+<td style="text-align: center;"><span class="math inline">\(0.016\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P（最终正确 <span class="math inline">\(\mid\)</span> 存在修复）</td>
+<td style="text-align: center;">1224</td>
+<td style="text-align: center;"><span class="math inline">\(+7.30\)</span> (1.52)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:oracle">互审超过初始回答候选选择神谕——但几乎无法交付</h2>
+<p><em>初始回答候选选择神谕</em>——总是从四个缓存初始答案中选出最佳者——在 MMLU-Pro 上可得 <span class="math inline">\(0.883\)</span>、在 SuperGPQA 上可得 <span class="math inline">\(0.697\)</span>，而最佳实际条件为 <span class="math inline">\(0.845\)</span> 与 <span class="math inline">\(0.614\)</span>（差距约 <span class="math inline">\(3.7\)</span>pp 与 <span class="math inline">\(8.3\)</span>pp，按未舍入值 <span class="math inline">\(0.8827\)</span> 对 <span class="math inline">\(0.8453\)</span>、<span class="math inline">\(0.6965\)</span> 对 <span class="math inline">\(0.614\)</span> 计算；表中的舍入值显示 <span class="math inline">\(3.8\)</span>pp）。同期工作在更大规模上得到相同诊断：跨 15<span>,</span>336 道题、81<span>,</span>390 个固定候选池，Ji 等 [41] 表明正确答案经常存在于候选集中却未被选中，且裁判可靠性随任务、生成者与正确答案的稀有度而变化。我们的候选选择神谕差距在完全受控的相同回答集下证实了这一候选供给瓶颈，并通过度量互审在候选池<em>之外</em>新增了什么而将其进一步推进。然而，该神谕<em>不是</em>审议系统的上限，因为互审者可以产生初始集 <span class="math inline">\(R_x\)</span> 之外的答案。他们确实做到了：在四个初始答案全错的题目上（MMLU-Pro 176/1500，<span class="math inline">\(11.7\%\)</span>；SuperGPQA 607/2000，<span class="math inline">\(30.4\%\)</span>），互审在 <span class="math inline">\(0\)</span>–<span class="math inline">\(2.3\%\)</span>（MMLU-Pro）与 <span class="math inline">\(3.1\)</span>–<span class="math inline">\(4.1\%\)</span>（SuperGPQA）的情形下（跨条件）产生了 <span class="math inline">\(R_x\)</span> 之外的正确答案——互审阶段的输出在经验上不只是初始答案的函数。</p>
+<p>但交付正是这些新信息死亡之处（表 <a href="#tab:delivery" data-reference-type="ref" data-reference="tab:delivery">10</a>）。端到端看，新颖正确提议进入最终答案的比例为：MMLU-Pro 上 C5 为 <span class="math inline">\(1/176\)</span> 题（<span class="math inline">\(0.6\%\)</span>），SuperGPQA 上至多 <span class="math inline">\(9/607\)</span>（<span class="math inline">\(1.5\%\)</span>）（C9；C5：<span class="math inline">\(8/607 = 1.3\%\)</span>）；「提出未交付」列量化了这一损失——例如 C3 在 MMLU-Pro 上提出 <span class="math inline">\(4\)</span> 个新颖正确答案但交付为零，C5 在 SuperGPQA 上提出 <span class="math inline">\(25\)</span> 个但仅采纳 <span class="math inline">\(6\)</span> 个（损失 <span class="math inline">\(19\)</span> 个）。在一致全错子集（120 与 401 题）内，每个条件的最终答案在至少 <span class="math inline">\(99.2\%\)</span>（MMLU-Pro）与 <span class="math inline">\(98.0\%\)</span>（SuperGPQA）的情形下仍然错误：互审能<em>创造</em>缺失的答案，但流水线无法<em>识别</em>它。</p>
+<div id="tab:delivery">
+<table>
+<caption>全错题上的新颖正确交付审计（四个初始答案全错；MMLU-Pro：176 题，3 种子；SuperGPQA：607 题，4 种子）。新颖提出 = 互审提出了初始集中没有的正确答案；最终正确 = 题目最终答对；提出未交付 = 已提出但未被采纳进入最终答案。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: center;" colspan="4">MMLU-Pro</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (4 种子)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">新颖提出</td>
+<td style="text-align: center;">最终正确</td>
+<td style="text-align: center;">被采纳</td>
+<td style="text-align: center;">提出未交付</td>
+<td style="text-align: center;">新颖提出</td>
+<td style="text-align: center;">最终正确</td>
+<td style="text-align: center;">被采纳</td>
+<td style="text-align: center;">提出未交付</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">25</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">19</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">13</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:rev">反向链：失稳，而非离群放大</h2>
+<p>我们在预实验时期对正确多数腐化的工作解释是<em>离群放大</em>：最远配对优先把唯一的错误离群答案接到某个正确智能体上。完整数据否定了它作为总体机制的地位。在 3:1 的答案分裂中——通过只比较具有相同分裂结构的题目来控制题目难度——单例答案正确的概率确实远低于多数（MMLU-Pro 上 <span class="math inline">\(20.8\%\)</span> 对 <span class="math inline">\(57.6\%\)</span>；SuperGPQA 上 <span class="math inline">\(28.4\%\)</span> 对 <span class="math inline">\(44.7\%\)</span>）：遥远、反常的答案不成比例地错误。但每题<em>最大距离</em>边的两个端点出错的概率基本等于基准率（MMLU-Pro：<span class="math inline">\(17.1\%\)</span> 对最小距离边的 <span class="math inline">\(16.3\%\)</span>，基准率 <span class="math inline">\(16.8\%\)</span>；SuperGPQA：<span class="math inline">\(44.7\%\)</span> 对 <span class="math inline">\(43.6\%\)</span>，基准率 <span class="math inline">\(44.1\%\)</span>）：最远配对<em>并不</em>系统性地选择错误伙伴。因此我们不再把离群放大当作总体解释；3:1 结果仅保留为「离群答案准确率低」，而非「FPRR 选了坏伙伴」。</p>
+<p>反向链实际展示的是<em>错误反对与有效答案失稳</em>。错误反对随配对距离上升（表 <a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a>：MMLU-Pro C5 下从 <span class="math inline">\(0.002\)</span> 升至 <span class="math inline">\(0.051\)</span>；SuperGPQA 最大权重配对下最高 <span class="math inline">\(0.104\)</span>）。在题目层面（图 <a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>，C 侧），MMLU-Pro 上 C5 下正确互审者的失稳比 C3 更重（<span class="math inline">\(50/1324 = 4\%\)</span> 对 <span class="math inline">\(27/1324 = 2\%\)</span>；最终转错 <span class="math inline">\(33\)</span> 对 <span class="math inline">\(23\)</span>）——C5 位于 MMLU-Pro 反向漏斗的顶端——而 SuperGPQA 上所有互审条件的反向链都很重（失稳 <span class="math inline">\(0.07\)</span>–<span class="math inline">\(0.08\)</span>）。语义不相似并没有把互审路由到错误伙伴；它制造的是对正确答案的反对。</p>
+<p>预注册的次要指标（表 <a href="#tab:secondary" data-reference-type="ref" data-reference="tab:secondary">11</a>）与共识迁移（图 <a href="#fig:transitions" data-reference-type="ref" data-reference="fig:transitions">10</a>）量化了由此产生的平衡。互审条件比投票更经常地挽回多数错误——但在 MMLU-Pro 上名义最好的是<em>随机</em>配对而非 FPRR（挽回率 <span class="math inline">\(0.099\)</span>；营救率 <span class="math inline">\(0.082\)</span>）；在 SuperGPQA 上无互审合成器 C2（<span class="math inline">\(0.099\)</span> / <span class="math inline">\(0.100\)</span>）在没有任何互审的情况下追平最好的互审条件（C4：<span class="math inline">\(0.098\)</span> / <span class="math inline">\(0.106\)</span>），而 C5 是除 C9 外最弱的互审条件（<span class="math inline">\(0.089\)</span> / <span class="math inline">\(0.096\)</span>）。相对 0 号智能体的初始答案，MMLU-Pro 互审条件把 <span class="math inline">\(15.2\)</span>–<span class="math inline">\(18.0\%\)</span> 的初始错误情形翻正，同时腐化 <span class="math inline">\(1.5\)</span>–<span class="math inline">\(2.1\%\)</span> 的初始正确情形（C5：<span class="math inline">\(16.0\%\)</span> / <span class="math inline">\(2.1\%\)</span>；C1 投票：<span class="math inline">\(11.7\%\)</span> / <span class="math inline">\(0.5\%\)</span>）；SuperGPQA 上这一权衡几乎对称（C5：<span class="math inline">\(17.2\%\)</span> 对 <span class="math inline">\(6.8\%\)</span>）——这正是更难的基准上没有任何净收益得以实现的原因。</p>
+<div id="tab:secondary">
+<table>
+<caption>次要指标（各条件比率）。rec = 多数错误挽回率；cor = 正确多数腐化率；res = 少数派营救率。SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 种子)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.024</td>
+<td style="text-align: center;">0.032</td>
+<td style="text-align: center;">0.048</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.064</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.022</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.040</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.082</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.098</td>
+<td style="text-align: center;">0.054</td>
+<td style="text-align: center;">0.106</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">0.078</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.096</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.017</td>
+<td style="text-align: center;">0.064</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.099</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.036</td>
+<td style="text-align: center;">0.070</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.075</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="../figures/F6_error_transitions_mmlu_pro.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="F6_error_transitions_mmlu_pro" /> <img src="../figures/F6_error_transitions_supergpqa.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="F6_error_transitions_supergpqa" /></p>
+<h2 id="sec:btr">互审活跃但净零：有益迁移率</h2>
+<p>C5 与自审对照 C9 准确率持平，可能意味着互审是冗余的——也可能意味着它在两个方向上都活跃并相互抵消。C2<span class="math inline">\(\leftrightarrow\)</span>C5 的题目级迁移给出了裁决：在同一合成流水线上加入互审，把 <span class="math inline">\(27\)</span> 道 MMLU-Pro 题目从错翻正、<span class="math inline">\(23\)</span> 道从正翻错（净 <span class="math inline">\(+4\)</span>；<span class="math inline">\(1450\)</span> 道不变），SuperGPQA 上为 <span class="math inline">\(49\)</span> 对 <span class="math inline">\(79\)</span>（净 <span class="math inline">\(-30\)</span>；<span class="math inline">\(1872\)</span> 道不变）。互审是<em>活跃</em>的，且在 SuperGPQA 上活跃地为净负——与表 <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a> 中显著的 C2 <span class="math inline">\(&gt;\)</span> C5 差距互为镜像。我们将其概括为<strong>有益迁移率</strong>，<span class="math inline">\(\mathrm{BTR} = \#\text{获救} / (\#\text{获救} + \#\text{受害})\)</span>：MMLU-Pro 上 <span class="math inline">\(0.54\)</span>，SuperGPQA 上 <span class="math inline">\(0.383\)</span>。（BTR 由 C2 与 C5 的逐题迁移计数计算；它不是对所有答案修改事件的精度，后者需要对每一次互审引起的编辑做单独审计。）</p>
+<h2 id="sec:subsets">拓扑有处理作用的子集</h2>
+<p>有一种稀释批评认为，总体零结果不提供信息，因为大多数题目的答案一致，任何拓扑都无从作用。因此我们限制到<em>分歧子集</em>（初始答案不一致；MMLU-Pro 上 <span class="math inline">\(223\)</span> 题，<span class="math inline">\(14.9\%\)</span>；SuperGPQA 上 <span class="math inline">\(754\)</span> 题，<span class="math inline">\(37.7\%\)</span>）与<em>可挽回子集</em>（正确答案出现在初始回答中的分歧题；<span class="math inline">\(59\)</span> 题，<span class="math inline">\(3.9\%\)</span>；与 <span class="math inline">\(234\)</span> 题，<span class="math inline">\(11.7\%\)</span>）。表 <a href="#tab:subsets" data-reference-type="ref" data-reference="tab:subsets">12</a> 驳回了稀释反驳，但也不支持任何条件性论断：C5 在两个基准上都<em>落后</em>于 C3——在 MMLU-Pro 分歧子集与可挽回子集上分别落后 <span class="math inline">\(3.1\)</span>pp 与 <span class="math inline">\(13.6\)</span>pp，在对应的 SuperGPQA 子集上落后 <span class="math inline">\(2.0\)</span>pp 与 <span class="math inline">\(1.7\)</span>pp（SuperGPQA 可挽回子集上 C5 对 C4：<span class="math inline">\(-3.4\)</span>pp）。方向在两个基准上一致为负，但每个置信区间都跨零——在拓扑有空间发挥作用之处，FPRR 没有表现出收益，只有一致的、不显著的惩罚。</p>
+<div id="tab:subsets">
+<table>
+<caption>在配对拓扑能够发挥作用的子集上 C5 与 C3 的比较（配对自助 CI；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">基准</th>
+<th style="text-align: left;">子集</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;">C3 准确率</th>
+<th style="text-align: center;">C5 准确率</th>
+<th style="text-align: center;">C5<span class="math inline">\(-\)</span>C3 (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">分歧</td>
+<td style="text-align: center;">223</td>
+<td style="text-align: center;">0.498</td>
+<td style="text-align: center;">0.466</td>
+<td style="text-align: center;"><span class="math inline">\(-3.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.1\)</span>, <span class="math inline">\(+1.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">可挽回</td>
+<td style="text-align: center;">59</td>
+<td style="text-align: center;">0.475</td>
+<td style="text-align: center;">0.339</td>
+<td style="text-align: center;"><span class="math inline">\(-13.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-25.4\)</span>, <span class="math inline">\(+0.0\)</span>]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">分歧</td>
+<td style="text-align: center;">754</td>
+<td style="text-align: center;">0.488</td>
+<td style="text-align: center;">0.468</td>
+<td style="text-align: center;"><span class="math inline">\(-2.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-4.8\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">可挽回</td>
+<td style="text-align: center;">234</td>
+<td style="text-align: center;">0.402</td>
+<td style="text-align: center;">0.385</td>
+<td style="text-align: center;"><span class="math inline">\(-1.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.6\)</span>, <span class="math inline">\(+5.1\)</span>]</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:what">什么穿过了异配边？</h2>
+<p>直接回答本文的问题：最远配对边<em>确实</em>携带了随机边与最近边携带得更少的信号——对真正错误同伴的更多检出（MMLU-Pro 上 <span class="math inline">\(301\)</span> 对 <span class="math inline">\(254\)</span> 与 <span class="math inline">\(260\)</span> 个 <code>PEER INCORRECT</code> 裁定；检出率 <span class="math inline">\(0.212\)</span> 对 <span class="math inline">\(0.202\)</span>/<span class="math inline">\(0.192\)</span>），且集中在高距离十分位，那里的检出率是低十分位的 <span class="math inline">\(3\)</span>–<span class="math inline">\(10\)</span> 倍。三个发现概括了这些信号的去向。<em>(a)</em> 语义距离可靠地增加错误暴露；错误暴露是否传播到修复与采纳取决于具体情形（MMLU-Pro：仅检出；SuperGPQA：三个阶段全部），而反向链在每个阶段都随同一距离放大——因此净收益在 MMLU-Pro 上为零、在 SuperGPQA 上为负（BTR <span class="math inline">\(0.54\)</span> 对 <span class="math inline">\(0.383\)</span>）。<em>(b)</em> 互审在 <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> 的全错题上产生超出初始回答候选选择神谕的新颖正确答案，但端到端交付 <span class="math inline">\(\le 1.5\%\)</span>，多数提议在提出与采纳之间丢失。<em>(c)</em> 约束瓶颈是认识信用分配：缺乏非对称验证时，系统无法区分纠正性分歧与错误反对。最不同 <span class="math inline">\(\neq\)</span> 最有教益。</p>
+<h1 id="sec:cases">案例分析</h1>
+<p>四道 MMLU-Pro 题目（均为种子 0）展示上述量化的机制；完整记录、距离矩阵与各条件最终答案见 <code>results/case_studies_mmlu_pro.md</code>。</p>
+<h4 id="成功纠正qid-11344">成功纠正（qid 11344）。</h4>
+<p>一道换热器设计题（金标：D）。四个智能体回答 B、E、D、C——一个错误多数（B）与一个正确智能体（2 号）。C5 配对 <span class="math inline">\((0,1)\)</span> 与 <span class="math inline">\((2,3)\)</span>；2 号裁定 3 号 <code>PEER INCORRECT</code>，3 号更新为 D 并认可 2 号（<code>PEER CORRECT</code>）。合成器恢复 D，而 C0、C1、C2、C9 都输出多数的 B。这是流水线按设计工作的案例——但值得注意的是 C3、C4、C6 在此同样恢复 D，因此该成功并非最远配对的特异效果。</p>
+<h4 id="少数派营救qid-10203">少数派营救（qid 10203）。</h4>
+<p>一道偏振片/半波片堆叠题（金标：J）。0 号与 1 号未能产生可解析的答案；仅 2 号答 J，3 号答 C。C5 下（配对 <span class="math inline">\((0,1)\)</span>、<span class="math inline">\((2,3)\)</span>），四份互审全部收敛：正确配对中的两个智能体都认可 J，2 号将 3 号标记为 <code>PEER INCORRECT</code>，每位互审者都更新为 J。所有聚合条件都恢复 J；只有 C0（0 号）仍然错误。互审把脆弱的单个正确样本转化为共识——但纯投票在此同样如此（不可解析的答案不参与投票），再次表明拓扑不是活性成分。</p>
+<h4 id="正确多数的失稳qid-12037">正确多数的失稳（qid 12037）。</h4>
+<p>一道管道流动功率题（金标：D）。三个智能体答 D；离群的 2 号答 A。最远配对（C5，C6 完全相同）把离群者接到正确的 0 号。离群者宣布 0 号 <code>PEER INCORRECT</code> 并坚持 A；与此同时，3 号在互审 1 号的正确 D 时改答 H。面对被打乱的互审记录，合成器为 C5（以及 C3）输出 A——一个正确多数被摧毁——而 C4 与 C6 仍为 D。我们将此呈现为 §<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a> 的<em>失稳</em>机制实例——一个遥远的同伴制造了对正确答案的反对——而不是最远配对系统性选择错误伙伴的证据：在总体层面它并不如此（最大距离边端点以基准率出错）。</p>
+<h4 id="共同误解qid-10012">共同误解（qid 10012）。</h4>
+<p>一道能量守恒抛体题（金标：I）。四个智能体都独立回答 A，两两距离 <span class="math inline">\(0.099\)</span>–<span class="math inline">\(0.243\)</span> 完全来自对同一错误推导的不同措辞。所有 C5 互审均返回 <code>PEER CORRECT</code>，每个条件——C0 到 C9——都输出 A。嵌入距离分开的是措辞，不是误解；当错误被共享时，异配互审为其背书。</p>
+<h1 id="sec:discussion">讨论</h1>
+<h4 id="干净的零结果及其信息量所在">干净的零结果，及其信息量所在。</h4>
+<p>在相同初始回答、相同提示与相同算力下，互审的<em>谁</em>并不重要：最远配对、最近配对、随机与精确最大权重匹配在 MMLU-Pro 上彼此相差在 0.6pp 以内、在 SuperGPQA 上相差在 0.4pp 以内，且无一胜过多数投票或算力匹配自审。这把「同质智能体之间的交流很少胜过聚合」 [6, 7] 这一新兴图景扩展到了路由维度：不仅是广播式辩论不增值——对同样样本的任何两两连线方式也都不增值。</p>
+<h4 id="为何相关簇直觉在此没有兑现">为何相关簇直觉在此没有兑现。</h4>
+<p>FPRR 的设计前提是：采样答案形成相关推理簇，跨簇配对能最大化诊断对比度。前提成立，但簇太小，无从绕行。MMLU-Pro 上 <span class="math inline">\(85.1\%\)</span> 的观测答案一致（<span class="math inline">\(77.1\%\)</span> 一致正确，<span class="math inline">\(8.0\%\)</span> 一致错误），四个样本中唯一答案数的均值为 <span class="math inline">\(1.166\)</span>，平均两两余弦距离为 <span class="math inline">\(0.087\)</span>；SuperGPQA 更具争议，但仍属低多样性（<span class="math inline">\(62.3\%\)</span> 一致，<span class="math inline">\(1.355\)</span> 个唯一答案，平均距离 <span class="math inline">\(0.095\)</span>）。当四个智能体中有三个说同样的话时，每种匹配规则产生的边集至多只差一对——这正是准确率表所显示的。异配路由预设了可利用的分歧质量；在温度 <span class="math inline">\(0.8\)</span>、强模型、饱和基准下，这种质量微乎其微。</p>
+<h4 id="错误暴露不是解决且两者都不免费">错误暴露不是解决，且两者都不免费。</h4>
+<p>机制结果把辩论文献常混为一谈的两个量分开了。语义距离稳健地增加错误<em>暴露</em>：互审者在最高距离十分位标记错误同伴的频率比最低十分位高出一个数量级。但暴露向修复与采纳的传播取决于具体情形——MMLU-Pro 上是平的，SuperGPQA 上三个阶段全部显著——而反向链在各处都随同一距离放大：错误反对（最高十分位达 <span class="math inline">\(0.10\)</span>）与正确互审者失稳（MMLU-Pro 上 C5 下 <span class="math inline">\(4\%\)</span> 的题目，C3 下 <span class="math inline">\(2\%\)</span>）。值得注意的是，反向链不能用最远配对选择了坏伙伴来解释：最大距离边端点以基准率出错。因此，在这一情形下，基于互审的流水线的约束瓶颈是<em>认识信用分配</em>：互审者与合成器无法区分纠正性分歧与错误反对，因为两者都以遥远且论证自信的答案形式到来——没有非对称验证，拓扑买来的每单位暴露都以失稳偿还。</p>
+<h4 id="系统层收益不是内在收益">系统层收益不是内在收益。</h4>
+<p>在多样本条件确实胜过单回答基线之处——最清楚的是 SuperGPQA，所有 <span class="math inline">\(N{=}4\)</span> 条件相对 C0 约 <span class="math inline">\(+4\)</span>pp——收益被投票与无互审合成同等捕获；事实上在 SuperGPQA 上无互审合成<em>显著</em>超过互审（C2 对 C5：<span class="math inline">\(+1.5\)</span>pp，<span class="math inline">\(p=0.010\)</span> 未校正），因此互审在那里是净成本，而不仅仅是零结果。我们的结果中没有任何东西表明互惠互审改变了模型所<em>知道</em>的东西；它只是对模型已经产生的答案重新加权，而在这些基准上投票以五分之一的 token 成本做到了同样好的重新加权。对互审或辩论收益的报告，应对照算力匹配自审控制与投票下限来阅读；在我们的数据中，两者完全解释了该效应。</p>
+<h1 id="sec:limitations">局限性</h1>
+<p>若干效度威胁限定着这些发现。</p>
+<p><strong>算力开销。</strong> 互审条件的 token 成本约为多数投票的 <span class="math inline">\({\sim}5\times\)</span>、单个回答的 <span class="math inline">\({\sim}20\times\)</span>，而总体收益为零；我们的成本分析是描述性的，未测试更廉价的互审变体（更短评审、更少配对）。</p>
+<p><strong>相关错误是结构性的。</strong> 所有智能体是同一服务商提供的同一检查点，因此同源相关错误（共同误解，占观测的 <span class="math inline">\(8.0\%\)</span>–<span class="math inline">\(21.6\%\)</span>）给任何模型内互审方案能够恢复的上限设了界；异质模型池可能表现不同。</p>
+<p><strong>基准污染。</strong> MMLU-Pro 与 SuperGPQA 是公开基准，可能已部分曝光于训练数据。污染抬高绝对准确率并压缩余量；由于它对所有条件作用相同，配对差值仍可解释，但我们能够检测的效应量受剩余余量约束。</p>
+<p><strong>嵌入依赖。</strong> 距离来自单一编码器（bge-m3）作用于结论 + 理由文本。嵌入距离度量的是表层语义不相似，而非逻辑分歧——qid 10012 显示相同误解的距离可达 <span class="math inline">\(0.24\)</span>。探索性度量消融（表 <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>）只部分缓解这一点：它是单种子、每基准 200 题，且缺 MMLU-Pro D4，因此 SuperGPQA 上的 D4 优势需要复现之后，才能拿来与主要零结果相权衡。</p>
+<p><strong>裁判与合成器偏置。</strong> 合成器与智能体是同一模型，可能共享它们的偏置（例如偏向自信或冗长的答案）；其提示跨条件冻结，因此该偏置不能解释条件间差异，但它塑造所有互审条件的结果。</p>
+<p><strong>单一模型、单一解码配置。</strong> 主运行使用一个检查点、一个温度（<span class="math inline">\(0.8\)</span>）、一个 <span class="math inline">\(N\)</span>；服务商不暴露种子参数，因此 API 非确定性无法用种子固定（我们控制的所有随机元素——采样、配对、打乱——都已带种子并记录）。该零结果可能无法迁移到多样性更高的情形（更高温度、异质集成、更难或更不饱和的任务），那里分歧质量更大。</p>
+<p><strong>范围与依赖性。</strong> 两个基准；SuperGPQA 基于四个种子（MMLU-Pro 为三个）。跨种子观测共享题目，因此合并自助 CI 与 McNemar <span class="math inline">\(p\)</span> 值轻度反保守——这反而使主要比较的零结论更为保守，它们无一接近显著。预注册的 <span class="math inline">\(N\)</span> 消融与配对种子方差研究（修订案 8）因预算未运行，因此我们无法量化零结果对 <span class="math inline">\(N\)</span> 或配对随机性的敏感度；距离消融是单种子的。</p>
+<h1 id="sec:conclusion">结论</h1>
+<p>按预注册的判定标准，本研究落入<strong>结果类别 D——零结果</strong>：在相同缓存回答上，最远配对互惠互审在 MMLU-Pro（最终，3 种子）与 SuperGPQA（4 种子）上与随机配对、最近配对、精确最大权重匹配、多数投票及算力匹配自审在统计上不可区分，所有主要效应量在 <span class="math inline">\(\pm 1\)</span>pp 以内，所有 Holm 校正 <span class="math inline">\(p\)</span> 值 <span class="math inline">\(\geq 0.92\)</span>。谁审谁并不重要——在这一情形下。若说有差别，互审在更难的基准上略逊于不互审（C2 <span class="math inline">\(&gt;\)</span> C5 <span class="math inline">\(1.5\)</span>pp，<span class="math inline">\(p=0.010\)</span> 未校正）。一条探索性注解对这一分类构成限定但不予改变：在单种子距离消融中，感知分歧的 NLI 矛盾度量（D4）在更难的基准上优于纯语义距离（D4 <span class="math inline">\(-\)</span> D2 <span class="math inline">\(= +3.0\)</span>pp，CI <span class="math inline">\([+0.5, +6.0]\)</span>，不一致题目 <span class="math inline">\(7\)</span> 对 <span class="math inline">\(1\)</span>；表 <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>）——这是「<em>认识上的对立</em>（而非文本差异）才是值得路由的量」的首个暗示，它把这一零结果与分歧感知路由的工作联系起来。</p>
+<p>我们认为，机制分析才是持久的贡献。语义距离在两个基准、所有配对规则下可靠地增加错误<em>暴露</em>，但暴露是否传播到修复与采纳取决于具体情形——而错误反对与失稳的反向链在每个阶段都随同一距离放大，因此净收益为零或更差。互审既不是冗余的，也不受初始答案集约束：它双向翻转题目（BTR <span class="math inline">\(0.54\)</span> / <span class="math inline">\(0.383\)</span>），并在 <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> 的全错题上产生新颖正确答案，但这些新信息的端到端交付 <span class="math inline">\(\le 1.5\%\)</span>。同质智能体之间的互审之所以失败，不是因为互审者看不到分歧，也不是因为说不出新东西——而是因为系统无法分配信用：没有非对称验证，纠正性分歧与错误反对不可区分。</p>
+<p>由此引出三个方向。第一，在分歧质量真实存在之处重测异配路由：更高温度或异质模型池、更不饱和的任务、更大的 <span class="math inline">\(N\)</span>。第二，先稳定再路由：保护正确答案免受距离诱导的错误反对（例如裁定条件化的合成，或对挑战的非对称验证），直接针对失稳链。第三，把认识信用分配本身作为研究对象——互审者校准、提议到采纳的交付、冲突评审下的裁决——因为我们的漏斗与分阶段回归表明，基于互审的测试时扩展的约束瓶颈是它，而非路由。</p>
+<h1 id="references">参考文献</h1>
+<div class="thebibliography">
+<ol>
+  <li id="bib-wang2022selfconsistency">WANG X, WEI J, SCHUURMANS D, et al. Self-consistency improves chain of thought reasoning in language models[C]//Proceedings of ICLR. 2023. arXiv:2203.11171.</li>
+  <li id="bib-du2023multiagent">DU Y, et al. Improving factuality and reasoning in language models through multiagent debate[C]//Proceedings of ICML. 2024. arXiv:2305.14325.</li>
+  <li id="bib-chen2023reconcile">CHEN J, et al. ReConcile: Round-table conference improves reasoning via consensus among diverse LLMs[C]//Proceedings of ACL. 2024. arXiv:2309.13007.</li>
+  <li id="bib-li2024moreagents">LI J, et al. More agents is all you need[EB/OL]. (2024). arXiv:2402.05120.</li>
+  <li id="bib-estornell2024multillm">ESTORNELL A, LIU Y. Multi-LLM debate: Framework, principals, and interventions[C]//Proceedings of NeurIPS. 2024. OpenReview sy7eSEXdPC.</li>
+  <li id="bib-yang2025revisiting">YANG Z, et al. Revisiting multi-agent debate as test-time scaling: A systematic study of conditional effectiveness[EB/OL]. (2025). arXiv:2505.22960.</li>
+  <li id="bib-choi2025debateorvote">CHOI, ZHU, LI. Debate or vote: Which yields better decisions in multi-agent large language models?[C]//Proceedings of NeurIPS. 2025. arXiv:2508.17536.</li>
+  <li id="bib-wu2025reallydebate">WU, et al. Can LLM agents really debate? A controlled study of multi-agent debate in logical reasoning[EB/OL]. (2025). arXiv:2511.07784.</li>
+  <li id="bib-zhu2026demystifying">ZHU, et al. Demystifying multi-agent debate: The role of confidence and diversity[EB/OL]. (2026). arXiv:2601.19921.</li>
+  <li id="bib-nguyen2026dars">NGUYEN, et al. Hear both sides: Efficient multi-agent debate via diversity-aware message retention[EB/OL]. (2026). arXiv:2603.20640.</li>
+  <li id="bib-zeng2025s2mad">ZENG, et al. S<sup>2</sup>-MAD: Breaking the token barrier to enhance multi-agent debate efficiency[C]//Proceedings of NAACL. 2025. arXiv:2502.04790.</li>
+  <li id="bib-rmoa2025">XIE, et al. RMoA: Optimizing mixture-of-agents through diversity maximization and residual compensation[C]//Findings of ACL. 2025.</li>
+  <li id="bib-cortexdebate2025">SUN, et al. CortexDebate: Debating with sparse, dynamic and trust-aware topology[C]//Findings of ACL. 2025. arXiv:2507.03928.</li>
+  <li id="bib-dysco2026">GOU, LIU. DySCo: Dynamic trust-aware sparse consensus[EB/OL]. (2026). arXiv:2606.01828.</li>
+  <li id="bib-dytopo2026">DyTopo: Dynamic topology routing for multi-agent systems[EB/OL]. (2026). arXiv:2602.06039.</li>
+  <li id="bib-mace2026">LI, et al. Multi-agent LLMs fail to explore each other / MACE[EB/OL]. (2026). arXiv:2607.11250.</li>
+  <li id="bib-gptswarm">ZHUGE, et al. GPTSwarm: Language agents as optimizable graphs[C]//Proceedings of ICML. 2024. arXiv:2402.16823.</li>
+  <li id="bib-dylan">LIU, et al. Dynamic LLM-agent network (DyLAN)[C]//Proceedings of COLM. 2024. arXiv:2310.02170.</li>
+  <li id="bib-agentprune">ZHANG, et al. AgentPrune: Reducing redundancy in multi-agent communication[C]//Proceedings of ICLR. 2025. arXiv:2410.02506.</li>
+  <li id="bib-gdesigner">ZHANG, et al. G-Designer: Architecting multi-agent communication topologies via graph neural networks[EB/OL]. (2024). arXiv:2410.11782.</li>
+  <li id="bib-macnet">QIAN, et al. MacNet: Multi-agent collaboration networks[EB/OL]. (2024). arXiv:2406.07155.</li>
+  <li id="bib-graphgrpo">Graph-GRPO: Graph topology optimization via GRPO[EB/OL]. (2026). arXiv:2603.02701.</li>
+  <li id="bib-gtd2025">JIANG, et al. Guided topology diffusion for multi-agent systems[C]//Proceedings of ACL. 2026. arXiv:2510.07799.</li>
+  <li id="bib-codebookagent">Codebook agent: Query-conditioned topology prediction[EB/OL]. (2026). arXiv:2609.02264.</li>
+  <li id="bib-xu2023peerreview">XU, et al. Towards reasoning in LLMs via multi-agent peer review collaboration[EB/OL]. (2023). arXiv:2311.08152.</li>
+  <li id="bib-pico2024">PiCO: Peer-based collaborative optimization[EB/OL]. (2024). arXiv:2402.01830.</li>
+  <li id="bib-qdtournament">Quality-diversity debate tournaments[EB/OL]. (2025). arXiv:2510.05909.</li>
+  <li id="bib-madsurvey2026">MOTGER, et al. A survey of multi-agent debate systems (141 studies)[EB/OL]. (2026). arXiv:2607.26212.</li>
+  <li id="bib-slimsc">Slim-SC: Efficient self-consistency via similarity pruning[EB/OL]. (2025). arXiv:2509.13990.</li>
+  <li id="bib-ssdp">SSDP: Semantic-similarity-based diverse pruning[EB/OL]. (2025). arXiv:2511.08595.</li>
+  <li id="bib-deepprune">DeepPrune: Efficient trace pruning for test-time scaling[EB/OL]. (2025). arXiv:2510.08483.</li>
+  <li id="bib-divse">NAIK, et al. DIVSE: Diverse self-consistency[EB/OL]. (2023). arXiv:2310.07088.</li>
+  <li id="bib-spmad">LI, et al. Sparse communication topology in multi-agent debate[C]//Findings of EMNLP. 2024. arXiv:2406.11776.</li>
+  <li id="bib-failuremodes">WYNN, et al. Understanding failure modes in multi-agent debate[EB/OL]. (2025). arXiv:2509.05396.</li>
+  <li id="bib-mmlupro">WANG Y, et al. MMLU-Pro: A more robust and challenging multi-task language understanding benchmark[C]//Proceedings of NeurIPS D&amp;B. 2024.</li>
+  <li id="bib-supergpqa">M-A-P. SuperGPQA: Scaling LLM evaluation across 285 graduate disciplines[EB/OL]. 2025.</li>
+  <li id="bib-gsm8k">COBBE, et al. Training verifiers to solve math word problems[EB/OL]. (2021). arXiv:2110.14168.</li>
+  <li id="bib-math500">HENDRYCKS, et al.; LIGHTMAN, et al. MATH-500[EB/OL]. 2024.</li>
+  <li id="bib-bgem3">CHEN, et al. BGE M3-embedding: Multi-lingual, multi-functionality, multi-granularity text embeddings[EB/OL]. 2024.</li>
+  <li id="bib-robertamnli">LIU, et al. RoBERTa (roberta-large-mnli)[EB/OL]. 2019.</li>
+  <li id="bib-ji2026candidate">JI J H, LI S, CHENG J, et al. Candidate supply and answer selection shape the value of LLM judging in multi-agent systems[EB/OL]. (2026). arXiv:2608.25937.</li>
+</ol>
+</div>
+</body>
+</html>
