@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Rui Li, Chenglong Sun, Xueyan Zheng, Dan Liu Gi (Beijing) Tech Design Ltd., Pékin, Chine" />
+  <title>Qui devrait réviser qui&nbsp;? Révision par les pairs disassortative conditionnée par les réponses pour le raisonnement des LLM au moment du test</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+
+<style>
+/* site override: restrained academic page on top of pandoc defaults */
+html { background: #fafafa; }
+body { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 5rem;
+       font-family: -apple-system, "Segoe UI", "Helvetica Neue", "PingFang SC",
+                    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+       color: #1d1d1f; line-height: 1.75; background: #fafafa; }
+h1, h2, h3, h4 { line-height: 1.3; color: #111; margin-top: 2.2em; }
+h1 { font-size: 1.7rem; }
+h2 { font-size: 1.3rem; border-bottom: 1px solid #e3e3e6; padding-bottom: .3em; }
+h3 { font-size: 1.1rem; }
+header#title-block-header h1.title { font-size: 1.9rem; }
+header#title-block-header p.author, header#title-block-header p.date {
+  color: #6e6e73; margin: .2em 0; }
+a { color: #0b5cad; text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; height: auto; display: block; margin: 1.2rem auto; }
+figure { margin: 1.6rem 0; }
+figcaption { font-size: .86rem; color: #6e6e73; margin-top: .5rem; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem;
+        margin: 1.4rem 0; }
+th, td { border-top: 1px solid #d8d8dc; padding: .35em .55em; }
+thead th { border-top: 2px solid #1d1d1f; border-bottom: 1px solid #1d1d1f; }
+tbody tr:last-child td { border-bottom: 2px solid #1d1d1f; }
+code { font-size: .88em; background: #f0f0f2; padding: .1em .3em;
+       border-radius: 4px; }
+pre { background: #f5f5f7; padding: 1rem; overflow-x: auto; border-radius: 8px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 3px solid #d8d8dc; margin-left: 0;
+             padding-left: 1.2rem; color: #3a3a3c; }
+.thebibliography ol { font-size: .86rem; color: #3a3a3c; }
+.thebibliography li { margin-bottom: .35em; }
+.abstract { font-size: .95rem; }
+hr { border: none; border-top: 1px solid #e3e3e6; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Qui devrait réviser qui&nbsp;?<br />
+Révision par les pairs disassortative conditionnée par les réponses pour le raisonnement des LLM au moment du test</h1>
+<p class="author">Rui Li, Chenglong Sun, Xueyan Zheng, Dan Liu<br />
+Gi (Beijing) Tech Design Ltd., Pékin, Chine</p>
+<p class="date">septembre 2026</p>
+</header>
+<h1 class="unnumbered" id="highlights">Faits saillants</h1>
+<ul>
+<li><p>Sous appariement contrôlé, la révision des paires les plus distantes ne bat pas l'appariement aléatoire.</p></li>
+<li><p>La distance sémantique augmente la détection d'erreur, pas la correction d'erreur.</p></li>
+<li><p>La révision génère des réponses correctes nouvelles qui sont rarement livrées.</p></li>
+<li><p>La synthèse sans révision bat la révision par les pairs sur le benchmark le plus difficile.</p></li>
+<li><p>Le Beneficial Transition Ratio (taux de transitions bénéfiques) quantifie l'effet net nul de la révision.</p></li>
+</ul>
+<p><strong>Mots-clés&nbsp;:</strong> systèmes multi-agents&nbsp;; grands modèles de langue&nbsp;; calcul au moment du test&nbsp;; topologie de communication&nbsp;; révision par les pairs&nbsp;; résultat négatif</p>
+<h1 id="sec:intro">Introduction</h1>
+<p>Répéter l'inférence stochastique d'un modèle de langue fixe peut améliorer sensiblement l'exactitude des réponses sans toucher aux poids du modèle&nbsp;: le vote d'auto-cohérence sur des échantillons indépendants [<a href="#ref-wang2022selfconsistency">1</a>] et le passage à l'échelle par échantillonnage-vote [<a href="#ref-li2024moreagents">4</a>] en sont les exemples canoniques. Une étape naturelle consiste à faire <em>communiquer</em> les instances échantillonnées&nbsp;: le débat multi-agents [<a href="#ref-du2023multiagent">2</a>] et les schémas de révision par les pairs [<a href="#ref-xu2023peerreview">25</a>] permettent aux instances d'un modèle de critiquer leurs réponses respectives avant l'agrégation.</p>
+<p>La communication entre agents homogènes présente pourtant une faiblesse structurelle. Les instances d'un même checkpoint, recevant la même invite, ne se trompent pas indépendamment&nbsp;: elles partagent données d'entraînement, biais inductifs et modes d'échec, de sorte que leurs échantillons forment des <em>clusters de raisonnement corrélés</em> — des groupes de réponses qui partagent hypothèses, stratégies et idées fausses. La communication de type diffusion tend alors à renforcer le point de vue majoritaire, qui est précisément celui le plus susceptible d'incarner l'erreur partagée. Empiriquement, le débat ne parvient souvent pas à battre le simple vote [<a href="#ref-yang2025revisiting">6</a>, <a href="#ref-choi2025debateorvote">7</a>], et les variantes sensibles à la diversité qui élaguent ou retiennent les messages communiquent toujours par diffusion [<a href="#ref-estornell2024multillm">5</a>, <a href="#ref-nguyen2026dars">10</a>].</p>
+<p>Cet article pose une question qui, à notre connaissance, n'a jamais été isolée expérimentalement&nbsp;:</p>
+<blockquote>
+<p><em>Qui devrait réviser qui&nbsp;?</em> Étant données <span class="math inline">\(N\)</span> réponses indépendantes d'un même modèle, la <strong>topologie</strong> de la révision par les pairs deux à deux — en l'occurrence, l'appariement de chaque agent avec le pair qui lui est sémantiquement le plus <em>différent</em> — permet-elle d'extraire davantage de réponses correctes que l'appariement aléatoire, l'appariement par similarité, le débat ou le vote, à modèle, invite et budget d'inférence identiques&nbsp;?</p>
+</blockquote>
+<p>Nous concrétisons cette question sous la forme de l'<strong>évaluation réciproque des paires les plus distantes (Farthest-Pair Reciprocal Review, FPRR)</strong>&nbsp;: plonger chaque réponse (conclusion + justification concise), calculer une matrice de distance cosinus deux à deux, construire un appariement parfait qui apparie les réponses distantes (un appariement glouton randomisé des plus distants, RGFM, avec un appariement exact de poids maximal comme variante), exécuter une évaluation réciproque limitée à la paire au sein de chaque paire, puis synthétiser une réponse finale à partir de toutes les réponses et révisions. Le pipeline ne requiert ni entraînement ni recherche documentaire, et utilise un seul modèle gelé et un seul jeu d'invites gelé du début à la fin.</p>
+<p>Point crucial, notre protocole isole la contribution causale de la règle de routage&nbsp;: toutes les conditions d'appariement consomment <em>exactement les mêmes réponses initiales mises en cache</em>, de sorte que les différences ne peuvent être attribuées à la chance du rééchantillonnage&nbsp;; et un contrôle d'auto-révision à calcul apparié sépare les effets de la topologie du simple fait de dépenser plus d'inférence.</p>
+<h4 id="contributions.">Contributions.</h4>
+<ul>
+<li><p>Nous formalisons la topologie de révision conditionnée par les réponses et fournissons la première étude contrôlée de l'évaluation réciproque disassortative (par appariement des plus distants), incluant l'appariement exact de poids maximal, l'appariement glouton randomisé, l'appariement des plus proches et l'appariement aléatoire sur des ensembles de réponses identiques.</p></li>
+<li><p>Un résultat nul pré-enregistré avec décomposition mécanistique&nbsp;: sur des ensembles de réponses identiques, la révision des paires les plus distantes égale l'appariement aléatoire, l'appariement des plus proches, l'appariement exact de poids maximal, le vote majoritaire et l'auto-révision à calcul apparié à <span class="math inline">\(\pm 1\)</span> point de pourcentage près sur les deux benchmarks, tandis que la distance de paire prédit de façon monotone la <em>détection</em> d'erreur mais pas la <em>correction</em> d'erreur.</p></li>
+<li><p>Une analyse mécanistique de l'information qui traverse les arêtes disassortatives&nbsp;: régressions par étape de détection/correction/adoption, entonnoirs de révision avant vs. inverse, effets de composition des paires, Beneficial Transition Ratios fondés sur les transitions, et modes d'échec quantifiés (déstabilisation d'alternatives valides, idée fausse partagée, défaillance du juge).</p></li>
+<li><p>Un pipeline expérimental entièrement journalisé, à réponses mises en cache (appariement à graine fixée, analyse syntaxique déterministe, statistiques bootstrap appariées), qui isole la règle de routage de la chance du rééchantillonnage et est reproductible de bout en bout.</p></li>
+</ul>
+<h1 id="sec:related">Travaux connexes</h1>
+<h4 id="test-time-scaling-and-sampling-ensembles.">Passage à l'échelle au moment du test et ensembles d'échantillonnage.</h4>
+<p>L'auto-cohérence [<a href="#ref-wang2022selfconsistency">1</a>] agrège des chaînes de pensée diverses par vote majoritaire&nbsp;; Li et al. [<a href="#ref-li2024moreagents">4</a>] montrent que l'exactitude croît avec le nombre d'agents sous le seul vote (leur mesure de similarité sélectionne l'échantillon le <em>plus</em> similaire — la polarité opposée à la nôtre). L'élagage par similarité de plongements de pools de traces mono-agent (Slim-SC [<a href="#ref-slimsc">29</a>], SSDP [<a href="#ref-ssdp">30</a>], DeepPrune [<a href="#ref-deepprune">31</a>]) améliore l'efficacité mais ne construit aucune communication inter-agents. DIVSE [<a href="#ref-divse">32</a>] diversifie au niveau de l'invite. Aucune ne conditionne une <em>topologie de communication</em> à des distances au niveau des réponses.</p>
+<h4 id="multi-agent-debate.">Débat multi-agents.</h4>
+<p>Du et al. [<a href="#ref-du2023multiagent">2</a>] ont établi le débat par diffusion entre instances homogènes&nbsp;; ReConcile [<a href="#ref-chen2023reconcile">3</a>] utilise des modèles hétérogènes avec un consensus pondéré par la confiance. Les réplications contrôlées tempèrent ces affirmations&nbsp;: le bénéfice du débat est conditionnel et égale souvent les baselines auto-agent [<a href="#ref-yang2025revisiting">6</a>]&nbsp;; le vote peut dominer le débat [<a href="#ref-choi2025debateorvote">7</a>]&nbsp;; et le comportement de débat des agents est lui-même discutable dans des tâches logiques contrôlées [<a href="#ref-wu2025reallydebate">8</a>]. Toutes utilisent des topologies de diffusion ou fixes.</p>
+<h4 id="diversity-in-debate.">Diversité dans le débat.</h4>
+<p>Estornell &amp; Liu [<a href="#ref-estornell2024multillm">5</a>] calculent des plongements de réponses et des distances deux à deux, diagnostiquent des chambres d'écho et élaguent jusqu'à un sous-ensemble de diversité maximale — mais les survivants continuent de diffuser&nbsp;; il n'y a ni appariement ni évaluation réciproque. DAR [<a href="#ref-nguyen2026dars">10</a>] retient un sous-ensemble en désaccord pour la diffusion via un filtre LLM (les plongements n'apparaissent que comme métrique d'évaluation). Demystifying MAD [<a href="#ref-zhu2026demystifying">9</a>] initialise les pools en maximisant le <em>nombre</em> de réponses uniques et entraîne la confiance via GRPO. S<span class="math inline">\(^2\)</span>-MAD [<a href="#ref-zeng2025s2mad">11</a>] utilise la similarité cosinus des réponses avec la polarité opposée (en supprimant les points de vue similaires redondants). RMoA [<a href="#ref-rmoa2025">12</a>] effectue une sélection de type point-le-plus-éloigné des réponses comme <em>entrées d'agrégation</em>, et non comme partenaires de révision. Dans cette littérature, la diversité élague, pondère, retient ou initialise — elle ne construit jamais de graphe de révision un-à-un.</p>
+<h4 id="distance-conditioned-topology.">Topologie conditionnée par la distance.</h4>
+<p>CortexDebate [<a href="#ref-cortexdebate2025">13</a>], le travail le plus proche du nôtre, inclut la dissimilarité cosinus des sorties dans les poids d'arêtes d'un graphe de débat épars (composite de formule de confiance, modèles hétérogènes, graphe de diffusion seuillé, vote majoritaire). DySCo [<a href="#ref-dysco2026">14</a>] liste la distance cosinus de plongements de raisonnement comme l'un de cinq signaux d'arête optionnels avec critique unidirectionnelle top-<span class="math inline">\(k\)</span>. DyTopo [<a href="#ref-dytopo2026">15</a>] route par <em>similarité</em> de descripteurs de besoin/offre. MACE [<a href="#ref-mace2026">16</a>] conditionne la sélection des pairs à la diversité de n-grammes via un bandit. Les méthodes à topologie apprise (GPTSwarm [<a href="#ref-gptswarm">17</a>], DyLAN [<a href="#ref-dylan">18</a>], AgentPrune [<a href="#ref-agentprune">19</a>], G-Designer [<a href="#ref-gdesigner">20</a>], MacNet [<a href="#ref-macnet">21</a>], Graph-GRPO [<a href="#ref-graphgrpo">22</a>], Guided Topology Diffusion [<a href="#ref-gtd2025">23</a>], Codebook Agent [<a href="#ref-codebookagent">24</a>]) conditionnent sur les requêtes, les rôles ou des valeurs apprises — jamais sur les distances entre réponses courantes — et requièrent généralement un entraînement.</p>
+<h4 id="peer-review-and-pairing.">Révision par les pairs et appariement.</h4>
+<p>Xu et al. [<a href="#ref-xu2023peerreview">25</a>] implémentent l'évaluation réciproque sur un graphe complet&nbsp;; PiCO [<a href="#ref-pico2024">26</a>] apparie des agents pour une évaluation mutuelle mais les apparie au hasard (en fait, notre contrôle d'appariement aléatoire)&nbsp;; un schéma de tournoi [<a href="#ref-qdtournament">27</a>] apparie par classement de compétence. Une revue de 141 études [<a href="#ref-madsurvey2026">28</a>] rapporte 88.7% de topologies statiques et aucun appariement par distance de plongement dans toute sa taxonomie. L'intersection vide qu'occupe notre méthode — distance de réponse <span class="math inline">\(\rightarrow\)</span> appariement parfait des plus distants <span class="math inline">\(\rightarrow\)</span> évaluation réciproque limitée à la paire <span class="math inline">\(\rightarrow\)</span> synthèse, le tout sans entraînement sur des échantillons homogènes à même invite — est documentée dans notre rapport de filtre de nouveauté (<code>NOVELTY_GATE.md</code>), qui a examiné plus de 40 articles avec lecture intégrale des sections de méthode et boule de neige citationnelle sur 2<span>,</span>235 articles citant [<a href="#ref-du2023multiagent">2</a>].</p>
+<h1 id="sec:method">Méthode</h1>
+<h2 id="problem-setting">Cadre du problème</h2>
+<p>Pour chaque problème <span class="math inline">\(x\)</span>, <span class="math inline">\(N\)</span> agents homogènes (en nombre pair) — même checkpoint, même invite système, même texte de problème et même configuration de décodage — produisent indépendamment des réponses <span class="math inline">\(r_i = (\text{answer}_i, \text{justification}_i)\)</span>, <span class="math inline">\(i=1,\dots,N\)</span>, où la justification est un résumé de raisonnement visible et concis (aucune chaîne de pensée cachée n'est demandée ni utilisée). L'échantillonnage stochastique indépendant est la seule source de diversité.</p>
+<h2 id="response-representation-and-distance">Représentation des réponses et distance</h2>
+<p>Chaque réponse est plongée sous la forme <span class="math inline">\(e_i = f(\text{CONCLUSION: answer}_i \mathbin{\Vert} \text{JUSTIFICATION: justification}_i)\)</span> avec un encodeur de phrases épinglé <span class="math inline">\(f\)</span> (bge-m3, 1024-d, digest Ollama <code>790764642607</code>). Le texte de la question n'est jamais plongé, car un texte de question identique dominerait la similarité. La distance principale est la distance cosinus <span class="math inline">\(d_{ij} = 1 - \cos(e_i, e_j)\)</span> (métrique D1). Ablations&nbsp;: D2 (plongements de la justification seule), D3 (hybride <span class="math inline">\(\lambda d_{ij} + (1-\lambda)\mathbf{1}[a_i \neq a_j]\)</span>, <span class="math inline">\(\lambda\)</span> réglé sur le pilote uniquement), D4 (probabilité de contradiction NLI (inférence en langage naturel) symétrisée, roberta-large-mnli).</p>
+<h2 id="pairing-algorithms">Algorithmes d'appariement</h2>
+<div class="algorithm">
+<div class="algorithmic">
+<p>matrice de distance <span class="math inline">\(d \in \mathbb{R}^{N\times N}\)</span>, PRNG à graine fixée <span class="math inline">\(U \gets \{1,\dots,N\}\)</span>&nbsp;; <span class="math inline">\(M \gets \emptyset\)</span> tirer <span class="math inline">\(i\)</span> uniformément dans <span class="math inline">\(U\)</span> (à graine fixée) <span class="math inline">\(j \gets \arg\max_{k \in U \setminus \{i\}} d_{ik}\)</span> <span class="math inline">\(M \gets M \cup \{(i,j)\}\)</span>&nbsp;; <span class="math inline">\(U \gets U \setminus \{i,j\}\)</span> appariement parfait <span class="math inline">\(M\)</span></p>
+</div>
+</div>
+<p>FPRR utilise RGFM (Algorithme <a href="#alg:rgfm" data-reference-type="ref" data-reference="alg:rgfm">[alg:rgfm]</a>)&nbsp;; la graine est consignée car la règle gloutonne dépend de l'ordre. Contrôles&nbsp;: <strong>Random</strong> (appariement parfait aléatoire à graine fixée), <strong>Nearest</strong> (même boucle avec <span class="math inline">\(\arg\min\)</span>) et <strong>MaxWeight</strong> (appariement parfait exact de poids maximal <span class="math inline">\(M^* = \arg\max_M \sum_{(i,j)\in M} d_{ij}\)</span> par énumération exhaustive des <span class="math inline">\((N-1)!!\)</span> appariements&nbsp;; <span class="math inline">\(N \le 8\)</span>).</p>
+<h2 id="reciprocal-peer-review">Évaluation réciproque par les pairs</h2>
+<p>Pour chaque paire <span class="math inline">\((i,j) \in M\)</span>, l'agent <span class="math inline">\(i\)</span> révise <span class="math inline">\(j\)</span> et <span class="math inline">\(j\)</span> révise <span class="math inline">\(i\)</span>. Le réviseur voit le problème, sa propre réponse et justification, et la réponse et la justification du partenaire — rien d'autre&nbsp;: ni les réponses des autres agents, ni la vérité terrain, ni les distances de plongement, ni aucune indication sur la formation de la paire. L'invite de révision (gelée, identique pour toutes les conditions d'appariement) exige que le réviseur vérifie le pair indépendamment, liste les affirmations correctes, les erreurs spécifiques et les hypothèses non vérifiées, et conclue par un verdict (<code>PEER CORRECT</code>/<code>PEER INCORRECT</code>) et une réponse propre mise à jour. La formulation interdit explicitement de présumer qu'un côté ou l'autre a raison, afin de contrer à la fois la flagornerie et le désaccord réflexe.</p>
+<h2 id="final-synthesis">Synthèse finale</h2>
+<p>Un appel au synthétiseur (même modèle) reçoit le problème, toutes les réponses candidates anonymisées (étiquettes S1…SN après un brassage à graine fixée par question) et — pour les conditions de révision — toutes les révisions deux à deux. Il ne voit jamais la vérité terrain, les noms de condition, les distances ou les informations d'appariement. Ses instructions&nbsp;: ne pas compter les affirmations répétées comme des preuves indépendantes&nbsp;; évaluer la qualité des arguments&nbsp;; utiliser les critiques pour localiser les erreurs&nbsp;; récupérer les solutions minoritaires correctes lorsque c'est justifié&nbsp;; ignorer la confiance rhétorique. La même invite de synthétiseur est utilisée dans toutes les conditions de révision.</p>
+<h2 id="compute-accounting">Comptabilisation du calcul</h2>
+<p>Par question, FPRR coûte <span class="math inline">\(N\)</span> générations initiales <span class="math inline">\(+\)</span> <span class="math inline">\(N\)</span> appels de révision <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> appel de synthèse. Le contrôle à calcul apparié (C9) dépense un budget identique en <span class="math inline">\(N\)</span> auto-révisions <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> synthèse sur les mêmes réponses initiales mises en cache.</p>
+<h1 id="sec:setup">Protocole expérimental</h1>
+<h4 id="model.">Modèle.</h4>
+<p>Tous les agents et le synthétiseur utilisent un seul modèle servi et gelé&nbsp;: <code>deepseek-flash</code> (DeepSeek-V4.1-Flash) via l'API DeepSeek, température <span class="math inline">\(0.8\)</span>, top-<span class="math inline">\(p\)</span> <span class="math inline">\(0.95\)</span>, tokens max 1500 (résolution/révision) / 2500 (synthèse), mode de réflexion désactivé afin que la justification visible soit le seul artefact de raisonnement&nbsp;; le fournisseur n'expose aucun paramètre de graine. La stochasticité a été vérifiée empiriquement (sorties distinctes sur des appels identiques répétés). Le modèle est homogène pour tous les agents et toutes les conditions&nbsp;; aucun poids n'est modifié.</p>
+<h4 id="benchmarks.">Benchmarks.</h4>
+<p>MMLU-Pro [<a href="#ref-mmlupro">35</a>] (test, 12<span>,</span>032 éléments, CC-BY-4.0) et SuperGPQA [<a href="#ref-supergpqa">36</a>] (26<span>,</span>526 éléments, ODC-BY&nbsp;; échantillonné) comme benchmarks principaux&nbsp;; GSM8K [<a href="#ref-gsm8k">37</a>] (test) comme vérification de bon sens (pilote&nbsp;: 95% en mono-agent <span class="math inline">\(\Rightarrow\)</span> saturé au plafond, exclu des runs complets)&nbsp;; MATH-500 réservé. GPQA-Diamond et LiveBench étaient inaccessibles depuis cet environnement (accès restreint)&nbsp;; SuperGPQA sert de benchmark récent de niveau troisième cycle. Les identifiants de questions sont fixés par un échantillonneur stratifié (graine d'échantillonnage 42) et partagés entre toutes les conditions et graines.</p>
+<h4 id="conditions.">Conditions.</h4>
+<p>C0 réponse unique&nbsp;; C1 vote majoritaire sur <span class="math inline">\(N{=}4\)</span> réponses mises en cache&nbsp;; C2 réponses mises en cache <span class="math inline">\(\rightarrow\)</span> synthétiseur (sans révision)&nbsp;; C3/C4/C5/C6 = évaluation réciproque sous appariements Random / Nearest / RGFM / MaxWeight sur les <em>mêmes</em> réponses mises en cache&nbsp;; C9 auto-révision à calcul apparié&nbsp;; C7 débat par diffusion en un tour (pilote uniquement). Toutes les conditions d'appariement consomment des réponses initiales identiques par (question, graine).</p>
+<h4 id="sample-sizes-and-seeds.">Tailles d'échantillon et graines.</h4>
+<p>Pilote&nbsp;: 100 questions par benchmark. Complet&nbsp;: MMLU-Pro 500 questions <span class="math inline">\(\times\)</span> 3 graines expérimentales&nbsp;; SuperGPQA 500 <span class="math inline">\(\times\)</span> 4 graines. L'ablation de métrique de distance (C5 sous D2/D3/D4, sous-ensembles de 200 questions, graine 0, D3/D4 réutilisant les réponses initiales mises en cache de D2 au sein de chaque benchmark) a été exécutée en entier sauf MMLU-Pro D4&nbsp;; l'ablation <span class="math inline">\(N \in \{2,4,6,8\}\)</span> et l'étude de variance de graine d'appariement (pré-enregistrée, Amendement 8) n'ont pas été exécutées pour des raisons de budget (§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>).</p>
+<h4 id="statistics.">Statistiques.</h4>
+<p>Exactitude de la réponse exacte avec un analyseur déterministe gelé (dernière ligne <code>FINAL ANSWER:</code>&nbsp;; non analysé <span class="math inline">\(\Rightarrow\)</span> incorrect). Bootstrap apparié (10<span>,</span>000 rééchantillonnages sur les questions) pour les IC (intervalles de confiance) à 95% des différences d'exactitude&nbsp;; tests de McNemar avec correction de continuité pour C5 vs. {C3, C4, C1, C9} avec correction de Holm–Bonferroni. Les hypothèses H1–H6 ont été pré-enregistrées (voir <code>preregistration.md</code>, y compris tous les amendements) avant toute évaluation sur le test complet.</p>
+<h4 id="contamination.">Contamination.</h4>
+<p>GSM8K et MATH sont anciens et fortement exposés&nbsp;; nous ne fondons donc aucune affirmation sur eux. MMLU-Pro (juin 2024) et surtout SuperGPQA (janvier 2025) sont postérieurs à une grande partie des données d'entraînement&nbsp;; les éléments de niveau troisième cycle de SuperGPQA et l'exactitude médiane du modèle (61% en mono-agent au pilote) en font l'instrument le plus sensible. Nous traitons néanmoins la contamination résiduelle comme une limite&nbsp;: elle ne peut que gonfler les nombres absolus, et s'applique identiquement à chaque condition, de sorte que les différences appariées restent interprétables.</p>
+<h4 id="reproducibility.">Reproductibilité.</h4>
+<p>Chaque appel API est journalisé en JSONL (identifiant de question, invite complète, sortie brute, champs analysés, usage de tokens, latence, horodatage, condition, graines). Les réponses initiales sont mises en cache et partagées entre conditions&nbsp;; les décisions d'appariement ne dépendent que des distances, jamais des étiquettes de référence. Le code et les configurations sont versionnés (git)&nbsp;; les scripts d'analyse sont déterministes (bootstrap à graine fixée).</p>
+<h1 id="sec:results">Résultats principaux</h1>
+<p>La Figure <a href="#fig:architecture" data-reference-type="ref" data-reference="fig:architecture">1</a> récapitule le pipeline (Section <a href="#sec:method" data-reference-type="ref" data-reference="sec:method">3</a>)&nbsp;; dans toute cette section, toutes les conditions d'appariement consomment des réponses initiales mises en cache identiques par (question, graine).</p>
+<figure>
+<img src="/research/who-should-review-whom/figures/F1_architecture.png" id="fig:architecture" style="width:90.0%" alt="Pipeline overview: N cached initial responses, bge-m3 distance matrix, pairing rule (Random / Nearest / RGFM / MaxWeight), reciprocal pair-limited review, and synthesis over all answers and reviews." /><figcaption aria-hidden="true">Vue d'ensemble du pipeline&nbsp;: <span class="math inline">\(N\)</span> réponses initiales mises en cache, matrice de distance bge-m3, règle d'appariement (Random / Nearest / RGFM / MaxWeight), évaluation réciproque limitée à la paire, et synthèse sur toutes les réponses et révisions.</figcaption>
+</figure>
+<h2 id="aggregate-accuracy">Exactitude globale</h2>
+<p>Le Tableau <a href="#tab:mmlu-acc" data-reference-type="ref" data-reference="tab:mmlu-acc">1</a> rapporte l'exactitude sur MMLU-Pro (500 questions <span class="math inline">\(\times\)</span> 3 graines expérimentales, <span class="math inline">\(n=1500\)</span> observations groupées). Toutes les conditions d'agrégation <span class="math inline">\(N{=}4\)</span> se regroupent dans une bande de 0.8pp (0.837–0.845)&nbsp;; FPRR (C5, 0.839) se situe au bas de cette bande avec le contrôle d'auto-révision à calcul apparié (C9, 0.839), 0.6pp sous l'appariement aléatoire, l'appariement des plus proches, l'appariement de poids maximal et le simple vote majoritaire (tous à 0.845). La Figure <a href="#fig:accuracy" data-reference-type="ref" data-reference="fig:accuracy">2</a> visualise ces exactitudes quasi identiques.</p>
+<div id="tab:mmlu-acc">
+<table>
+<caption>Exactitude par condition sur MMLU-Pro (500 questions <span class="math inline">\(\times\)</span> 3 graines&nbsp;; <span class="math inline">\(n=1500\)</span> groupées). Les IC à 95% sont des bootstrap appariés sur les questions&nbsp;; les exactitudes par graine ont chacune <span class="math inline">\(n=500\)</span>. Les observations groupées partagent les questions entre graines, donc les IC sont légèrement anti-conservateurs&nbsp;; les valeurs par graine montrent le même ordre.</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Condition</td>
+<td style="text-align: left;">Nom</td>
+<td style="text-align: center;">Exactitude groupée</td>
+<td style="text-align: center;">IC 95%</td>
+<td style="text-align: center;" colspan="2">Exactitude par graine</td>
+</tr>
+<tr class="even">
+
+
+
+
+<td style="text-align: center;">s0 / s1</td>
+<td style="text-align: center;">s2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">Réponse unique</td>
+<td style="text-align: center;">0.829</td>
+<td style="text-align: center;">[0.810, 0.848]</td>
+<td style="text-align: center;">0.824 / 0.834</td>
+<td style="text-align: center;">0.830</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">Vote majoritaire</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.844 / 0.844</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">Ensemble + synth.</td>
+<td style="text-align: center;">0.837</td>
+<td style="text-align: center;">[0.818, 0.855]</td>
+<td style="text-align: center;">0.838 / 0.840</td>
+<td style="text-align: center;">0.832</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">Paires aléatoires</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.846 / 0.850</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">Paires les plus proches</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.842 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.844 / 0.836</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">Appariement de poids maximal</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.826, 0.863]</td>
+<td style="text-align: center;">0.840 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">Auto-révision (appariée)</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.838 / 0.838</td>
+<td style="text-align: center;">0.842</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:mmlu-paired">
+<table>
+<caption>Comparaisons appariées de C5 (FPRR) aux contrôles sur MMLU-Pro (<span class="math inline">\(n=1500\)</span>). diff = C5 moins le contrôle, en points de pourcentage (pp)&nbsp;; IC = bootstrap apparié à 95%&nbsp;; <span class="math inline">\(p\)</span> = McNemar avec correction de continuité&nbsp;; <span class="math inline">\(p_{\mathrm{Holm}}\)</span> = Holm–Bonferroni sur la famille principale {C3, C4, C1, C9}. Les lignes sous la règle médiane sont des comparaisons secondaires hors de la famille corrigée.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Comparaison</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">IC 95% (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C3 (aléatoire)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.3\)</span>, <span class="math inline">\(0.2\)</span>]</td>
+<td style="text-align: center;">13/21</td>
+<td style="text-align: center;">0.230</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C4 (plus proche)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">19/28</td>
+<td style="text-align: center;">0.243</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C1 (vote)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">18/27</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C9 (auto-révision)</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(0.8\)</span>]</td>
+<td style="text-align: center;">19/19</td>
+<td style="text-align: center;">0.871</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C0 (unique)</td>
+<td style="text-align: center;"><span class="math inline">\(+1.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.1\)</span>, <span class="math inline">\(2.1\)</span>]</td>
+<td style="text-align: center;">41/26</td>
+<td style="text-align: center;">0.087</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C2 (sans révision)</td>
+<td style="text-align: center;"><span class="math inline">\(+0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.7\)</span>, <span class="math inline">\(1.2\)</span>]</td>
+<td style="text-align: center;">27/23</td>
+<td style="text-align: center;">0.671</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C6 (poids maximal)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">16/24</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Le Tableau <a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a> donne l'analyse appariée. L'IC bootstrap de chaque comparaison principale croise zéro, et les quatre valeurs de <span class="math inline">\(p\)</span> ajustées par Holm valent toutes <span class="math inline">\(0.920\)</span>&nbsp;: il n'y a aucune différence détectable entre FPRR et l'appariement aléatoire (H1), l'appariement des plus proches (H2), le vote majoritaire (H3) ou le contrôle d'auto-révision à calcul apparié. Face à la baseline à réponse unique, FPRR gagne <span class="math inline">\(+1.0\)</span>pp, sans atteindre la significativité (<span class="math inline">\(p=0.087\)</span>, non corrigé).</p>
+<p>SuperGPQA (500 questions <span class="math inline">\(\times\)</span> 4 graines, <span class="math inline">\(n=2000\)</span> groupées) montre le même schéma à exactitude plus faible, avec un résultat plus tranché (Tableau <a href="#tab:sg-acc" data-reference-type="ref" data-reference="tab:sg-acc">3</a>). FPRR (0.599) est indiscernable de — et si tant est légèrement sous — l'appariement aléatoire (0.606), l'appariement des plus proches (0.605), l'appariement de poids maximal (0.602), le vote majoritaire (0.598) et l'auto-révision (0.595)&nbsp;; les quatre valeurs de <span class="math inline">\(p\)</span> principales ajustées par Holm sont <span class="math inline">\(\ge 0.987\)</span> (Tableau <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>). Sur ce benchmark plus difficile, chaque condition <span class="math inline">\(N{=}4\)</span> dépasse nettement la baseline à réponse unique (C0, 0.561&nbsp;; C5 vs C0&nbsp;: <span class="math inline">\(+3.8\)</span>pp, IC 95% [<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>], <span class="math inline">\(p&lt;0.001\)</span>), donc la machinerie d'ensemble aide en soi. Mais la condition synthétiseur sans révision C2 (0.614) est la meilleure condition, et ici la perte n'est plus du bruit&nbsp;: <strong>C2 bat C5 de <span class="math inline">\(1.5\)</span>pp avec un IC bootstrap qui exclut zéro</strong> (<span class="math inline">\([-2.6, -0.4]\)</span>, McNemar <span class="math inline">\(p=0.010\)</span>&nbsp;; comparaison secondaire hors de la famille corrigée par Holm, et anti-conservatrice sous dépendance inter-graines). Sur le benchmark plus difficile, l'évaluation réciproque par les pairs inflige un coût net faible mais statistiquement détectable par rapport à la simple synthèse des mêmes réponses mises en cache — cohérent avec l'analyse des transitions du §<a href="#sec:btr" data-reference-type="ref" data-reference="sec:btr">7.4</a> (BTR <span class="math inline">\(= 0.383\)</span>).</p>
+<div id="tab:sg-acc">
+<table>
+<caption>Exactitude par condition sur SuperGPQA (500 questions <span class="math inline">\(\times\)</span> 4 graines&nbsp;; <span class="math inline">\(n=2000\)</span> groupées). Les IC à 95% sont des bootstrap appariés sur les questions&nbsp;; les exactitudes par graine ont chacune <span class="math inline">\(n=500\)</span>. Les observations groupées partagent les questions entre graines, donc les IC sont légèrement anti-conservateurs&nbsp;; les valeurs par graine montrent le même ordre.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Condition</th>
+<th style="text-align: left;">Nom</th>
+<th style="text-align: center;">Exactitude groupée</th>
+<th style="text-align: center;">IC 95%</th>
+<th style="text-align: center;">Exactitude par graine (s0/s1/s2/s3)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">Réponse unique</td>
+<td style="text-align: center;">0.561</td>
+<td style="text-align: center;">[0.539, 0.583]</td>
+<td style="text-align: center;">0.546 / 0.572 / 0.568 / 0.558</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">Vote majoritaire</td>
+<td style="text-align: center;">0.598</td>
+<td style="text-align: center;">[0.576, 0.619]</td>
+<td style="text-align: center;">0.594 / 0.604 / 0.588 / 0.604</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">Ensemble + synth.</td>
+<td style="text-align: center;">0.614</td>
+<td style="text-align: center;">[0.593, 0.635]</td>
+<td style="text-align: center;">0.616 / 0.622 / 0.608 / 0.608</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">Paires aléatoires</td>
+<td style="text-align: center;">0.606</td>
+<td style="text-align: center;">[0.584, 0.627]</td>
+<td style="text-align: center;">0.594 / 0.598 / 0.616 / 0.614</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">Paires les plus proches</td>
+<td style="text-align: center;">0.605</td>
+<td style="text-align: center;">[0.583, 0.625]</td>
+<td style="text-align: center;">0.598 / 0.604 / 0.602 / 0.614</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.599</td>
+<td style="text-align: center;">[0.577, 0.620]</td>
+<td style="text-align: center;">0.598 / 0.602 / 0.596 / 0.598</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">Appariement de poids maximal</td>
+<td style="text-align: center;">0.602</td>
+<td style="text-align: center;">[0.580, 0.623]</td>
+<td style="text-align: center;">0.594 / 0.606 / 0.608 / 0.598</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">Auto-révision (appariée)</td>
+<td style="text-align: center;">0.595</td>
+<td style="text-align: center;">[0.573, 0.616]</td>
+<td style="text-align: center;">0.602 / 0.586 / 0.588 / 0.604</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:sg-paired">
+<table>
+<caption>Comparaisons appariées de C5 (FPRR) sur SuperGPQA (<span class="math inline">\(n=2000\)</span>, groupées sur 4 graines). Colonnes comme dans le Tableau <a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a>. À noter la comparaison secondaire C5 vs C2&nbsp;: <span class="math inline">\(-1.5\)</span>pp avec un IC excluant zéro (<span class="math inline">\(p=0.010\)</span>, non corrigé).</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Comparaison</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">IC 95% (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C3 (aléatoire)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.8\)</span>, <span class="math inline">\(+0.4\)</span>]</td>
+<td style="text-align: center;">56/70</td>
+<td style="text-align: center;">0.247</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C4 (plus proche)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.7\)</span>, <span class="math inline">\(+0.5\)</span>]</td>
+<td style="text-align: center;">54/66</td>
+<td style="text-align: center;">0.315</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C1 (vote)</td>
+<td style="text-align: center;"><span class="math inline">\(+0.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.1\)</span>, <span class="math inline">\(+1.3\)</span>]</td>
+<td style="text-align: center;">72/70</td>
+<td style="text-align: center;">0.933</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C9 (auto-révision)</td>
+<td style="text-align: center;"><span class="math inline">\(+0.4\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(+1.5\)</span>]</td>
+<td style="text-align: center;">68/61</td>
+<td style="text-align: center;">0.597</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C0 (unique)</td>
+<td style="text-align: center;"><span class="math inline">\(+3.8\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>]</td>
+<td style="text-align: center;">151/76</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;\)</span>0.0001</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 vs C2 (sans révision)</td>
+<td style="text-align: center;"><span class="math inline">\(-1.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]</td>
+<td style="text-align: center;">49/79</td>
+<td style="text-align: center;">0.010</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 vs C6 (poids maximal)</td>
+<td style="text-align: center;"><span class="math inline">\(-0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+<td style="text-align: center;">54/60</td>
+<td style="text-align: center;">0.640</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="/research/who-should-review-whom/figures/F3_accuracy_by_condition.png" id="fig:accuracy" style="width:85.0%" alt="Accuracy by condition on both benchmarks (MMLU-Pro: n=1500, 3 seeds; SuperGPQA: n=2000, 4 seeds). All N{=}4 conditions are statistically indistinguishable within each benchmark, except that no-review synthesis (C2) exceeds FPRR on SuperGPQA." /><figcaption aria-hidden="true">Exactitude par condition sur les deux benchmarks (MMLU-Pro&nbsp;: <span class="math inline">\(n=1500\)</span>, 3 graines&nbsp;; SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span>, 4 graines). Toutes les conditions <span class="math inline">\(N{=}4\)</span> sont statistiquement indiscernables au sein de chaque benchmark, sauf que la synthèse sans révision (C2) dépasse FPRR sur SuperGPQA.</figcaption>
+</figure>
+<h2 id="cost">Coût</h2>
+<p>La révision est coûteuse et n'achète rien ici (Tableau <a href="#tab:tokens" data-reference-type="ref" data-reference="tab:tokens">5</a>, Figure <a href="#fig:tokens" data-reference-type="ref" data-reference="fig:tokens">3</a>). Sur MMLU-Pro, C5 consomme <span class="math inline">\(11.89\)</span>M de tokens — <span class="math inline">\(19.7\times\)</span> la baseline à réponse unique et <span class="math inline">\(4.9\times\)</span> le vote majoritaire — pour 0.6pp d'exactitude de <em>moins</em> que le vote&nbsp;; l'exactitude par million de tokens chute de 1.37 (C0) et 0.35 (C1) à 0.07 pour toutes les conditions de révision. SuperGPQA montre le même schéma à coût en tokens par graine comparable (<span class="math inline">\(23.87\)</span>M pour C5 sur 4 graines), où la révision accuse en outre un retard significatif sur la synthèse sans révision.</p>
+<div id="tab:tokens">
+<table>
+<caption>Usage total de tokens et exactitude par million de tokens (exact./Mtok&nbsp;; l'exact./Mtok de SuperGPQA calculée à partir des totaux groupés). Colonnes SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span> groupées sur 4 graines.</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="2">MMLU-Pro (<span class="math inline">\(n=1500\)</span>)</td>
+<td style="text-align: center;" colspan="2">SuperGPQA (<span class="math inline">\(n=2000\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> Condition</td>
+<td style="text-align: center;">tokens (M)</td>
+<td style="text-align: center;">exact./Mtok</td>
+<td style="text-align: center;">tokens (M)</td>
+<td style="text-align: center;">exact./Mtok</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.60</td>
+<td style="text-align: center;">1.37</td>
+<td style="text-align: center;">1.20</td>
+<td style="text-align: center;">0.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: center;">2.41</td>
+<td style="text-align: center;">0.35</td>
+<td style="text-align: center;">4.76</td>
+<td style="text-align: center;">0.13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">3.82</td>
+<td style="text-align: center;">0.22</td>
+<td style="text-align: center;">8.14</td>
+<td style="text-align: center;">0.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">11.80</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.77</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">11.78</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.74</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">11.89</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.87</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">11.95</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.92</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">11.26</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">22.71</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="/research/who-should-review-whom/figures/F4_accuracy_vs_tokens.png" id="fig:tokens" style="width:85.0%" alt="Accuracy vs. total tokens. Review conditions (C3–C6, C9) occupy an expensive plateau; voting (C1) dominates them on the cost–accuracy trade-off." /><figcaption aria-hidden="true">Exactitude vs. tokens totaux. Les conditions de révision (C3–C6, C9) occupent un plateau coûteux&nbsp;; le vote (C1) les domine sur le compromis coût–exactitude.</figcaption>
+</figure>
+<h2 id="verdict-on-h1h3">Verdict sur H1–H3</h2>
+<p><strong>H1 (FPRR <span class="math inline">\(&gt;\)</span> appariement aléatoire)&nbsp;: non étayée.</strong> <span class="math inline">\(-0.5\)</span>pp sur MMLU-Pro, <span class="math inline">\(-0.7\)</span>pp sur SuperGPQA&nbsp;; les deux IC croisent zéro (<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>). <strong>H2 (FPRR <span class="math inline">\(&gt;\)</span> appariement des plus proches)&nbsp;: non étayée.</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(-0.6\)</span>pp (<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>). <strong>H3 (FPRR <span class="math inline">\(&gt;\)</span> vote majoritaire)&nbsp;: non étayée.</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(+0.1\)</span>pp (<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>). L'appariement exact de poids maximal (C6) ne fait pas mieux que le RGFM glouton, et le contrôle d'auto-révision à calcul apparié (C9) reproduit l'exactitude de FPRR presque exactement sur les deux benchmarks&nbsp;; le résultat nul n'est donc attribuable ni à une sous-optimalité de l'appariement ni au calcul de révision lui-même.</p>
+<h1 id="sec:ablations">Études d'ablation</h1>
+<h4 id="pairing-rule-c3c6-identical-initials.">Règle d'appariement (C3–C6, initiales identiques).</h4>
+<p>Comme les quatre conditions d'appariement révisent les <em>mêmes</em> réponses initiales mises en cache, toute différence d'exactitude entre elles est attribuable au seul appariement. Il n'y en a essentiellement aucune&nbsp;: sur MMLU-Pro, C3/C4/C5/C6 obtiennent 0.845 / 0.845 / 0.839 / 0.845 (écart 0.6pp)&nbsp;; sur SuperGPQA (<span class="math inline">\(n=2000\)</span>, 4 graines) 0.606 / 0.605 / 0.599 / 0.602 (écart 0.7pp). L'appariement exact de poids maximal (C6) est indiscernable du RGFM glouton (C5), et l'appariement des plus proches (C4) — la polarité opposée — égale l'appariement aléatoire. La Figure <a href="#fig:matchings" data-reference-type="ref" data-reference="fig:matchings">5</a> visualise combien les quatre règles câblent différemment les mêmes réponses&nbsp;; le câblage ne change rien à l'exactitude.</p>
+<p><img src="/research/who-should-review-whom/figures/F2_distance_matchings_mmlu_pro.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="Distance matrices and the matchings induced by Random / Nearest / RGFM / MaxWeight on identical response sets (left: MMLU-Pro; right: SuperGPQA, seed 0 shown for illustration; pooled results in Tables 1 and 3)." /> <img src="/research/who-should-review-whom/figures/F2_distance_matchings_supergpqa.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="Distance matrices and the matchings induced by Random / Nearest / RGFM / MaxWeight on identical response sets (left: MMLU-Pro; right: SuperGPQA, seed 0 shown for illustration; pooled results in Tables 1 and 3)." /></p>
+<h4 id="review-vs.-no-review-c2-synthesizer-vs.-vote-c1.">Révision vs. sans révision (C2), synthétiseur vs. vote (C1).</h4>
+<p>Sur MMLU-Pro, les conditions de révision (0.839–0.845) se situent à moins de 0.8pp de la condition synthétiseur sans révision C2 (0.837), et le vote C1 (0.845) égale la meilleure condition de révision pour une fraction du coût. Sur SuperGPQA, l'ordre s'inverse&nbsp;: C2 (0.614) est la meilleure condition, <em>au-dessus</em> de toutes les conditions de révision (0.599–0.606), avec C1 à 0.598 — et avec quatre graines l'écart est statistiquement détectable (C5 vs C2&nbsp;: <span class="math inline">\(-1.5\)</span>pp, IC 95% [<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>], <span class="math inline">\(p=0.010\)</span> non corrigé&nbsp;; Tableau <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>). L'évaluation réciproque n'ajoute donc aucune valeur par rapport à l'une ou l'autre baseline d'agrégation — et sur le benchmark plus difficile elle en retranche un peu.</p>
+<h4 id="compute-matching-c9.">Calcul apparié (C9).</h4>
+<p>L'auto-révision à budget d'appels identique reproduit FPRR presque exactement (0.839 vs 0.839 sur MMLU-Pro&nbsp;; 0.595 vs 0.599 sur SuperGPQA&nbsp;; diff C5 vs C9 <span class="math inline">\(0.0\)</span>pp / <span class="math inline">\(+0.4\)</span>pp, <span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>). Dépenser le budget de révision en auto-critique est exactement aussi bon — et aussi limité — que de le dépenser en révision par les pairs&nbsp;: le budget étant fixé, le résultat nul se rattache au <em>routage</em>.</p>
+<h4 id="distance-metric-d1d4-and-pilot-lambda.">Métrique de distance (D1–D4) et <span class="math inline">\(\lambda\)</span> pilote.</h4>
+<p>Conformément à la pré-inscription, <span class="math inline">\(\lambda\)</span> pour la distance hybride D3 a été fixé à <span class="math inline">\(0.5\)</span> avant les runs complets, comme meilleure valeur au pilote sur le benchmark offrant le plus de marge et comme point médian sinon (ablation de distance pilote sous C5, 100 questions par benchmark, graine 0&nbsp;; les données pilotes ne servent qu'au réglage et ne sont pas rapportées comme preuve). Le Tableau <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a> rapporte l'ablation de distance complète sur 200 questions (C5 sous D2/D3/D4, graine 0&nbsp;; au sein de chaque benchmark, D3/D4 réutilisent les réponses initiales mises en cache de D2, de sorte que les comparaisons appariées inter-métriques isolent la topologie induite par chaque métrique). Cette analyse est <em>exploratoire</em> (Amendement 8 de la pré-inscription&nbsp;: mécanistique, hors de la famille principale corrigée par Holm).</p>
+<p>Sur SuperGPQA, les métriques sensibles au désaccord battent la distance sémantique pure&nbsp;: D4 (contradiction NLI) atteint <span class="math inline">\(0.680\)</span> contre <span class="math inline">\(0.650\)</span> pour D2 (cosinus conclusion+justification), et la différence appariée D4 <span class="math inline">\(-\)</span> D2 vaut <span class="math inline">\(+3.0\)</span>pp avec un IC bootstrap qui exclut zéro (<span class="math inline">\([+0.5, +6.0]\)</span>) — mais sur seulement <span class="math inline">\(7\)</span> contre <span class="math inline">\(1\)</span> questions discordantes (McNemar <span class="math inline">\(p=0.077\)</span>), une seule graine et 200 questions&nbsp;: le signal est réel mais fragile et exige une réplication. Le mécanisme est cohérent avec le §<a href="#sec:mechanism" data-reference-type="ref" data-reference="sec:mechanism">7</a>&nbsp;: sous D4, le taux de corruption de la majorité chute d'un facteur six par rapport à D2 (<span class="math inline">\(0.008\)</span> vs <span class="math inline">\(0.048\)</span>&nbsp;; D3&nbsp;: <span class="math inline">\(0.024\)</span>) tandis que le taux de correction est le plus élevé des trois métriques (<span class="math inline">\(0.289\)</span> vs <span class="math inline">\(0.268\)</span> sous D2&nbsp;; les taux de verdicts d'opposition erronée au niveau révision sont plats, <span class="math inline">\(0.047\)</span>–<span class="math inline">\(0.052\)</span>) — la contradiction NLI se rapproche de l'opposition <em>épistémique</em> davantage que le cosinus de plongements, de sorte que l'appariement des plus distants sous D4 choisit des disputes qui valent plus souvent la peine. Sur MMLU-Pro, toutes les différences de métriques sont nulles (D2/D3 à moins de <span class="math inline">\(0.5\)</span>pp l'une de l'autre et du vote)&nbsp;: le benchmark saturé ne laisse aucune marge à un quelconque signal de routage. MMLU-Pro D4 n'a pas été exécuté (budget).</p>
+<div id="tab:dist-ablation">
+<table>
+<caption>Ablation de métrique de distance sous C5 (200 questions par benchmark, graine 0&nbsp;; exploratoire, Amendement 8). Au sein de chaque benchmark, toutes les métriques révisent des réponses initiales mises en cache identiques, de sorte que les différences appariées isolent la topologie induite par la métrique. C1 (vote majoritaire) est calculé sur les mêmes ensembles de réponses. Diffs en points de pourcentage&nbsp;; les valeurs de <span class="math inline">\(p\)</span> sont des McNemar avec correction de continuité, non corrigées.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Benchmark</th>
+<th style="text-align: left;">Métrique</th>
+<th style="text-align: center;">exactitude C5</th>
+<th style="text-align: center;">exactitude C1</th>
+<th style="text-align: center;">C5 <span class="math inline">\(-\)</span> C1 [IC 95%], <span class="math inline">\(p\)</span></th>
+<th style="text-align: center;">apparié vs D2 [IC 95%], <span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D2 (cosinus)</td>
+<td style="text-align: center;">0.650 [0.585, 0.715]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-2.0\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.45\)</span></td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.670 [0.605, 0.735]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+4.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+7.5\)</span>], <span class="math inline">\(0.061\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-0.5\)</span>, <span class="math inline">\(+5.0\)</span>], <span class="math inline">\(0.29\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D4 (contr. NLI)</td>
+<td style="text-align: center;">0.680 [0.615, 0.745]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+5.0\)</span> [<span class="math inline">\(+2.0\)</span>, <span class="math inline">\(+8.5\)</span>], <span class="math inline">\(0.009\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+3.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.077\)</span> (7:1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D2 (cosinus)</td>
+<td style="text-align: center;">0.860 [0.810, 0.905]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+1.5\)</span>], NS</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.865 [0.815, 0.910]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+3.0\)</span>], NS</td>
+<td style="text-align: center;"><span class="math inline">\(+0.5\)</span> [<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(+2.5\)</span>], <span class="math inline">\(1.0\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D4 (contr. NLI)</td>
+<td style="text-align: center;" colspan="4"><em>non exécuté (budget)</em></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="agent-count-n-and-pairing-seed-variance.">Nombre d'agents <span class="math inline">\(N\)</span> et variance de la graine d'appariement.</h4>
+<p>Non exécuté (budget). L'ablation <span class="math inline">\(N \in \{2,6,8\}\)</span> et l'étude de variance de graine d'appariement (graines d'appariement 1, 2 pour C3/C5, sous-ensembles MMLU-Pro de 200 questions) ont été conçues et gelées dans la pré-inscription (Amendement 8) mais n'ont pu être exécutées dans le budget API restant&nbsp;; nous les rapportons comme manquantes plutôt que de les passer sous silence, et comptons leur absence comme une limite (§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>).</p>
+<h1 id="sec:mechanism">Analyse mécanistique</h1>
+<p>Le résultat nul global soulève une question plus fine&nbsp;: l'arête disassortative porte-t-elle <em>un quelconque</em> signal supplémentaire, et si oui, où meurt-il&nbsp;? Nous décomposons l'étape de révision en deux chaînes qui courent en directions opposées (Figure <a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>)&nbsp;: une <em>chaîne avant</em> — une question a au moins une réponse initiale erronée (E0), un réviseur détecte l'erreur (E1), une correction correcte est proposée (E2) et la réponse finale est correcte (E3) — et une <em>chaîne inverse</em> — une question a au moins une réponse initiale correcte (C0), un réviseur s'oppose à tort à un pair correct (C1), un réviseur correct est déstabilisé jusqu'à changer ou douter d'une réponse valide (C2), et la réponse finale est erronée (C3).</p>
+<figure>
+<img src="/research/who-should-review-whom/figures/F8_repair_funnels.png" id="fig:funnels" style="width:95.0%" alt="Dual question-level funnels on both benchmarks (MMLU-Pro: n=1500, 3 seeds; SuperGPQA: n=2000, 4 seeds). Forward chain E0\toE3 (error exposure \to detection \to fix proposed \to final correct) and reverse chain C0\toC3 (correct answer present \to false opposition \to destabilization \to final wrong). Detection rises with pair distance; resolution does not rise with it; and the reverse chain grows heavier under disassortative pairing." /><figcaption aria-hidden="true">Entonnoirs doubles au niveau question sur les deux benchmarks (MMLU-Pro&nbsp;: <span class="math inline">\(n=1500\)</span>, 3 graines&nbsp;; SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span>, 4 graines). Chaîne avant E0<span class="math inline">\(\to\)</span>E3 (exposition à l'erreur <span class="math inline">\(\to\)</span> détection <span class="math inline">\(\to\)</span> correction proposée <span class="math inline">\(\to\)</span> finale correcte) et chaîne inverse C0<span class="math inline">\(\to\)</span>C3 (réponse correcte présente <span class="math inline">\(\to\)</span> opposition erronée <span class="math inline">\(\to\)</span> déstabilisation <span class="math inline">\(\to\)</span> finale erronée). La détection augmente avec la distance de paire&nbsp;; la résolution n'augmente pas avec elle&nbsp;; et la chaîne inverse s'alourdit sous l'appariement disassortatif.</figcaption>
+</figure>
+<h2 id="sec:fwd">La chaîne avant&nbsp;: la distance achète l'exposition</h2>
+<p>FPRR déplace bien le trafic de révision vers les paires où le désaccord est possible. En comptant les révisions dirigées selon l'exactitude du réviseur et du révisé, C5 place <span class="math inline">\(412/6000\)</span> (<span class="math inline">\(6.9\%\)</span>) des révisions MMLU-Pro sur des paires mixtes correct–incorrect, contre <span class="math inline">\(328\)</span> (<span class="math inline">\(5.5\%\)</span>) sous appariement aléatoire et <span class="math inline">\(320\)</span> (<span class="math inline">\(5.3\%\)</span>) sous appariement des plus proches — une augmentation relative de <span class="math inline">\(25\)</span>–<span class="math inline">\(30\%\)</span> des arêtes inter-erreurs, à égalité avec l'appariement exact de poids maximal (C6&nbsp;: <span class="math inline">\(416\)</span>, <span class="math inline">\(6.9\%\)</span>). Sur SuperGPQA, le déplacement est plus faible&nbsp;: C5 place <span class="math inline">\(1270/8000\)</span> (<span class="math inline">\(15.9\%\)</span>) des révisions sur des paires mixtes contre <span class="math inline">\(1194\)</span> (<span class="math inline">\(14.9\%\)</span>) sous appariement aléatoire et <span class="math inline">\(1098\)</span> (<span class="math inline">\(13.7\%\)</span>) sous appariement des plus proches (C6&nbsp;: <span class="math inline">\(1330\)</span>, <span class="math inline">\(16.6\%\)</span>).</p>
+<p>Le Tableau <a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a> stratifie toutes les révisions C5 par décile de distance de paire, et le Tableau <a href="#tab:review-outcomes" data-reference-type="ref" data-reference="tab:review-outcomes">8</a> donne les résultats globaux au niveau révision. La détection augmente fortement avec la distance sur les deux benchmarks et sous les quatre règles d'appariement, avec de menues non-monotonies locales (Figure <a href="#fig:deciles" data-reference-type="ref" data-reference="fig:deciles">8</a>)&nbsp;: sous C5, P(verdict <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> révisé erroné) grimpe de <span class="math inline">\(0.000\)</span> à <span class="math inline">\(0.379\)</span> sur MMLU-Pro et de <span class="math inline">\(0.050\)</span> à <span class="math inline">\(0.361\)</span> sur SuperGPQA entre les déciles extrêmes&nbsp;; sur C3–C6, le taux de détection du décile supérieur s'étend de <span class="math inline">\(0.368\)</span>–<span class="math inline">\(0.436\)</span> (MMLU-Pro) et <span class="math inline">\(0.301\)</span>–<span class="math inline">\(0.361\)</span> (SuperGPQA). La révision par les pairs détecte aussi les réponses erronées bien plus souvent que l'auto-révision (C9&nbsp;: <span class="math inline">\(0.091\)</span> / <span class="math inline">\(0.135\)</span> vs <span class="math inline">\(0.19\)</span>–<span class="math inline">\(0.26\)</span> pour C3–C6). Notons que C6 — et non C5 — atteint le taux de détection le plus élevé sur MMLU-Pro (<span class="math inline">\(0.227\)</span>), tout en égalant C3/C4 en exactitude&nbsp;: la détection supplémentaire au-delà de la baseline aléatoire n'a aucun bénéfice global sous aucune règle de routage.</p>
+<div id="tab:deciles">
+<table>
+<caption>Comportement de révision de C5 (FPRR) par décile de distance de paire sur les deux benchmarks (MMLU-Pro&nbsp;: 6000 révisions&nbsp;; SuperGPQA&nbsp;: 8000 révisions, 4 graines). det = P(verdict <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> révisé erroné)&nbsp;; cor = P(erreur corrigée <span class="math inline">\(\mid\)</span> révisé erroné)&nbsp;; f.o. = P(opposition erronée <span class="math inline">\(\mid\)</span> révisé correct). Les intervalles de déciles sont des distances cosinus&nbsp;; arêtes groupées sur C3–C6.</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="4">MMLU-Pro (6000 révisions)</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (8000 révisions)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"> Décile</td>
+<td style="text-align: center;">intervalle dist.</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;">intervalle dist.</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">[0.000, 0.028]</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.000, 0.034]</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.027</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">[0.028, 0.043]</td>
+<td style="text-align: center;">0.073</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.034, 0.051]</td>
+<td style="text-align: center;">0.083</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.018</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">[0.043, 0.056]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.006</td>
+<td style="text-align: center;">[0.051, 0.066]</td>
+<td style="text-align: center;">0.178</td>
+<td style="text-align: center;">0.079</td>
+<td style="text-align: center;">0.030</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">[0.056, 0.069]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">[0.066, 0.078]</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.123</td>
+<td style="text-align: center;">0.039</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">[0.069, 0.081]</td>
+<td style="text-align: center;">0.105</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">[0.078, 0.090]</td>
+<td style="text-align: center;">0.229</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.079</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">[0.081, 0.094]</td>
+<td style="text-align: center;">0.200</td>
+<td style="text-align: center;">0.130</td>
+<td style="text-align: center;">0.023</td>
+<td style="text-align: center;">[0.090, 0.104]</td>
+<td style="text-align: center;">0.258</td>
+<td style="text-align: center;">0.129</td>
+<td style="text-align: center;">0.065</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">[0.094, 0.111]</td>
+<td style="text-align: center;">0.156</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">[0.104, 0.119]</td>
+<td style="text-align: center;">0.279</td>
+<td style="text-align: center;">0.155</td>
+<td style="text-align: center;">0.072</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">[0.111, 0.130]</td>
+<td style="text-align: center;">0.236</td>
+<td style="text-align: center;">0.127</td>
+<td style="text-align: center;">0.030</td>
+<td style="text-align: center;">[0.119, 0.138]</td>
+<td style="text-align: center;">0.262</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">[0.130, 0.161]</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.103</td>
+<td style="text-align: center;">0.043</td>
+<td style="text-align: center;">[0.138, 0.168]</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">0.151</td>
+<td style="text-align: center;">0.090</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">[0.161, 1.000]</td>
+<td style="text-align: center;">0.379</td>
+<td style="text-align: center;">0.209</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">[0.168, 1.000]</td>
+<td style="text-align: center;">0.361</td>
+<td style="text-align: center;">0.171</td>
+<td style="text-align: center;">0.097</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:review-outcomes">
+<table>
+<caption>Résultats au niveau révision. det = P(verdict <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> révisé erroné)&nbsp;; f.o. = P(opposition erronée <span class="math inline">\(\mid\)</span> révisé correct). SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span>, 4 graines.</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 graines)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> Condition</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> révisions</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> révisions</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3 aléatoire</td>
+<td style="text-align: center;">5928</td>
+<td style="text-align: center;">0.202</td>
+<td style="text-align: center;">0.012</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.241</td>
+<td style="text-align: center;">0.054</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4 plus proche</td>
+<td style="text-align: center;">5918</td>
+<td style="text-align: center;">0.192</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">7568</td>
+<td style="text-align: center;">0.231</td>
+<td style="text-align: center;">0.057</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 FPRR</td>
+<td style="text-align: center;">5912</td>
+<td style="text-align: center;">0.212</td>
+<td style="text-align: center;">0.020</td>
+<td style="text-align: center;">7570</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.063</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6 poids maximal</td>
+<td style="text-align: center;">5902</td>
+<td style="text-align: center;">0.227</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.254</td>
+<td style="text-align: center;">0.062</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9 auto-révision</td>
+<td style="text-align: center;">5943</td>
+<td style="text-align: center;">0.091</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">7668</td>
+<td style="text-align: center;">0.135</td>
+<td style="text-align: center;">0.037</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/research/who-should-review-whom/figures/F5_decile_correction_mmlu_pro.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="Detection, correction, and false-opposition rates by pair-distance decile for C3–C6 (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Detection rises with distance under every pairing rule; correction saturates; false opposition climbs." /> <img src="/research/who-should-review-whom/figures/F5_decile_correction_supergpqa.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="Detection, correction, and false-opposition rates by pair-distance decile for C3–C6 (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Detection rises with distance under every pairing rule; correction saturates; false opposition climbs." /></p>
+<h4 id="stage-wise-regressions-exposure-vs.-resolution.">Régressions par étape&nbsp;: exposition vs. résolution.</h4>
+<p>Pour cerner <em>où</em> la distance agit, nous ajustons trois régressions logistiques sur la distance de paire (révisions C3–C6 groupées)&nbsp;: la détection d'un révisé erroné, une correction correcte conditionnellement à la détection, et une réponse finale correcte conditionnellement à l'existence d'une correction (Tableau <a href="#tab:stage-reg" data-reference-type="ref" data-reference="tab:stage-reg">9</a>). Sur MMLU-Pro, seule l'étape de détection est sensible à la distance (<span class="math inline">\(\beta = +12.2\)</span>, <span class="math inline">\(p&lt;0.0001\)</span>)&nbsp;; la propagation vers la correction (<span class="math inline">\(p=0.20\)</span>) et l'adoption (<span class="math inline">\(p=0.84\)</span>) est plate. Sur SuperGPQA, les trois étapes sont significatives (<span class="math inline">\(\beta = +7.5\)</span>, <span class="math inline">\(+1.7\)</span>, <span class="math inline">\(+7.3\)</span>&nbsp;; <span class="math inline">\(p&lt;0.0001\)</span>, <span class="math inline">\(p=0.016\)</span>, <span class="math inline">\(p&lt;0.0001\)</span> respectivement) — la distance se propage bien jusqu'à la résolution là-bas — et pourtant l'exactitude globale ne bouge toujours pas, parce que la chaîne inverse (§<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a>) croît avec la même distance. L'énoncé précis est donc&nbsp;: <em>la distance améliore l'exposition à l'erreur&nbsp;; que l'exposition se propage jusqu'à la résolution dépend du régime.</em></p>
+<div id="tab:stage-reg">
+<table>
+<caption>Régressions logistiques par étape des événements de la chaîne avant sur la distance cosinus de paire (révisions C3–C6 groupées&nbsp;; SuperGPQA&nbsp;: 4 graines).</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Benchmark</th>
+<th style="text-align: left;">Étape (résultat)</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(\beta_{\mathrm{dist}}\)</span> (SE)</th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(détection <span class="math inline">\(\mid\)</span> révisé erroné)</td>
+<td style="text-align: center;">4040</td>
+<td style="text-align: center;"><span class="math inline">\(+12.20\)</span> (0.75)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(correction correcte <span class="math inline">\(\mid\)</span> détecté)</td>
+<td style="text-align: center;">796</td>
+<td style="text-align: center;"><span class="math inline">\(+1.64\)</span> (1.29)</td>
+<td style="text-align: center;"><span class="math inline">\(0.203\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(finale correcte <span class="math inline">\(\mid\)</span> correction existante)</td>
+<td style="text-align: center;">321</td>
+<td style="text-align: center;"><span class="math inline">\(-0.52\)</span> (2.66)</td>
+<td style="text-align: center;"><span class="math inline">\(0.844\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(détection <span class="math inline">\(\mid\)</span> révisé erroné)</td>
+<td style="text-align: center;">14124</td>
+<td style="text-align: center;"><span class="math inline">\(+7.54\)</span> (0.37)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(correction correcte <span class="math inline">\(\mid\)</span> détecté)</td>
+<td style="text-align: center;">3161</td>
+<td style="text-align: center;"><span class="math inline">\(+1.68\)</span> (0.70)</td>
+<td style="text-align: center;"><span class="math inline">\(0.016\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(finale correcte <span class="math inline">\(\mid\)</span> correction existante)</td>
+<td style="text-align: center;">1224</td>
+<td style="text-align: center;"><span class="math inline">\(+7.30\)</span> (1.52)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:oracle">La révision dépasse l'oracle de sélection des réponses initiales — mais livre à peine</h2>
+<p>Un <em>oracle de sélection des réponses initiales</em> — qui choisirait toujours la meilleure des quatre réponses initiales mises en cache — atteindrait <span class="math inline">\(0.883\)</span> sur MMLU-Pro et <span class="math inline">\(0.697\)</span> sur SuperGPQA, contre <span class="math inline">\(0.845\)</span> et <span class="math inline">\(0.614\)</span> pour la meilleure condition réelle (écarts de <span class="math inline">\({\approx}3.7\)</span>pp et <span class="math inline">\(8.3\)</span>pp, calculés à partir des valeurs non arrondies <span class="math inline">\(0.8827\)</span> vs <span class="math inline">\(0.8453\)</span> et <span class="math inline">\(0.6965\)</span> vs <span class="math inline">\(0.614\)</span>&nbsp;; les valeurs arrondies du tableau suggèrent <span class="math inline">\(3.8\)</span>pp). Un travail concomitant aboutit au même diagnostic à bien plus grande échelle&nbsp;: sur 15<span>,</span>336 questions et 81<span>,</span>390 pools de candidats fixes, Ji et al. [<a href="#ref-ji2026candidate">41</a>] montrent que les réponses correctes sont fréquemment présentes dans l'ensemble des candidats sans être sélectionnées, et que la fiabilité du juge varie avec la tâche, le générateur et la rareté de la réponse correcte. Notre écart à l'oracle de sélection confirme ce goulot d'étranglement de l'offre de candidats sous des ensembles de réponses identiques entièrement contrôlés, et l'étend en mesurant ce que la révision ajoute <em>au-delà</em> du pool de candidats. Cet oracle n'est cependant <em>pas</em> le plafond d'un système de délibération, car les réviseurs peuvent générer des réponses absentes de l'ensemble initial <span class="math inline">\(R_x\)</span>. Et ils le font réellement&nbsp;: sur les questions où les quatre réponses initiales sont erronées (176/1500 sur MMLU-Pro, <span class="math inline">\(11.7\%\)</span>&nbsp;; 607/2000 sur SuperGPQA, <span class="math inline">\(30.4\%\)</span>), la révision a produit une réponse correcte hors de <span class="math inline">\(R_x\)</span> dans <span class="math inline">\(0\)</span>–<span class="math inline">\(2.3\%\)</span> (MMLU-Pro) et <span class="math inline">\(3.1\)</span>–<span class="math inline">\(4.1\%\)</span> (SuperGPQA) des cas toutes conditions confondues — la sortie de l'étape de révision n'est empiriquement pas une fonction des seules réponses initiales.</p>
+<p>Mais c'est la livraison qui tue cette information nouvelle (Tableau <a href="#tab:delivery" data-reference-type="ref" data-reference="tab:delivery">10</a>). De bout en bout, une proposition correcte nouvelle a atteint la réponse finale dans <span class="math inline">\(1/176\)</span> questions (<span class="math inline">\(0.6\%\)</span>) sous C5 sur MMLU-Pro et au plus <span class="math inline">\(9/607\)</span> (<span class="math inline">\(1.5\%\)</span>) sur SuperGPQA (C9&nbsp;; C5&nbsp;: <span class="math inline">\(8/607 = 1.3\%\)</span>)&nbsp;; la colonne «&nbsp;proposées, non livrées&nbsp;» quantifie la perte — p.&nbsp;ex. C3 a proposé <span class="math inline">\(4\)</span> réponses correctes nouvelles sur MMLU-Pro et n'en a livré aucune, et C5 en a proposé <span class="math inline">\(25\)</span> sur SuperGPQA et n'en a adopté que <span class="math inline">\(6\)</span> (<span class="math inline">\(19\)</span> perdues). Dans le sous-ensemble unanimement erroné (120 et 401 questions), la réponse finale de chaque condition reste erronée dans au moins <span class="math inline">\(99.2\%\)</span> (MMLU-Pro) et <span class="math inline">\(98.0\%\)</span> (SuperGPQA) des cas&nbsp;: la révision peut <em>créer</em> la réponse manquante, mais le pipeline ne sait pas la <em>reconnaître</em>.</p>
+<div id="tab:delivery">
+<table>
+<caption>Audit de livraison des réponses correctes nouvelles sur les questions entièrement erronées (les quatre réponses initiales erronées&nbsp;; MMLU-Pro&nbsp;: 176 questions, 3 graines&nbsp;; SuperGPQA&nbsp;: 607, 4 graines). nouv. prop. = la révision a proposé une réponse correcte absente des initiales&nbsp;; fin. corr. = question finalement correcte&nbsp;; prop. non livr. = proposée mais non adoptée dans la réponse finale.</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="4">MMLU-Pro</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (4 graines)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> Condition</td>
+<td style="text-align: center;">nouv. prop.</td>
+<td style="text-align: center;">fin. corr.</td>
+<td style="text-align: center;">adoptées</td>
+<td style="text-align: center;">prop. non livr.</td>
+<td style="text-align: center;">nouv. prop.</td>
+<td style="text-align: center;">fin. corr.</td>
+<td style="text-align: center;">adoptées</td>
+<td style="text-align: center;">prop. non livr.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">25</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">19</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">13</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:rev">La chaîne inverse&nbsp;: la déstabilisation, non l'amplification des valeurs aberrantes</h2>
+<p>Notre explication de travail de l'ère pilote pour la corruption des majorités correctes était l'<em>amplification des valeurs aberrantes</em>&nbsp;: l'appariement des plus distants câblerait préférentiellement l'unique valeur aberrante erronée à un agent correct. Les données complètes la réfutent comme mécanisme global. Au sein des répartitions de réponses 3:1 — en contrôlant la difficulté des questions en ne comparant que des questions de même structure de répartition — le singleton est en effet bien moins susceptible d'être correct que la majorité (<span class="math inline">\(20.8\%\)</span> vs <span class="math inline">\(57.6\%\)</span> sur MMLU-Pro&nbsp;; <span class="math inline">\(28.4\%\)</span> vs <span class="math inline">\(44.7\%\)</span> sur SuperGPQA)&nbsp;: les réponses distantes et inhabituelles sont disproportionnellement erronées. Mais les extrémités de l'arête de distance <em>maximale</em> de chaque question sont erronées essentiellement au taux de base (<span class="math inline">\(17.1\%\)</span> vs <span class="math inline">\(16.3\%\)</span> pour l'arête de distance minimale, taux de base <span class="math inline">\(16.8\%\)</span>, MMLU-Pro&nbsp;; <span class="math inline">\(44.7\%\)</span> vs <span class="math inline">\(43.6\%\)</span>, base <span class="math inline">\(44.1\%\)</span>, SuperGPQA)&nbsp;: l'appariement des plus distants ne sélectionne <em>pas</em> systématiquement de partenaires erronés. Nous retirons donc l'amplification des valeurs aberrantes comme explication globale&nbsp;; le résultat 3:1 ne vaut que comme «&nbsp;les réponses aberrantes ont une faible exactitude&nbsp;», et non «&nbsp;FPRR choisit de mauvais partenaires&nbsp;».</p>
+<p>Ce que la chaîne inverse montre à la place, c'est l'<em>opposition erronée et la déstabilisation des réponses valides</em>. L'opposition erronée augmente avec la distance de paire (Tableau <a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a>&nbsp;: de <span class="math inline">\(0.002\)</span> à <span class="math inline">\(0.051\)</span> sous C5 sur MMLU-Pro&nbsp;; jusqu'à <span class="math inline">\(0.104\)</span> sous appariement de poids maximal sur SuperGPQA). Au niveau question (Figure <a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>, côté C), la déstabilisation des réviseurs corrects est plus lourde sous C5 que sous C3 sur MMLU-Pro (<span class="math inline">\(50/1324 = 4\%\)</span> vs <span class="math inline">\(27/1324 = 2\%\)</span>&nbsp;; finale-erronée <span class="math inline">\(33\)</span> vs <span class="math inline">\(23\)</span>) — C5 coiffe l'entonnoir inverse de MMLU-Pro — tandis que sur SuperGPQA la chaîne inverse est lourde pour toutes les conditions de révision (<span class="math inline">\(0.07\)</span>–<span class="math inline">\(0.08\)</span> déstabilisées). La dissimilarité sémantique ne route pas vers des partenaires erronés&nbsp;; elle fabrique de l'opposition à des partenaires corrects.</p>
+<p>Les métriques secondaires pré-enregistrées (Tableau <a href="#tab:secondary" data-reference-type="ref" data-reference="tab:secondary">11</a>) et les transitions de consensus (Figure <a href="#fig:transitions" data-reference-type="ref" data-reference="fig:transitions">10</a>) quantifient le bilan qui en résulte. Les conditions de révision récupèrent les erreurs de la majorité plus souvent que le vote — mais c'est l'appariement <em>aléatoire</em>, et non FPRR, qui est nominalement le meilleur sur MMLU-Pro (récupération <span class="math inline">\(0.099\)</span>&nbsp;; sauvetage <span class="math inline">\(0.082\)</span>), et sur SuperGPQA le synthétiseur sans révision C2 (<span class="math inline">\(0.099\)</span> / <span class="math inline">\(0.100\)</span>) égale les meilleures conditions de révision (C4&nbsp;: <span class="math inline">\(0.098\)</span> / <span class="math inline">\(0.106\)</span>) sans aucune révision, tandis que C5 est la plus faible condition de révision hormis C9 (<span class="math inline">\(0.089\)</span> / <span class="math inline">\(0.096\)</span>). Par rapport à la réponse initiale de l'agent 0, les conditions de révision MMLU-Pro basculent <span class="math inline">\(15.2\)</span>–<span class="math inline">\(18.0\%\)</span> des cas initialement erronés vers correct tout en corrompant <span class="math inline">\(1.5\)</span>–<span class="math inline">\(2.1\%\)</span> des cas initialement corrects (C5&nbsp;: <span class="math inline">\(16.0\%\)</span> / <span class="math inline">\(2.1\%\)</span>&nbsp;; vote C1&nbsp;: <span class="math inline">\(11.7\%\)</span> / <span class="math inline">\(0.5\%\)</span>)&nbsp;; sur SuperGPQA, le compromis est presque symétrique (C5&nbsp;: <span class="math inline">\(17.2\%\)</span> vs <span class="math inline">\(6.8\%\)</span>) — ce qui explique exactement pourquoi aucun gain net ne se matérialise sur le benchmark plus difficile.</p>
+<div id="tab:secondary">
+<table>
+<caption>Métriques secondaires (taux par condition). rec = récupération des erreurs de la majorité&nbsp;; cor = corruption d'une majorité correcte&nbsp;; res = sauvetage de la minorité. SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span>, 4 graines.</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 graines)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> Condition</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.024</td>
+<td style="text-align: center;">0.032</td>
+<td style="text-align: center;">0.048</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.064</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.022</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.040</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.082</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.098</td>
+<td style="text-align: center;">0.054</td>
+<td style="text-align: center;">0.106</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">0.078</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.096</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.017</td>
+<td style="text-align: center;">0.064</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.099</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.036</td>
+<td style="text-align: center;">0.070</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.075</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/research/who-should-review-whom/figures/F6_error_transitions_mmlu_pro.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="Error transitions relative to agent 0’s initial answer (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Recovery and corruption nearly cancel under every review topology." /> <img src="/research/who-should-review-whom/figures/F6_error_transitions_supergpqa.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="Error transitions relative to agent 0’s initial answer (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Recovery and corruption nearly cancel under every review topology." /></p>
+<h2 id="sec:btr">La révision est active mais à effet net nul&nbsp;: le Beneficial Transition Ratio</h2>
+<p>Que C5 égale le contrôle d'auto-révision C9 en exactitude pourrait signifier que la révision est redondante — ou qu'elle est active dans les deux sens et s'annule. Les transitions C2<span class="math inline">\(\leftrightarrow\)</span>C5 au niveau question tranchent&nbsp;: l'ajout des révisions au même pipeline de synthèse bascule <span class="math inline">\(27\)</span> questions MMLU-Pro d'erroné à correct et <span class="math inline">\(23\)</span> de correct à erroné (net <span class="math inline">\(+4\)</span>&nbsp;; <span class="math inline">\(1450\)</span> inchangées), et <span class="math inline">\(49\)</span> vs <span class="math inline">\(79\)</span> sur SuperGPQA (net <span class="math inline">\(-30\)</span>&nbsp;; <span class="math inline">\(1872\)</span> inchangées). La révision est <em>active</em>, et sur SuperGPQA activement nette-négative — reflétant l'écart significatif C2 <span class="math inline">\(&gt;\)</span> C5 du Tableau <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>. Nous résumons cela par le <strong>Beneficial Transition Ratio</strong> (taux de transitions bénéfiques), <span class="math inline">\(\mathrm{BTR} = \#\text{rescued} / (\#\text{rescued} + \#\text{harmed})\)</span>&nbsp;: <span class="math inline">\(0.54\)</span> sur MMLU-Pro et <span class="math inline">\(0.383\)</span> sur SuperGPQA. (Le BTR est calculé à partir des comptes de transitions par question C2 vs C5&nbsp;; ce n'est pas une précision sur tous les événements de révision de réponse, ce qui exigerait un audit séparé de chaque modification induite par une révision.)</p>
+<h2 id="sec:subsets">Sous-ensembles où la topologie a un effet de traitement</h2>
+<p>Une critique de dilution soutient que le résultat nul global est non informatif parce que la plupart des questions sont unanimes et qu'aucune topologie ne peut y agir. Nous restreignons donc l'analyse au <em>sous-ensemble de désaccord</em> (réponses initiales non unanimes&nbsp;; <span class="math inline">\(223\)</span> questions, <span class="math inline">\(14.9\%\)</span>, sur MMLU-Pro&nbsp;; <span class="math inline">\(754\)</span>, <span class="math inline">\(37.7\%\)</span>, sur SuperGPQA) et au <em>sous-ensemble récupérable</em> (questions de désaccord dont la réponse correcte figure parmi les initiales&nbsp;; <span class="math inline">\(59\)</span>, <span class="math inline">\(3.9\%\)</span>&nbsp;; et <span class="math inline">\(234\)</span>, <span class="math inline">\(11.7\%\)</span>). Le Tableau <a href="#tab:subsets" data-reference-type="ref" data-reference="tab:subsets">12</a> rejette la réfutation par dilution sans autoriser non plus d'affirmation conditionnelle&nbsp;: C5 est <em>devancé</em> par C3 sur les deux benchmarks — de <span class="math inline">\(3.1\)</span>pp et <span class="math inline">\(13.6\)</span>pp sur les sous-ensembles de désaccord et récupérable de MMLU-Pro, et de <span class="math inline">\(2.0\)</span>pp et <span class="math inline">\(1.7\)</span>pp sur les sous-ensembles SuperGPQA correspondants (C5 vs C4 sur SuperGPQA récupérable&nbsp;: <span class="math inline">\(-3.4\)</span>pp). La direction est désormais uniformément négative sur les deux benchmarks, mais chaque intervalle de confiance croise zéro — là où la topologie a de la place pour agir, FPRR ne montre aucun bénéfice et une pénalité constante, non significative.</p>
+<div id="tab:subsets">
+<table>
+<caption>C5 vs C3 sur les sous-ensembles où la topologie d'appariement peut agir (IC bootstrap appariés&nbsp;; SuperGPQA&nbsp;: <span class="math inline">\(n=2000\)</span>, 4 graines).</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Benchmark</th>
+<th style="text-align: left;">Sous-ensemble</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;">exactitude C3</th>
+<th style="text-align: center;">exactitude C5</th>
+<th style="text-align: center;">C5<span class="math inline">\(-\)</span>C3 (pp)</th>
+<th style="text-align: center;">IC 95% (pp)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">désaccord</td>
+<td style="text-align: center;">223</td>
+<td style="text-align: center;">0.498</td>
+<td style="text-align: center;">0.466</td>
+<td style="text-align: center;"><span class="math inline">\(-3.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.1\)</span>, <span class="math inline">\(+1.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">récupérable</td>
+<td style="text-align: center;">59</td>
+<td style="text-align: center;">0.475</td>
+<td style="text-align: center;">0.339</td>
+<td style="text-align: center;"><span class="math inline">\(-13.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-25.4\)</span>, <span class="math inline">\(+0.0\)</span>]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">désaccord</td>
+<td style="text-align: center;">754</td>
+<td style="text-align: center;">0.488</td>
+<td style="text-align: center;">0.468</td>
+<td style="text-align: center;"><span class="math inline">\(-2.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-4.8\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">récupérable</td>
+<td style="text-align: center;">234</td>
+<td style="text-align: center;">0.402</td>
+<td style="text-align: center;">0.385</td>
+<td style="text-align: center;"><span class="math inline">\(-1.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.6\)</span>, <span class="math inline">\(+5.1\)</span>]</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:what">Qu'est-ce qui a traversé les arêtes disassortatives&nbsp;?</h2>
+<p>Pour répondre directement à la question de l'article&nbsp;: les arêtes des paires les plus distantes <em>portaient</em> un signal que les arêtes aléatoires et les plus proches portaient moins — davantage de détections de pairs réellement erronés (<span class="math inline">\(301\)</span> vs <span class="math inline">\(254\)</span> et <span class="math inline">\(260\)</span> verdicts <code>PEER INCORRECT</code> sur MMLU-Pro&nbsp;; détection <span class="math inline">\(0.212\)</span> vs <span class="math inline">\(0.202\)</span>/<span class="math inline">\(0.192\)</span>), concentrées dans les déciles de haute distance où la détection vaut <span class="math inline">\(3\)</span>–<span class="math inline">\(10\times\)</span> le taux des déciles bas. Trois résultats résument où ce signal est allé. <em>(a)</em> La distance sémantique augmente de façon fiable l'exposition à l'erreur&nbsp;; que l'exposition se propage à la réparation et à l'adoption dépend du régime (MMLU-Pro&nbsp;: détection seule&nbsp;; SuperGPQA&nbsp;: les trois étapes), et la chaîne inverse croît avec la même distance à chaque étape — le gain net est donc nul sur MMLU-Pro et négatif sur SuperGPQA (BTR <span class="math inline">\(0.54\)</span> vs <span class="math inline">\(0.383\)</span>). <em>(b)</em> La révision génère des réponses correctes nouvelles au-delà de l'oracle de sélection des réponses initiales sur <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> des questions entièrement erronées, mais la livraison de bout en bout est <span class="math inline">\(\le 1.5\%\)</span>, et la plupart des propositions se perdent entre proposition et adoption. <em>(c)</em> La contrainte limitante est l'attribution épistémique du crédit&nbsp;: sans validation asymétrique, le système ne peut distinguer le désaccord correctif de l'opposition erronée. Différent <span class="math inline">\(\neq\)</span> instructif.</p>
+<h1 id="sec:cases">Études de cas</h1>
+<p>Quatre questions MMLU-Pro (toutes graine 0) illustrent les mécanismes quantifiés ci-dessus&nbsp;; transcriptions complètes, matrices de distance et finales par condition se trouvent dans <code>results/case_studies_mmlu_pro.md</code>.</p>
+<h4 id="successful-correction-qid-11344.">Correction réussie (qid 11344).</h4>
+<p>Une question de conception d'échangeur de chaleur (référence&nbsp;: D). Les quatre agents répondent B, E, D, C — une majorité erronée (B) avec un seul agent correct (2). C5 apparie <span class="math inline">\((0,1)\)</span> et <span class="math inline">\((2,3)\)</span>&nbsp;; l'agent 2 juge l'agent 3 <code>PEER INCORRECT</code>, et l'agent 3 se met à jour vers D et approuve l'agent 2 (<code>PEER CORRECT</code>). Le synthétiseur récupère D, tandis que C0, C1, C2 et C9 produisent tous le B de la majorité. C'est le pipeline fonctionnant comme prévu — bien que C3, C4 et C6 récupèrent aussi D ici, ce succès n'est donc pas spécifique à l'appariement des plus distants.</p>
+<h4 id="minority-rescue-qid-10203.">Sauvetage d'une minorité (qid 10203).</h4>
+<p>Un empilement polariseur/lame demi-onde (référence&nbsp;: J). Les agents 0 et 1 ne produisent pas de réponse analysable&nbsp;; l'agent 2 seul répond J, l'agent 3 répond C. Sous C5 (paires <span class="math inline">\((0,1)\)</span>, <span class="math inline">\((2,3)\)</span>), les quatre révisions convergent&nbsp;: les deux agents de la paire correcte approuvent J, l'agent 2 signale l'agent 3 comme <code>PEER INCORRECT</code>, et chaque réviseur se met à jour vers J. Toutes les conditions d'agrégation récupèrent J&nbsp;; seul C0 (agent 0) reste erroné. La révision convertit un unique échantillon correct fragile en consensus — mais le simple vote le fait aussi ici (les réponses non analysables ne votent pas), montrant encore que la topologie n'est pas l'ingrédient actif.</p>
+<h4 id="destabilization-of-a-correct-majority-qid-12037.">Déstabilisation d'une majorité correcte (qid 12037).</h4>
+<p>Une question de puissance d'écoulement en conduite (référence&nbsp;: D). Trois agents répondent D&nbsp;; l'agent aberrant 2 répond A. L'appariement des plus distants (C5, et à l'identique C6) câble la valeur aberrante à l'agent correct 0. La valeur aberrante déclare l'agent 0 <code>PEER INCORRECT</code> et garde A&nbsp;; pendant ce temps, l'agent 3, révisant le D correct de l'agent 1, bascule vers H. Face à un dossier de révision perturbé, le synthétiseur produit A pour C5 (et C3) — une majorité correcte détruite — tandis que C4 et C6 restent à D. Nous présentons cela comme une instance du mécanisme de <em>déstabilisation</em> du §<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a> — un pair distant fabriquant de l'opposition à des réponses correctes — et non comme une preuve que l'appariement des plus distants sélectionne systématiquement des partenaires erronés&nbsp;: au niveau global, ce n'est pas le cas (les extrémités des arêtes de distance maximale se trompent au taux de base).</p>
+<h4 id="shared-misconception-qid-10012.">Idée fausse partagée (qid 10012).</h4>
+<p>Une question de projectile et conservation de l'énergie (référence&nbsp;: I). Les quatre agents répondent indépendamment A, avec des distances deux à deux de <span class="math inline">\(0.099\)</span>–<span class="math inline">\(0.243\)</span> provenant uniquement de justifications formulées différemment pour la même dérivation erronée. Toutes les révisions C5 renvoient <code>PEER CORRECT</code>, et chaque condition — de C0 à C9 — produit A. La distance de plongement sépare les formulations&nbsp;; l'idée fausse est partagée, de sorte que la révision disassortative finit par la certifier.</p>
+<h1 id="sec:discussion">Discussion</h1>
+<h4 id="a-clean-null-and-why-it-is-informative.">Un résultat nul propre, et pourquoi il est informatif.</h4>
+<p>À réponses initiales, invites et calcul identiques, le <em>qui</em> de la révision par les pairs ne compte pas&nbsp;: les appariements des plus distants, des plus proches, aléatoire et exact de poids maximal se tiennent à 0.6pp les uns des autres sur MMLU-Pro et à 0.4pp sur SuperGPQA, et aucun ne bat le vote majoritaire ni l'auto-révision à calcul apparié. Cela étend à la dimension du routage le tableau émergeant selon lequel la communication entre agents homogènes bat rarement l'agrégation [<a href="#ref-yang2025revisiting">6</a>, <a href="#ref-choi2025debateorvote">7</a>]&nbsp;: ce n'est pas seulement le débat par diffusion qui n'ajoute aucune valeur — aucun câblage deux à deux des mêmes échantillons n'en ajoute non plus.</p>
+<h4 id="why-the-correlated-cluster-intuition-did-not-pay-off-here.">Pourquoi l'intuition des clusters corrélés n'a pas payé ici.</h4>
+<p>FPRR a été conçu sur la prémisse que les réponses échantillonnées forment des clusters de raisonnement corrélés et qu'apparier à travers les clusters maximise le contraste diagnostique. La prémisse tient, mais les clusters sont trop petits pour être contournés par le routage. Sur MMLU-Pro, <span class="math inline">\(85.1\%\)</span> des observations sont unanimes (<span class="math inline">\(77.1\%\)</span> unanimement correctes, <span class="math inline">\(8.0\%\)</span> unanimement erronées), le nombre moyen de réponses uniques parmi quatre échantillons est <span class="math inline">\(1.166\)</span>, et la distance cosinus moyenne deux à deux est <span class="math inline">\(0.087\)</span>&nbsp;; SuperGPQA est plus disputé mais reste peu diversifié (<span class="math inline">\(62.3\%\)</span> unanimes, <span class="math inline">\(1.355\)</span> réponses uniques, distance moyenne <span class="math inline">\(0.095\)</span>). Quand trois agents sur quatre disent la même chose, chaque règle d'appariement produit presque le même ensemble d'arêtes à une paire près — ce que montrent exactement les tableaux d'exactitude. Le routage disassortatif présuppose une masse de désaccord exploitable&nbsp;; à température <span class="math inline">\(0.8\)</span> avec un modèle fort sur des benchmarks saturés, cette masse est minimale.</p>
+<h4 id="exposure-is-not-resolution-and-neither-is-free.">L'exposition n'est pas la résolution, et aucune des deux n'est gratuite.</h4>
+<p>Les résultats mécanistiques séparent deux quantités que la littérature sur le débat confond souvent. La distance sémantique augmente robustement l'<em>exposition</em> à l'erreur&nbsp;: les réviseurs signalent les pairs erronés jusqu'à un ordre de grandeur plus souvent dans le décile de distance supérieur que dans l'inférieur. Mais la propagation de cette exposition vers la réparation et l'adoption dépend du régime — plate sur MMLU-Pro, significative aux trois étapes sur SuperGPQA — et une chaîne inverse croît partout avec la même distance&nbsp;: opposition erronée (jusqu'à <span class="math inline">\(0.10\)</span> dans le décile supérieur) et déstabilisation des réviseurs corrects (<span class="math inline">\(4\%\)</span> des questions sous C5 vs <span class="math inline">\(2\%\)</span> sous C3 sur MMLU-Pro). Fait notable, la chaîne inverse ne s'explique pas par une sélection de mauvais partenaires par l'appariement des plus distants&nbsp;: les extrémités des arêtes de distance maximale se trompent au taux de base. Ce qui bride les pipelines fondés sur la révision dans ce régime, c'est l'<em>attribution épistémique du crédit</em>&nbsp;: une réponse distante et argumentée avec assurance semble identique pour le réviseur et le synthétiseur, qu'elle corrige une erreur ou invente une objection, de sorte que sans validation asymétrique, chaque unité d'exposition achetée par la topologie est remboursée en déstabilisation.</p>
+<h4 id="system-level-gains-are-not-intrinsic-gains.">Les gains au niveau système ne sont pas des gains intrinsèques.</h4>
+<p>Là où les conditions multi-échantillons battent effectivement la baseline unique — le plus nettement sur SuperGPQA, <span class="math inline">\({\approx}+4\)</span>pp pour toutes les conditions <span class="math inline">\(N{=}4\)</span> face à C0 — le gain est capturé à parts égales par le vote et la synthèse sans révision&nbsp;; en fait, sur SuperGPQA la synthèse sans révision dépasse <em>significativement</em> la révision par les pairs (C2 vs C5&nbsp;: <span class="math inline">\(+1.5\)</span>pp, <span class="math inline">\(p=0.010\)</span> non corrigé), de sorte que sur le benchmark plus difficile la révision est mesurablement pire que l'absence de révision. Rien dans nos résultats ne suggère que l'évaluation réciproque change ce que le modèle <em>sait</em>&nbsp;; elle repondère des réponses que le modèle produit déjà, et sur ces benchmarks le vote les repondère tout aussi bien pour un cinquième du coût en tokens. Les rapports de gains fondés sur la révision ou le débat devraient être lus à l'aune d'un contrôle d'auto-révision à calcul apparié et d'un plancher de vote&nbsp;; dans nos données, les deux rendent entièrement compte de l'effet.</p>
+<h1 id="sec:limitations">Limites</h1>
+<p>Plusieurs menaces à la validité nuancent ces résultats.</p>
+<p><strong>Surcoût de calcul.</strong> Les conditions de révision coûtent <span class="math inline">\({\sim}5\times\)</span> les tokens du vote majoritaire et <span class="math inline">\({\sim}20\times\)</span> une réponse unique pour un gain global nul&nbsp;; notre analyse de coût est descriptive et ne teste pas de variantes de révision moins coûteuses (révisions plus courtes, moins de paires).</p>
+<p><strong>Les erreurs corrélées sont structurelles.</strong> Tous les agents sont un même checkpoint servi par un même fournisseur, de sorte que les erreurs corrélées de même source (idée fausse partagée, <span class="math inline">\(8.0\%\)</span>–<span class="math inline">\(21.6\%\)</span> des observations) bornent ce que tout schéma de révision intra-modèle peut récupérer&nbsp;; des pools de modèles hétérogènes peuvent se comporter différemment.</p>
+<p><strong>Contamination des benchmarks.</strong> MMLU-Pro et SuperGPQA sont des benchmarks publics et peuvent être partiellement exposés dans les données d'entraînement. La contamination gonfle les exactitudes absolues et comprime la marge&nbsp;; comme elle s'applique identiquement à chaque condition, les différences appariées restent interprétables, mais les tailles d'effet détectables sont bornées par la marge restante.</p>
+<p><strong>Dépendance au plongement.</strong> Les distances proviennent d'un seul encodeur (bge-m3) sur le texte conclusion + justification. La distance de plongement mesure une dissimilarité sémantique de surface, pas un désaccord logique — la question qid 10012 montre des idées fausses identiques à distance <span class="math inline">\(0.24\)</span>. L'ablation de métrique exploratoire (Tableau <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>) n'atténue cela que partiellement&nbsp;: elle est à graine unique, 200 questions par benchmark, et MMLU-Pro D4 manque&nbsp;; l'avantage de D4 sur SuperGPQA exige donc une réplication avant de pouvoir peser contre le résultat nul principal.</p>
+<p><strong>Biais du juge et du synthétiseur.</strong> Le synthétiseur est le même modèle que les agents et peut partager leurs biais (p.&nbsp;ex. vers des réponses assurées ou verbeuses)&nbsp;; son invite était gelée entre conditions, donc ce biais ne peut expliquer les différences de conditions, mais il façonne tous les résultats des conditions de révision.</p>
+<p><strong>Modèle unique, configuration de décodage unique.</strong> Un checkpoint, une température (<span class="math inline">\(0.8\)</span>), un <span class="math inline">\(N\)</span> dans les runs principaux&nbsp;; le fournisseur n'expose aucun paramètre de graine, donc le non-déterminisme de l'API n'est pas fixable par graine (tous les éléments stochastiques que nous contrôlons — échantillonnage, appariement, brassages — sont à graine fixée et journalisés). Le résultat nul pourrait ne pas se transférer à des régimes de plus grande diversité (température plus élevée, ensembles hétérogènes, tâches plus dures ou moins saturées) où la masse de désaccord est plus grande.</p>
+<p><strong>Portée et dépendance.</strong> Deux benchmarks&nbsp;; SuperGPQA repose sur quatre graines (contre trois pour MMLU-Pro). Les observations inter-graines partagent des questions, donc les IC bootstrap groupés et les valeurs de <span class="math inline">\(p\)</span> de McNemar sont légèrement anti-conservateurs — ce qui, le cas échéant, rend les conclusions nulles conservatrices pour les comparaisons principales, dont aucune n'approche la significativité. L'ablation de <span class="math inline">\(N\)</span> et l'étude de variance de graine d'appariement pré-enregistrées (Amendement 8) n'ont pas été exécutées pour des raisons de budget&nbsp;; nous ne pouvons donc pas quantifier la sensibilité du résultat nul à <span class="math inline">\(N\)</span> ou au hasard d'appariement&nbsp;; l'ablation de distance est à graine unique.</p>
+<h1 id="sec:conclusion">Conclusion</h1>
+<p>Selon les critères de décision pré-enregistrés, cette étude se classe en <strong>catégorie de résultat D — un résultat nul</strong>&nbsp;: sur des réponses mises en cache identiques, l'évaluation réciproque des paires les plus distantes est statistiquement indiscernable de l'appariement aléatoire, de l'appariement des plus proches, de l'appariement exact de poids maximal, du vote majoritaire et de l'auto-révision à calcul apparié sur MMLU-Pro (final, 3 graines) et SuperGPQA (4 graines), avec toutes les tailles d'effet principales à moins de <span class="math inline">\(\pm 1\)</span>pp et toutes les valeurs de <span class="math inline">\(p\)</span> ajustées par Holm <span class="math inline">\(\geq 0.92\)</span>. Qui révise qui ne compte pas — dans ce régime. Il semble même que la révision soit légèrement pire que l'absence de révision sur le benchmark plus difficile (C2 <span class="math inline">\(&gt;\)</span> C5 de <span class="math inline">\(1.5\)</span>pp, <span class="math inline">\(p=0.010\)</span> non corrigé). Une note exploratoire nuance, sans la changer, cette classification&nbsp;: dans l'ablation de distance à graine unique, la métrique sensible au désaccord par contradiction NLI (D4) surpasse la distance sémantique pure sur le benchmark plus difficile (D4 <span class="math inline">\(-\)</span> D2 <span class="math inline">\(= +3.0\)</span>pp, IC <span class="math inline">\([+0.5, +6.0]\)</span>, <span class="math inline">\(7\)</span> vs <span class="math inline">\(1\)</span> discordantes&nbsp;; Tableau <a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>) — premier indice que c'est l'<em>opposition épistémique</em>, et non la différence textuelle, qui est la quantité sur laquelle router, reliant ce résultat nul aux travaux sur le routage sensible au désaccord.</p>
+<p>L'analyse mécanistique est, croyons-nous, la contribution durable. La distance sémantique augmente de façon fiable l'<em>exposition</em> à l'erreur sur les deux benchmarks et toutes les règles d'appariement, mais que l'exposition se propage à la réparation et à l'adoption dépend du régime — et la chaîne inverse d'opposition erronée et de déstabilisation croît avec la même distance à chaque étape, de sorte que le gain net est nul ou pire. La révision n'est ni redondante ni bornée par l'ensemble des réponses initiales&nbsp;: elle bascule des questions dans les deux sens (BTR <span class="math inline">\(0.54\)</span> / <span class="math inline">\(0.383\)</span>) et génère des réponses correctes nouvelles sur <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> des questions entièrement erronées, mais la livraison de bout en bout de cette information nouvelle est <span class="math inline">\(\le 1.5\%\)</span>. La révision par les pairs entre agents homogènes échoue non parce que les réviseurs ne voient pas le désaccord, ni parce que rien de nouveau ne peut être dit — mais parce que le système ne sait pas attribuer le crédit&nbsp;: sans validation asymétrique, désaccord correctif et opposition erronée sont indiscernables.</p>
+<p>Trois directions s'ensuivent. Premièrement, retester le routage disassortatif là où la masse de désaccord est réelle&nbsp;: pools à température plus élevée ou à modèles hétérogènes, tâches moins saturées et <span class="math inline">\(N\)</span> plus grands. Deuxièmement, stabiliser avant de router&nbsp;: protéger les réponses correctes contre l'opposition erronée induite par la distance (p.&nbsp;ex. synthèse conditionnée par le verdict ou validation asymétrique des contestations), en ciblant directement la chaîne de déstabilisation. Troisièmement, traiter l'attribution épistémique du crédit elle-même comme objet d'étude — calibration des réviseurs, livraison de la proposition à l'adoption, et arbitrage sous révisions conflictuelles — puisque nos entonnoirs et régressions par étape identifient l'attribution du crédit, plutôt que le routage, comme la contrainte limitante du passage à l'échelle au moment du test fondé sur la révision.</p>
+<h1 class="unnumbered" id="declarations">Déclarations</h1>
+<h2 class="unnumbered" id="data-availability">Disponibilité des données</h2>
+<p>Les enregistrements bruts mis en cache (JSONL&nbsp;: invites complètes, sorties brutes, champs analysés, usage de tokens, graines), les sorties d'analyse et les données des figures sont disponibles dans le dépôt du projet. Les jeux de données de benchmark sont publics&nbsp;: MMLU-Pro (CC-BY-4.0) et SuperGPQA (ODC-BY).</p>
+<h2 class="unnumbered" id="code-availability">Disponibilité du code</h2>
+<p>Le pipeline expérimental complet et les scripts d'analyse (appariement à graine fixée, analyse syntaxique déterministe, statistiques bootstrap appariées) sont disponibles dans le dépôt du projet.</p>
+<h2 class="unnumbered" id="author-contributions">Contributions des auteurs</h2>
+<p>Tous les auteurs ont contribué à la conception de l'étude, à l'exécution des expériences, à l'analyse des données et à la préparation du manuscrit, et ont approuvé la version finale.</p>
+<h2 class="unnumbered" id="funding">Financement</h2>
+<p>Ce travail a été mené et financé par Gi (Beijing) Tech Design Ltd.&nbsp;; aucun financement externe n'a été reçu.</p>
+<h2 class="unnumbered" id="competing-interests">Conflits d'intérêts</h2>
+<p>Tous les auteurs sont employés de Gi (Beijing) Tech Design Ltd.</p>
+<h2 class="unnumbered" id="ethics-approval">Approbation éthique</h2>
+<p>Sans objet&nbsp;; cette étude n'implique ni participants humains, ni animaux, ni données personnelles identifiables.</p>
+<div class="thebibliography">
+<h2>Références</h2>
+<ol>
+<li id="ref-wang2022selfconsistency">Wang, X. et al. Self-Consistency Improves Chain of Thought Reasoning in Language Models. ICLR 2023 (arXiv:2203.11171).</li>
+<li id="ref-du2023multiagent">Du, Y. et al. Improving Factuality and Reasoning in Language Models through Multiagent Debate. ICML 2024 (arXiv:2305.14325).</li>
+<li id="ref-chen2023reconcile">Chen, J. et al. ReConcile: Round-Table Conference Improves Reasoning via Consensus among Diverse LLMs. ACL 2024 (arXiv:2309.13007).</li>
+<li id="ref-li2024moreagents">Li, J. et al. More Agents Is All You Need. arXiv:2402.05120, 2024.</li>
+<li id="ref-estornell2024multillm">Estornell, A. and Liu, Y. Multi-LLM Debate: Framework, Principals, and Interventions. NeurIPS 2024 (OpenReview sy7eSEXdPC).</li>
+<li id="ref-yang2025revisiting">Yang, Z. et al. Revisiting Multi-Agent Debate as Test-Time Scaling: A Systematic Study of Conditional Effectiveness. arXiv:2505.22960, 2025.</li>
+<li id="ref-choi2025debateorvote">Choi, Zhu, Li. Debate or Vote: Which Yields Better Decisions in Multi-Agent Large Language Models? NeurIPS 2025 (arXiv:2508.17536).</li>
+<li id="ref-wu2025reallydebate">Wu, et al. Can LLM Agents Really Debate? A Controlled Study of Multi-Agent Debate in Logical Reasoning. arXiv:2511.07784, 2025.</li>
+<li id="ref-zhu2026demystifying">Zhu, et al. Demystifying Multi-Agent Debate: The Role of Confidence and Diversity. arXiv:2601.19921, 2026.</li>
+<li id="ref-nguyen2026dars">Nguyen, et al. Hear Both Sides: Efficient Multi-Agent Debate via Diversity-Aware Message Retention. arXiv:2603.20640, 2026.</li>
+<li id="ref-zeng2025s2mad">Zeng, et al. S\(^2\)-MAD: Breaking the Token Barrier to Enhance Multi-Agent Debate Efficiency. NAACL 2025 (arXiv:2502.04790).</li>
+<li id="ref-rmoa2025">Xie, et al. RMoA: Optimizing Mixture-of-Agents through Diversity Maximization and Residual Compensation. Findings of ACL 2025.</li>
+<li id="ref-cortexdebate2025">Sun, et al. CortexDebate: Debating with Sparse, Dynamic and Trust-Aware Topology. Findings of ACL 2025 (arXiv:2507.03928).</li>
+<li id="ref-dysco2026">Gou and Liu. DySCo: Dynamic Trust-Aware Sparse Consensus. arXiv:2606.01828, 2026.</li>
+<li id="ref-dytopo2026">DyTopo: Dynamic Topology Routing for Multi-Agent Systems. arXiv:2602.06039, 2026.</li>
+<li id="ref-mace2026">Li, et al. Multi-Agent LLMs Fail to Explore Each Other / MACE. arXiv:2607.11250, 2026.</li>
+<li id="ref-gptswarm">Zhuge, et al. GPTSwarm: Language Agents as Optimizable Graphs. ICML 2024 (arXiv:2402.16823).</li>
+<li id="ref-dylan">Liu, et al. Dynamic LLM-Agent Network (DyLAN). COLM 2024 (arXiv:2310.02170).</li>
+<li id="ref-agentprune">Zhang, et al. AgentPrune: Reducing Redundancy in Multi-Agent Communication. ICLR 2025 (arXiv:2410.02506).</li>
+<li id="ref-gdesigner">Zhang, et al. G-Designer: Architecting Multi-agent Communication Topologies via Graph Neural Networks. arXiv:2410.11782, 2024.</li>
+<li id="ref-macnet">Qian, et al. MacNet: Multi-Agent Collaboration Networks. arXiv:2406.07155, 2024.</li>
+<li id="ref-graphgrpo">Graph-GRPO: Graph Topology Optimization via GRPO. arXiv:2603.02701, 2026.</li>
+<li id="ref-gtd2025">Jiang, et al. Guided Topology Diffusion for Multi-Agent Systems. ACL 2026 (arXiv:2510.07799).</li>
+<li id="ref-codebookagent">Codebook Agent: Query-Conditioned Topology Prediction. arXiv:2609.02264, 2026.</li>
+<li id="ref-xu2023peerreview">Xu, et al. Towards Reasoning in LLMs via Multi-Agent Peer Review Collaboration. arXiv:2311.08152, 2023.</li>
+<li id="ref-pico2024">PiCO: Peer-based Collaborative Optimization. arXiv:2402.01830, 2024.</li>
+<li id="ref-qdtournament">Quality-Diversity Debate Tournaments. arXiv:2510.05909, 2025.</li>
+<li id="ref-madsurvey2026">Motger, et al. A Survey of Multi-Agent Debate Systems (141 studies). arXiv:2607.26212, 2026.</li>
+<li id="ref-slimsc">Slim-SC: Efficient Self-Consistency via Similarity Pruning. arXiv:2509.13990, 2025.</li>
+<li id="ref-ssdp">SSDP: Semantic-Similarity-Based Diverse Pruning. arXiv:2511.08595, 2025.</li>
+<li id="ref-deepprune">DeepPrune: Efficient Trace Pruning for Test-Time Scaling. arXiv:2510.08483, 2025.</li>
+<li id="ref-divse">Naik, et al. DIVSE: Diverse Self-Consistency. arXiv:2310.07088, 2023.</li>
+<li id="ref-spmad">Li, et al. Sparse Communication Topology in Multi-Agent Debate. Findings of EMNLP 2024 (arXiv:2406.11776).</li>
+<li id="ref-failuremodes">Wynn, et al. Understanding Failure Modes in Multi-Agent Debate. arXiv:2509.05396, 2025.</li>
+<li id="ref-mmlupro">Wang, Y. et al. MMLU-Pro: A More Robust and Challenging Multi-Task Language Understanding Benchmark. NeurIPS 2024 D&amp;B.</li>
+<li id="ref-supergpqa">M-A-P. SuperGPQA: Scaling LLM Evaluation across 285 Graduate Disciplines. 2025.</li>
+<li id="ref-gsm8k">Cobbe, et al. Training Verifiers to Solve Math Word Problems. arXiv:2110.14168, 2021.</li>
+<li id="ref-math500">Hendrycks, et al. / Lightman, et al. MATH-500. 2024.</li>
+<li id="ref-bgem3">Chen, et al. BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings. 2024.</li>
+<li id="ref-robertamnli">Liu, et al. RoBERTa (roberta-large-mnli). 2019.</li>
+<li id="ref-ji2026candidate">Ji, J.-H., Li, S., Cheng, J., She, Z., Yu, J.-T., and Yuan, Z. Candidate Supply and Answer Selection Shape the Value of LLM Judging in Multi-Agent Systems. arXiv:2608.25937, 2026.</li>
+</ol>
+</div>
+</body>
+</html>

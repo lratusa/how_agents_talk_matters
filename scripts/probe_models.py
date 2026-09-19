@@ -17,13 +17,16 @@ DATA = ROOT / "data" / "benchmarks"
 OUT = ROOT / "data" / "pilot"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# Keys: read from the user's existing project env (authorized by user).
+# Keys: PROBE_KEY env var, or a dotenv file (FPRR_KEY_FILE, default .env.local).
 def load_key(name):
-    env = Path(r"D:/pc-project/Jinshang_LLM/new_implementation/.env.local")
-    for line in env.read_text(encoding="utf-8-sig").splitlines():
-        if line.startswith(name + "="):
-            return line.split("=", 1)[1].strip()
-    raise RuntimeError("%s not found" % name)
+    env = Path(os.environ.get("FPRR_KEY_FILE", ".env.local"))
+    if env.exists():
+        for line in env.read_text(encoding="utf-8-sig").splitlines():
+            if line.startswith(name + "="):
+                return line.split("=", 1)[1].strip()
+    raise RuntimeError(
+        "%s not found. Export it, or set FPRR_KEY_FILE to a dotenv file "
+        "containing %s=<your-key>." % (name, name))
 
 API = os.environ.get("PROBE_API", "https://api.deepseek.com/v1/chat/completions")
 KEY = os.environ.get("PROBE_KEY") or load_key(

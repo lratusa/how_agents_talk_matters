@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Rui Li, Chenglong Sun, Xueyan Zheng, Dan Liu Gi (Beijing) Tech Design Ltd., Beijing, China" />
+  <title>誰が誰を査読すべきか？テスト時 LLM 推論のための応答条件付き非相称型相互査読</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+
+<style>
+/* site override: restrained academic page on top of pandoc defaults */
+html { background: #fafafa; }
+body { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 5rem;
+       font-family: -apple-system, "Segoe UI", "Helvetica Neue", "PingFang SC",
+                    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+       color: #1d1d1f; line-height: 1.75; background: #fafafa; }
+h1, h2, h3, h4 { line-height: 1.3; color: #111; margin-top: 2.2em; }
+h1 { font-size: 1.7rem; }
+h2 { font-size: 1.3rem; border-bottom: 1px solid #e3e3e6; padding-bottom: .3em; }
+h3 { font-size: 1.1rem; }
+header#title-block-header h1.title { font-size: 1.9rem; }
+header#title-block-header p.author, header#title-block-header p.date {
+  color: #6e6e73; margin: .2em 0; }
+a { color: #0b5cad; text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; height: auto; display: block; margin: 1.2rem auto; }
+figure { margin: 1.6rem 0; }
+figcaption { font-size: .86rem; color: #6e6e73; margin-top: .5rem; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem;
+        margin: 1.4rem 0; }
+th, td { border-top: 1px solid #d8d8dc; padding: .35em .55em; }
+thead th { border-top: 2px solid #1d1d1f; border-bottom: 1px solid #1d1d1f; }
+tbody tr:last-child td { border-bottom: 2px solid #1d1d1f; }
+code { font-size: .88em; background: #f0f0f2; padding: .1em .3em;
+       border-radius: 4px; }
+pre { background: #f5f5f7; padding: 1rem; overflow-x: auto; border-radius: 8px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 3px solid #d8d8dc; margin-left: 0;
+             padding-left: 1.2rem; color: #3a3a3c; }
+.thebibliography ol { font-size: .86rem; color: #3a3a3c; }
+.thebibliography li { margin-bottom: .35em; }
+.abstract { font-size: .95rem; }
+hr { border: none; border-top: 1px solid #e3e3e6; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">誰が誰を査読すべきか？<br />
+テスト時 LLM 推論のための応答条件付き非相称型相互査読</h1>
+<p class="author">Rui Li, Chenglong Sun, Xueyan Zheng, Dan Liu<br />
+Gi (Beijing) Tech Design Ltd.（中国・北京）</p>
+<p class="date">2026年9月</p>
+</header>
+<h1 class="unnumbered" id="highlights">ハイライト</h1>
+<ul>
+<li><p>最遠ペア査読は、制御されたマッチングの下でランダムペアリングを上回らない。</p></li>
+<li><p>意味距離は誤り検出を高めるが、誤り訂正は高めない。</p></li>
+<li><p>査読は新規の正解を生成するが、最終回答に届くことは稀である。</p></li>
+<li><p>より難しいベンチマークでは、査読なし合成が相互査読を上回る。</p></li>
+<li><p>有益遷移比（BTR）が査読の正味ゼロ効果を定量化する。</p></li>
+</ul>
+<p><strong>キーワード:</strong> マルチエージェントシステム；大規模言語モデル；テスト時計算；通信トポロジー；相互査読；負の結果</p>
+<h1 id="sec:intro">序論</h1>
+<p>固定された言語モデルからの反復的な確率推論は、モデルの重みに一切手を加えることなく回答精度を大幅に改善できる。独立サンプルに対する自己整合性投票 [<a href="#ref-wang2022selfconsistency">1</a>] とサンプル＆投票スケーリング [<a href="#ref-li2024moreagents">4</a>] がその代表例である。自然な次の一手は、サンプリングされたインスタンス同士を<em>通信</em>させることである。マルチエージェント討論 [<a href="#ref-du2023multiagent">2</a>] や相互査読スキーム [<a href="#ref-xu2023peerreview">25</a>] は、集約の前にモデルのインスタンスが互いの回答を批評し合うことを可能にする。</p>
+<p>しかし、同質エージェント間の通信には構造的な弱点がある。同一チェックポイントのインスタンスは、同一プロンプトを与えられると、独立に誤るわけではない。訓練データ・帰納バイアス・失敗様式を共有するため、それらのサンプルは<em>相関する推論クラスター</em>——仮定・戦略・誤解を共有する回答群——を形成する。ブロードキャスト型の通信は多数派の見解を強化する傾向があり、それはまさに共有された誤りを最も体現しやすい見解である。経験的に、討論は単純な多数決を上回らないことが多く [<a href="#ref-yang2025revisiting">6</a>, <a href="#ref-choi2025debateorvote">7</a>]、メッセージを剪定または保持する多様性考慮型の変種も、依然としてブロードキャストで通信している [<a href="#ref-estornell2024multillm">5</a>, <a href="#ref-nguyen2026dars">10</a>]。</p>
+<p>本論文は、我々の知る限り実験的に単離されたことのない問いを提起する。</p>
+<blockquote>
+<p><em>誰が誰を査読すべきか？</em> 同一モデルからの <span class="math inline">\(N\)</span> 個の独立した回答が与えられたとき、ペアワイズ相互査読の<strong>トポロジー</strong>——具体的には、各エージェントを意味的に最も<em>異なる</em>相手とペアにすること——は、同一のモデル・プロンプト・推論予算の下で、ランダムペアリング・類似度ベースのペアリング・討論・多数決よりも多くの正解を引き出せるか？</p>
+</blockquote>
+<p>我々はこの問いを<strong>最遠ペア相互査読（FPRR）</strong>として具体化する。各応答（結論＋簡潔な正当化）を埋め込み、ペアワイズのコサイン距離行列を計算し、遠い応答同士をペアにする完全マッチングを構成し（乱択貪欲最遠マッチング、RGFM。変種として厳密な最大重みマッチングを用いる）、各ペア内で相互のペア限定査読を実行し、すべての回答と査読から最終回答を合成する。このパイプラインは学習不要・検索不要であり、全体を通じて1つの凍結モデルと1つの凍結プロンプトセットのみを使用する。</p>
+<p>重要な点として、本設計はルーティング規則の因果的寄与を単離する。すべてのペアリング条件は<em>まったく同一のキャッシュ済み初期応答</em>を消費するため、差異を再サンプリングの偶然に帰因させることはできない。また、計算量整合の自己査読コントロールにより、トポロジー効果と単なる推論量の増加とを切り分ける。</p>
+<h4 id="contributions.">貢献</h4>
+<ul>
+<li><p>応答条件付き査読トポロジーを定式化し、非相称型（最遠ペア）相互査読の初の制御研究を提供する。同一応答集合上での厳密最大重みマッチング・乱択貪欲マッチング・最近接ペアリング・ランダムペアリングを含む。</p></li>
+<li><p>メカニズム分解を伴う事前登録済みの null 結果（不有意な結果）：同一応答集合上で、最遠ペア査読は両ベンチマークにおいて、ランダムペアリング・最近接ペアリング・厳密最大重みマッチング・多数決・計算量整合自己査読と <span class="math inline">\(\pm 1\)</span> パーセントポイント以内で一致する一方、ペア距離は誤り<em>検出</em>を単調に予測するが、誤り<em>訂正</em>は予測しない。</p></li>
+<li><p>非相称エッジを横断する情報のメカニズム分析：段階別の検出・修正・採用回帰、順方向対逆方向の査読ファネル、ペア構成効果、遷移ベースの有益遷移比、定量化された失敗様式（有効な選択肢の不安定化・共有された誤解・判定者の失敗）を含む。</p></li>
+<li><p>完全にログ記録されたキャッシュ応答実験パイプライン（シード付きペアリング・決定論的パース・ペアブートストラップ統計）であり、ルーティング規則を再サンプリングの偶然から単離し、エンドツーエンドで再現可能である。</p></li>
+</ul>
+<h1 id="sec:related">関連研究</h1>
+<h4 id="test-time-scaling-and-sampling-ensembles.">テスト時スケーリングとサンプリングアンサンブル</h4>
+<p>自己整合性 [<a href="#ref-wang2022selfconsistency">1</a>] は多様な思考連鎖を多数決で集約する。Li ら [<a href="#ref-li2024moreagents">4</a>] は、多数決のみでエージェント数に応じて精度がスケールすることを示した（彼らの類似度指標は<em>最も</em>類似したサンプルを選択する——我々とは逆の極性である）。単一エージェントの推論トレースプールに対する埋め込み類似度剪定（Slim-SC [<a href="#ref-slimsc">29</a>]、SSDP [<a href="#ref-ssdp">30</a>]、DeepPrune [<a href="#ref-deepprune">31</a>]）は効率を改善するが、エージェント間通信は構築しない。DIVSE [<a href="#ref-divse">32</a>] はプロンプトレベルで多様化する。いずれも応答レベルの距離に<em>通信トポロジー</em>を条件付けてはいない。</p>
+<h4 id="multi-agent-debate.">マルチエージェント討論</h4>
+<p>Du ら [<a href="#ref-du2023multiagent">2</a>] は同質インスタンス間のブロードキャスト討論を確立した。ReConcile [<a href="#ref-chen2023reconcile">3</a>] は異種モデルと信頼度重み付きコンセンサスを用いる。制御された追試はこれらの主張を和らげる。討論の利益は条件的であり、しばしば自己エージェントのベースラインと同程度にとどまり [<a href="#ref-yang2025revisiting">6</a>]、多数決が討論を支配しうる [<a href="#ref-choi2025debateorvote">7</a>]。そして制御された論理タスクではエージェントの討論行動そのものが疑問視されている [<a href="#ref-wu2025reallydebate">8</a>]。いずれもブロードキャストまたは固定トポロジーを用いている。</p>
+<h4 id="diversity-in-debate.">討論における多様性</h4>
+<p>Estornell &amp; Liu [<a href="#ref-estornell2024multillm">5</a>] は応答埋め込みとペアワイズ距離を計算し、エコーチェンバーを診断し、最大多様性の部分集合へ剪定する——しかし生き残った要素は依然としてブロードキャストであり、ペアリングも相互査読も存在しない。DAR [<a href="#ref-nguyen2026dars">10</a>] は LLM フィルターを介して不一致の部分集合をブロードキャスト用に保持する（埋め込みは評価指標としてのみ登場する）。Demystifying MAD [<a href="#ref-zhu2026demystifying">9</a>] はユニーク回答<em>数</em>の最大化によりプールを初期化し、GRPO で信頼度を学習する。S<span class="math inline">\(^2\)</span>-MAD [<a href="#ref-zeng2025s2mad">11</a>] は逆極性の応答コサイン類似度を用いる（冗長な類似視点を抑制する）。RMoA [<a href="#ref-rmoa2025">12</a>] は応答の最遠点式選択を<em>集約入力</em>として行うのであり、査読相手としてではない。この文献系における多様性は、剪定・重み付け・保持・初期化を行うのであり、一対一の査読グラフを構築することは決してない。</p>
+<h4 id="distance-conditioned-topology.">距離条件付きトポロジー</h4>
+<p>我々に最も近い研究である CortexDebate [<a href="#ref-cortexdebate2025">13</a>] は、疎な討論グラフのエッジ重みに出力コサイン非類似度を含めている（信頼度式の合成・異種モデル・閾値付きブロードキャストグラフ・多数決）。DySCo [<a href="#ref-dysco2026">14</a>] は推論埋め込みのコサイン距離を5つの選択可能なエッジ信号の1つとして挙げ、一方向の上位 <span class="math inline">\(k\)</span> 件批評を行う。DyTopo [<a href="#ref-dytopo2026">15</a>] は要求・提供記述子の<em>類似度</em>でルーティングする。MACE [<a href="#ref-mace2026">16</a>] はバンディットを介して n-gram 多様性にピア選択を条件付ける。学習型トポロジー手法（GPTSwarm [<a href="#ref-gptswarm">17</a>]、DyLAN [<a href="#ref-dylan">18</a>]、AgentPrune [<a href="#ref-agentprune">19</a>]、G-Designer [<a href="#ref-gdesigner">20</a>]、MacNet [<a href="#ref-macnet">21</a>]、Graph-GRPO [<a href="#ref-graphgrpo">22</a>]、Guided Topology Diffusion [<a href="#ref-gtd2025">23</a>]、Codebook Agent [<a href="#ref-codebookagent">24</a>]）は、クエリ・役割・学習済み値に条件付けるのであり、現在の応答間の距離には決して条件付けず、通常は学習を要する。</p>
+<h4 id="peer-review-and-pairing.">相互査読とペアリング</h4>
+<p>Xu ら [<a href="#ref-xu2023peerreview">25</a>] は全対全グラフ上で相互査読を実装している。PiCO [<a href="#ref-pico2024">26</a>] はエージェントを相互評価のためにペアにするが、ペアはランダムに組まれる（実質的に、我々のランダムペアリングコントロールに相当する）。トーナメント方式 [<a href="#ref-qdtournament">27</a>] は能力順位でペアを組む。141 研究のサーベイ [<a href="#ref-madsurvey2026">28</a>] は 88.7% が静的トポロジーであると報告し、その分類体系のどこにも埋め込み距離ペアリングは存在しない。我々の手法が占める空の交差領域——応答距離 <span class="math inline">\(\rightarrow\)</span> 最遠完全マッチング <span class="math inline">\(\rightarrow\)</span> 相互ペア限定査読 <span class="math inline">\(\rightarrow\)</span> 合成、すべてが同質・同一プロンプトのサンプル上で学習不要——は、我々の新規性ゲートレポート（<code>NOVELTY_GATE.md</code>）に記録されている。同レポートは、40 件以上の論文について方法セクションの全文精読と、[<a href="#ref-du2023multiagent">2</a>] の被引用論文 2<span>,</span>235 件にわたる引用スノーボーリングを行ったものである。</p>
+<h1 id="sec:method">方法</h1>
+<h2 id="problem-setting">問題設定</h2>
+<p>各問題 <span class="math inline">\(x\)</span> に対し、<span class="math inline">\(N\)</span>（偶数）個の同質エージェント——同一のチェックポイント・システムプロンプト・問題文・デコード設定——が独立に応答 <span class="math inline">\(r_i = (\text{answer}_i, \text{justification}_i)\)</span>（<span class="math inline">\(i=1,\dots,N\)</span>）を生成する。正当化は簡潔で可視の推論要約であり（隠れた思考連鎖は要求も使用もされない）、独立な確率的サンプリングが多様性の唯一の源泉である。</p>
+<h2 id="response-representation-and-distance">応答表現と距離</h2>
+<p>各応答は、固定された文エンコーダ <span class="math inline">\(f\)</span>（bge-m3、1024 次元、Ollama ダイジェスト <code>790764642607</code>）により <span class="math inline">\(e_i = f(\text{CONCLUSION: answer}_i \mathbin{\Vert} \text{JUSTIFICATION: justification}_i)\)</span> として埋め込まれる。同一の問題文が類似度を支配してしまうため、問題文は埋め込まない。主たる距離はコサイン距離 <span class="math inline">\(d_{ij} = 1 - \cos(e_i, e_j)\)</span>（指標 D1）である。アブレーション：D2（正当化のみの埋め込み）、D3（ハイブリッド <span class="math inline">\(\lambda d_{ij} + (1-\lambda)\mathbf{1}[a_i \neq a_j]\)</span>、<span class="math inline">\(\lambda\)</span> はパイロットのみで調整）、D4（対称化 NLI（自然言語推論）矛盾確率、roberta-large-mnli）。</p>
+<h2 id="pairing-algorithms">ペアリングアルゴリズム</h2>
+<div class="algorithm">
+<div class="algorithmic">
+<p>距離行列 <span class="math inline">\(d \in \mathbb{R}^{N\times N}\)</span>、シード付き PRNG <span class="math inline">\(U \gets \{1,\dots,N\}\)</span>；<span class="math inline">\(M \gets \emptyset\)</span> <span class="math inline">\(i\)</span> を <span class="math inline">\(U\)</span> から一様に抽出し（シード付き）、<span class="math inline">\(j \gets \arg\max_{k \in U \setminus \{i\}} d_{ik}\)</span> とする。<span class="math inline">\(M \gets M \cup \{(i,j)\}\)</span>；<span class="math inline">\(U \gets U \setminus \{i,j\}\)</span> 完全マッチング <span class="math inline">\(M\)</span></p>
+</div>
+</div>
+<p>FPRR は RGFM を用いる（Algorithm <a href="#alg:rgfm" data-reference-type="ref" data-reference="alg:rgfm">[alg:rgfm]</a>）。貪欲規則は順序依存であるため、シードを記録する。コントロール：<strong>Random</strong>（シード付きランダム完全マッチング）、<strong>Nearest</strong>（<span class="math inline">\(\arg\min\)</span> に置き換えた同一ループ）、<strong>MaxWeight</strong>（<span class="math inline">\((N-1)!!\)</span> 個のマッチングの全数列挙による厳密最大重み完全マッチング <span class="math inline">\(M^* = \arg\max_M \sum_{(i,j)\in M} d_{ij}\)</span>；<span class="math inline">\(N \le 8\)</span>）。</p>
+<h2 id="reciprocal-peer-review">相互査読</h2>
+<p>すべてのペア <span class="math inline">\((i,j) \in M\)</span> について、エージェント <span class="math inline">\(i\)</span> が <span class="math inline">\(j\)</span> を査読し、<span class="math inline">\(j\)</span> が <span class="math inline">\(i\)</span> を査読する。査読者が見るのは、問題・自身の回答と正当化・相手の回答と正当化のみであり、それ以外は一切見えない。他のエージェントの回答・正解・埋め込み距離・ペアがどう形成されたかの情報も与えられない。査読プロンプト（凍結済み、すべてのペアリング条件で同一）は、査読者に相手を独立に検査し、正しい主張・具体的な誤り・未検証の仮定を列挙し、最後に判定（<code>PEER CORRECT</code>/<code>PEER INCORRECT</code>）と更新された自身の回答で締めくくることを要求する。迎合と反射的な反対の双方に対抗するため、どちらか一方が正しいと仮定することを明示的に禁じる文言になっている。</p>
+<h2 id="final-synthesis">最終合成</h2>
+<p>1 回の合成器呼び出し（同一モデル）は、問題・匿名化された全候補回答（シード付きの問題ごとのシャッフル後に S1…SN とラベル付け）・および査読条件ではすべてのペアワイズ査読を受け取る。正解・条件名・距離・ペアリング情報は一切与えられない。指示内容は次の通りである。繰り返された主張を独立した証拠として数えないこと。議論の質を評価すること。批評を誤りの特定に用いること。正当と判断される場合は正しい少数派の解を回復すること。修辞的な自信は無視すること。同一の合成器プロンプトがすべての査読条件で使用される。</p>
+<h2 id="compute-accounting">計算量の計上</h2>
+<p>問題あたり、FPRR は <span class="math inline">\(N\)</span> 回の初期生成 <span class="math inline">\(+\)</span> <span class="math inline">\(N\)</span> 回の査読呼び出し <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> 回の合成呼び出しを要する。計算量整合コントロール（C9）は、同一のキャッシュ済み初期応答に対して、同一予算を <span class="math inline">\(N\)</span> 回の自己査読 <span class="math inline">\(+\)</span> <span class="math inline">\(1\)</span> 回の合成に費やす。</p>
+<h1 id="sec:setup">実験設定</h1>
+<h4 id="model.">モデル</h4>
+<p>すべてのエージェントと合成器は1つの凍結された提供モデルを使用する。DeepSeek API 経由の <code>deepseek-flash</code>（DeepSeek-V4.1-Flash）で、温度 <span class="math inline">\(0.8\)</span>、top-<span class="math inline">\(p\)</span> <span class="math inline">\(0.95\)</span>、最大トークン数 1500（解答・査読）/ 2500（合成）とし、可視の正当化が唯一の推論成果物となるよう思考モードは無効化した。プロバイダはシードパラメータを公開していない。確率性は経験的に検証した（同一呼び出しの繰り返しで異なる出力が得られた）。モデルは全エージェント・全条件で同質であり、重みの変更はない。</p>
+<h4 id="benchmarks.">ベンチマーク</h4>
+<p>主要ベンチマークとして MMLU-Pro [<a href="#ref-mmlupro">35</a>]（テスト、12<span>,</span>032 項目、CC-BY-4.0）と SuperGPQA [<a href="#ref-supergpqa">36</a>]（26<span>,</span>526 項目、ODC-BY、サンプリング済み）を用いた。GSM8K [<a href="#ref-gsm8k">37</a>]（テスト）は健全性チェックとして用いた（パイロット：単一エージェントで 95% <span class="math inline">\(\Rightarrow\)</span> 天井飽和のため本実行から除外）。MATH-500 は保留とした。GPQA-Diamond と LiveBench はこの環境からはアクセスできなかった（アクセス制限あり）。SuperGPQA が近年の大学院レベルのベンチマークとしての役割を担う。問題 ID は層化サンプラー（サンプリングシード 42）で固定され、すべての条件とシードで共有される。</p>
+<h4 id="conditions.">条件</h4>
+<p>C0：単一応答。C1：<span class="math inline">\(N{=}4\)</span> のキャッシュ済み応答に対する多数決。C2：キャッシュ済み応答 <span class="math inline">\(\rightarrow\)</span> 合成器（査読なし）。C3/C4/C5/C6：<em>同一</em>のキャッシュ済み応答上で Random / Nearest / RGFM / MaxWeight の各ペアリングによる相互査読。C9：計算量整合の自己査読。C7：1 ラウンドのブロードキャスト討論（パイロットのみ）。すべてのペアリング条件は（問題、シード）ごとに同一の初期応答を消費する。</p>
+<h4 id="sample-sizes-and-seeds.">サンプルサイズとシード</h4>
+<p>パイロット：ベンチマークあたり 100 問。本実験：MMLU-Pro は 500 問 <span class="math inline">\(\times\)</span> 3 実験シード、SuperGPQA は 500 <span class="math inline">\(\times\)</span> 4 シード。距離指標アブレーション（D2/D3/D4 下の C5、200 問の部分集合、シード 0。各ベンチマーク内で D3/D4 は D2 のキャッシュ済み初期応答を再利用）は、MMLU-Pro D4 を除き完走した。<span class="math inline">\(N \in \{2,4,6,8\}\)</span> のアブレーションとペアリングシード分散研究（事前登録済み、修正 8）は予算の都合で実行しなかった（§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>）。</p>
+<h4 id="statistics.">統計</h4>
+<p>正解精度は凍結された決定論的パーサーで算出した（最後の <code>FINAL ANSWER:</code> 行。パース不能 <span class="math inline">\(\Rightarrow\)</span> 不正解）。精度差の 95% 信頼区間にはペアブートストラップ（問題にわたる 10<span>,</span>000 回の再サンプリング）を用い、C5 対 {C3, C4, C1, C9} には連続性補正付き McNemar 検定と Holm–Bonferroni 補正を適用した。仮説 H1–H6 は、本テストの評価に先立ち事前登録された（<code>preregistration.md</code> 参照、すべての修正を含む）。</p>
+<h4 id="contamination.">コンタミネーション</h4>
+<p>GSM8K と MATH は古く、露出が激しいため、これらに基づく主張は一切行わない。MMLU-Pro（2024 年 6 月）、とりわけ SuperGPQA（2025 年 1 月）は多くの訓練データより後に登場している。SuperGPQA の大学院レベルの項目と、そこでのモデルの中域精度（パイロットで単一エージェント 61%）により、より感度の高い測定器となる。それでも残留コンタミネーションは限界として扱う。それは絶対値を押し上げうるだけであり、すべての条件に同一に適用されるため、ペア差は解釈可能なままである。</p>
+<h4 id="reproducibility.">再現性</h4>
+<p>すべての API 呼び出しは JSONL にログ記録される（問題 ID・完全なプロンプト・生出力・パース済みフィールド・トークン使用量・レイテンシ・タイムスタンプ・条件・シード）。初期応答はキャッシュされ条件間で共有される。ペアリング/マッチングの決定は距離のみに依存し、ゴールドラベルには決して依存しない。コードと設定はバージョン管理され（git）、分析スクリプトは決定論的である（シード付きブートストラップ）。</p>
+<h1 id="sec:results">主な結果</h1>
+<p>図<a href="#fig:architecture" data-reference-type="ref" data-reference="fig:architecture">1</a>はパイプラインの概観である（第<a href="#sec:method" data-reference-type="ref" data-reference="sec:method">3</a>節）。本節全体を通じ、すべてのペアリング条件は（問題、シード）ごとに同一のキャッシュ済み初期応答を消費する。</p>
+<figure>
+<img src="/research/who-should-review-whom/figures/F1_architecture.png" id="fig:architecture" style="width:90.0%" alt="Pipeline overview: N cached initial responses, bge-m3 distance matrix, pairing rule (Random / Nearest / RGFM / MaxWeight), reciprocal pair-limited review, and synthesis over all answers and reviews." /><figcaption aria-hidden="true">パイプライン概観：<span class="math inline">\(N\)</span> 個のキャッシュ済み初期応答、bge-m3 による距離行列、ペアリング規則（Random / Nearest / RGFM / MaxWeight）、相互ペア限定査読、全回答と全査読にわたる合成。</figcaption>
+</figure>
+<h2 id="aggregate-accuracy">集約精度</h2>
+<p>表<a href="#tab:mmlu-acc" data-reference-type="ref" data-reference="tab:mmlu-acc">1</a>は MMLU-Pro における精度を報告する（500 問 <span class="math inline">\(\times\)</span> 3 実験シード、プール観測数 <span class="math inline">\(n=1500\)</span>）。すべての <span class="math inline">\(N{=}4\)</span> 集約条件は 0.8pp の帯域（0.837–0.845）内に収まる。FPRR（C5、0.839）は計算量整合自己査読コントロール（C9、0.839）とともにその帯域の下端に位置し、ランダムペアリング・最近接ペアリング・最大重みマッチング・単純多数決（すべて 0.845）より 0.6pp 低い。図<a href="#fig:accuracy" data-reference-type="ref" data-reference="fig:accuracy">2</a>はほぼ同一の精度を可視化したものである。</p>
+<div id="tab:mmlu-acc">
+<table>
+<caption>条件別 MMLU-Pro 精度（500 問 <span class="math inline">\(\times\)</span> 3 シード、プール <span class="math inline">\(n=1500\)</span>）。95% CI は問題にわたるペアブートストラップ。シード別精度はそれぞれ <span class="math inline">\(n=500\)</span>。プール観測はシード間で問題を共有するため、CI は軽度に反保守的である。シード別の値も同じ順序を示す。</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">条件</td>
+<td style="text-align: left;">名称</td>
+<td style="text-align: center;">プール精度</td>
+<td style="text-align: center;">95% CI</td>
+<td style="text-align: center;" colspan="2">シード別精度</td>
+</tr>
+<tr class="even">
+
+
+
+
+<td style="text-align: center;">s0 / s1</td>
+<td style="text-align: center;">s2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">単一応答</td>
+<td style="text-align: center;">0.829</td>
+<td style="text-align: center;">[0.810, 0.848]</td>
+<td style="text-align: center;">0.824 / 0.834</td>
+<td style="text-align: center;">0.830</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">多数決</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.844 / 0.844</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">アンサンブル＋合成</td>
+<td style="text-align: center;">0.837</td>
+<td style="text-align: center;">[0.818, 0.855]</td>
+<td style="text-align: center;">0.838 / 0.840</td>
+<td style="text-align: center;">0.832</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">ランダムペア</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.846 / 0.850</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">最近接ペア</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.827, 0.863]</td>
+<td style="text-align: center;">0.842 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.844 / 0.836</td>
+<td style="text-align: center;">0.838</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">最大重みマッチング</td>
+<td style="text-align: center;">0.845</td>
+<td style="text-align: center;">[0.826, 0.863]</td>
+<td style="text-align: center;">0.840 / 0.846</td>
+<td style="text-align: center;">0.848</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">自己査読（整合）</td>
+<td style="text-align: center;">0.839</td>
+<td style="text-align: center;">[0.821, 0.857]</td>
+<td style="text-align: center;">0.838 / 0.838</td>
+<td style="text-align: center;">0.842</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:mmlu-paired">
+<table>
+<caption>MMLU-Pro における C5（FPRR）とコントロールのペア比較（<span class="math inline">\(n=1500\)</span>）。diff = C5 からコントロールを引いた差（パーセントポイント、pp）。CI = 95% ペアブートストラップ。<span class="math inline">\(p\)</span> = 連続性補正付き McNemar。<span class="math inline">\(p_{\mathrm{Holm}}\)</span> = 一次ファミリー {C3, C4, C1, C9} に対する Holm–Bonferroni。中罫線以下の行は補正ファミリー外の二次比較である。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">比較</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C3（ランダム）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.3\)</span>, <span class="math inline">\(0.2\)</span>]</td>
+<td style="text-align: center;">13/21</td>
+<td style="text-align: center;">0.230</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C4（最近接）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">19/28</td>
+<td style="text-align: center;">0.243</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C1（多数決）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">18/27</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C9（自己査読）</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(0.8\)</span>]</td>
+<td style="text-align: center;">19/19</td>
+<td style="text-align: center;">0.871</td>
+<td style="text-align: center;">0.920</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C0（単一）</td>
+<td style="text-align: center;"><span class="math inline">\(+1.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.1\)</span>, <span class="math inline">\(2.1\)</span>]</td>
+<td style="text-align: center;">41/26</td>
+<td style="text-align: center;">0.087</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C2（査読なし）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.7\)</span>, <span class="math inline">\(1.2\)</span>]</td>
+<td style="text-align: center;">27/23</td>
+<td style="text-align: center;">0.671</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C6（最大重み）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(0.3\)</span>]</td>
+<td style="text-align: center;">16/24</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>表<a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a>はペア分析を示す。すべての一次比較のブートストラップ CI はゼロをまたぎ、4 つの Holm 調整済み <span class="math inline">\(p\)</span> 値はすべて <span class="math inline">\(0.920\)</span> であった。すなわち、FPRR とランダムペアリング（H1）・最近接ペアリング（H2）・多数決（H3）・計算量整合自己査読コントロールとの間に検出可能な差はない。単一応答ベースラインに対して FPRR は <span class="math inline">\(+1.0\)</span>pp の利得を得るが、有意には達しない（<span class="math inline">\(p=0.087\)</span>、未補正）。</p>
+<p>SuperGPQA（500 問 <span class="math inline">\(\times\)</span> 4 シード、プール <span class="math inline">\(n=2000\)</span>）は、より低い精度で同じパターンを示し、1 つ鋭い結果が加わる（表<a href="#tab:sg-acc" data-reference-type="ref" data-reference="tab:sg-acc">3</a>）。FPRR（0.599）はランダムペアリング（0.606）・最近接ペアリング（0.605）・最大重みマッチング（0.602）・多数決（0.598）・自己査読（0.595）と区別がつかず、むしろわずかに下回る。4 つの一次比較の Holm 調整済み <span class="math inline">\(p\)</span> 値はすべて <span class="math inline">\(\ge 0.987\)</span> であった（表<a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>）。このより難しいベンチマークでは、すべての <span class="math inline">\(N{=}4\)</span> 条件が単一応答ベースラインを明確に上回る（C0：0.561。C5 対 C0：<span class="math inline">\(+3.8\)</span>pp、95% CI [<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>]、<span class="math inline">\(p&lt;0.001\)</span>）ため、アンサンブルの仕組み自体は有効である。しかし査読なし合成条件 C2（0.614）が最良の条件であり、ここでは損失はもはやノイズではない。<strong>C2 は C5 を <span class="math inline">\(1.5\)</span>pp 上回り、ブートストラップ CI はゼロを含まない</strong>（<span class="math inline">\([-2.6, -0.4]\)</span>、McNemar <span class="math inline">\(p=0.010\)</span>。Holm 補正ファミリー外の二次比較であり、シード間依存の下で反保守的）。より難しいベンチマークでは、相互査読は同一のキャッシュ済み回答を単に合成する場合と比べて、小さいが統計的に検出可能な正味のコストをもたらす。これは §<a href="#sec:btr" data-reference-type="ref" data-reference="sec:btr">7.4</a> の遷移分析（BTR <span class="math inline">\(= 0.383\)</span>）と整合する。</p>
+<div id="tab:sg-acc">
+<table>
+<caption>条件別 SuperGPQA 精度（500 問 <span class="math inline">\(\times\)</span> 4 シード、プール <span class="math inline">\(n=2000\)</span>）。95% CI は問題にわたるペアブートストラップ。シード別精度はそれぞれ <span class="math inline">\(n=500\)</span>。プール観測はシード間で問題を共有するため、CI は軽度に反保守的である。シード別の値も同じ順序を示す。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">条件</th>
+<th style="text-align: left;">名称</th>
+<th style="text-align: center;">プール精度</th>
+<th style="text-align: center;">95% CI</th>
+<th style="text-align: center;">シード別精度 (s0/s1/s2/s3)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: left;">単一応答</td>
+<td style="text-align: center;">0.561</td>
+<td style="text-align: center;">[0.539, 0.583]</td>
+<td style="text-align: center;">0.546 / 0.572 / 0.568 / 0.558</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: left;">多数決</td>
+<td style="text-align: center;">0.598</td>
+<td style="text-align: center;">[0.576, 0.619]</td>
+<td style="text-align: center;">0.594 / 0.604 / 0.588 / 0.604</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: left;">アンサンブル＋合成</td>
+<td style="text-align: center;">0.614</td>
+<td style="text-align: center;">[0.593, 0.635]</td>
+<td style="text-align: center;">0.616 / 0.622 / 0.608 / 0.608</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: left;">ランダムペア</td>
+<td style="text-align: center;">0.606</td>
+<td style="text-align: center;">[0.584, 0.627]</td>
+<td style="text-align: center;">0.594 / 0.598 / 0.616 / 0.614</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: left;">最近接ペア</td>
+<td style="text-align: center;">0.605</td>
+<td style="text-align: center;">[0.583, 0.625]</td>
+<td style="text-align: center;">0.598 / 0.604 / 0.602 / 0.614</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: left;">FPRR (RGFM)</td>
+<td style="text-align: center;">0.599</td>
+<td style="text-align: center;">[0.577, 0.620]</td>
+<td style="text-align: center;">0.598 / 0.602 / 0.596 / 0.598</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: left;">最大重みマッチング</td>
+<td style="text-align: center;">0.602</td>
+<td style="text-align: center;">[0.580, 0.623]</td>
+<td style="text-align: center;">0.594 / 0.606 / 0.608 / 0.598</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: left;">自己査読（整合）</td>
+<td style="text-align: center;">0.595</td>
+<td style="text-align: center;">[0.573, 0.616]</td>
+<td style="text-align: center;">0.602 / 0.586 / 0.588 / 0.604</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:sg-paired">
+<table>
+<caption>SuperGPQA における C5（FPRR）のペア比較（<span class="math inline">\(n=2000\)</span>、4 シードでプール）。列構成は表<a href="#tab:mmlu-paired" data-reference-type="ref" data-reference="tab:mmlu-paired">2</a>と同じ。二次比較 C5 対 C2 に注意：<span class="math inline">\(-1.5\)</span>pp で CI はゼロを含まない（<span class="math inline">\(p=0.010\)</span>、未補正）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">比較</th>
+<th style="text-align: center;">diff (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+<th style="text-align: center;">McNemar <span class="math inline">\(b/c\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_{\mathrm{Holm}}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C3（ランダム）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.8\)</span>, <span class="math inline">\(+0.4\)</span>]</td>
+<td style="text-align: center;">56/70</td>
+<td style="text-align: center;">0.247</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C4（最近接）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.7\)</span>, <span class="math inline">\(+0.5\)</span>]</td>
+<td style="text-align: center;">54/66</td>
+<td style="text-align: center;">0.315</td>
+<td style="text-align: center;">0.987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C1（多数決）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.1\)</span>, <span class="math inline">\(+1.3\)</span>]</td>
+<td style="text-align: center;">72/70</td>
+<td style="text-align: center;">0.933</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C9（自己査読）</td>
+<td style="text-align: center;"><span class="math inline">\(+0.4\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-0.8\)</span>, <span class="math inline">\(+1.5\)</span>]</td>
+<td style="text-align: center;">68/61</td>
+<td style="text-align: center;">0.597</td>
+<td style="text-align: center;">1.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C0（単一）</td>
+<td style="text-align: center;"><span class="math inline">\(+3.8\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(+2.3\)</span>, <span class="math inline">\(+5.2\)</span>]</td>
+<td style="text-align: center;">151/76</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;\)</span>0.0001</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5 対 C2（査読なし）</td>
+<td style="text-align: center;"><span class="math inline">\(-1.5\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]</td>
+<td style="text-align: center;">49/79</td>
+<td style="text-align: center;">0.010</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 対 C6（最大重み）</td>
+<td style="text-align: center;"><span class="math inline">\(-0.3\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-1.4\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+<td style="text-align: center;">54/60</td>
+<td style="text-align: center;">0.640</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="/research/who-should-review-whom/figures/F3_accuracy_by_condition.png" id="fig:accuracy" style="width:85.0%" alt="Accuracy by condition on both benchmarks (MMLU-Pro: n=1500, 3 seeds; SuperGPQA: n=2000, 4 seeds). All N{=}4 conditions are statistically indistinguishable within each benchmark, except that no-review synthesis (C2) exceeds FPRR on SuperGPQA." /><figcaption aria-hidden="true">両ベンチマークにおける条件別精度（MMLU-Pro：<span class="math inline">\(n=1500\)</span>、3 シード。SuperGPQA：<span class="math inline">\(n=2000\)</span>、4 シード）。すべての <span class="math inline">\(N{=}4\)</span> 条件は各ベンチマーク内で統計的に区別がつかない。ただし SuperGPQA では査読なし合成（C2）が FPRR を上回る。</figcaption>
+</figure>
+<h2 id="cost">コスト</h2>
+<p>査読は高コストであり、ここでは何ももたらさない（表<a href="#tab:tokens" data-reference-type="ref" data-reference="tab:tokens">5</a>、図<a href="#fig:tokens" data-reference-type="ref" data-reference="fig:tokens">3</a>）。MMLU-Pro では、C5 は <span class="math inline">\(11.89\)</span>M トークンを消費する——単一応答ベースラインの <span class="math inline">\(19.7\times\)</span>、多数決の <span class="math inline">\(4.9\times\)</span>——でありながら、精度は多数決より 0.6pp <em>低い</em>。百万トークンあたりの精度は 1.37（C0）・0.35（C1）から、すべての査読条件で 0.07 に低下する。SuperGPQA でもシードあたりほぼ同水準のトークンコスト（C5 は 4 シードで <span class="math inline">\(23.87\)</span>M）で同じパターンが見られ、さらに査読は査読なし合成に有意に劣後する。</p>
+<div id="tab:tokens">
+<table>
+<caption>総トークン使用量と百万トークンあたりの精度（acc/Mtok。SuperGPQA の acc/Mtok はプール合計から算出）。SuperGPQA 列：<span class="math inline">\(n=2000\)</span>、4 シードでプール。</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="2">MMLU-Pro (<span class="math inline">\(n=1500\)</span>)</td>
+<td style="text-align: center;" colspan="2">SuperGPQA (<span class="math inline">\(n=2000\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">トークン (M)</td>
+<td style="text-align: center;">acc/Mtok</td>
+<td style="text-align: center;">トークン (M)</td>
+<td style="text-align: center;">acc/Mtok</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.60</td>
+<td style="text-align: center;">1.37</td>
+<td style="text-align: center;">1.20</td>
+<td style="text-align: center;">0.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C1</td>
+<td style="text-align: center;">2.41</td>
+<td style="text-align: center;">0.35</td>
+<td style="text-align: center;">4.76</td>
+<td style="text-align: center;">0.13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">3.82</td>
+<td style="text-align: center;">0.22</td>
+<td style="text-align: center;">8.14</td>
+<td style="text-align: center;">0.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">11.80</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.77</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">11.78</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.74</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">11.89</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.87</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">11.95</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">23.92</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">11.26</td>
+<td style="text-align: center;">0.07</td>
+<td style="text-align: center;">22.71</td>
+<td style="text-align: center;">0.03</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure>
+<img src="/research/who-should-review-whom/figures/F4_accuracy_vs_tokens.png" id="fig:tokens" style="width:85.0%" alt="Accuracy vs. total tokens. Review conditions (C3–C6, C9) occupy an expensive plateau; voting (C1) dominates them on the cost–accuracy trade-off." /><figcaption aria-hidden="true">精度対総トークン数。査読条件（C3–C6、C9）は高コストの高原に位置し、多数決（C1）はコスト・精度のトレードオフでこれらを支配する。</figcaption>
+</figure>
+<h2 id="verdict-on-h1h3">H1–H3 への判定</h2>
+<p><strong>H1（FPRR <span class="math inline">\(&gt;\)</span> ランダムペアリング）：支持されない。</strong>MMLU-Pro で <span class="math inline">\(-0.5\)</span>pp、SuperGPQA で <span class="math inline">\(-0.7\)</span>pp。両 CI はゼロをまたぐ（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。<strong>H2（FPRR <span class="math inline">\(&gt;\)</span> 最近接ペアリング）：支持されない。</strong><span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(-0.6\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。<strong>H3（FPRR <span class="math inline">\(&gt;\)</span> 多数決）：支持されない。</strong><span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(+0.1\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>）。厳密最大重みマッチング（C6）は貪欲 RGFM より良い結果とはならず、計算量整合自己査読コントロール（C9）は両ベンチマークで FPRR の精度をほぼ正確に再現する。したがって、この null 結果はマッチングの部分最適性や査読計算量そのものに帰因するものではない。</p>
+<h1 id="sec:ablations">アブレーション研究</h1>
+<h4 id="pairing-rule-c3c6-identical-initials.">ペアリング規則（C3–C6、同一初期応答）</h4>
+<p>4 つのペアリング条件はすべて<em>同一</em>のキャッシュ済み初期応答を査読するため、それらの間の精度差はマッチングのみに帰因できる。実質的に差は存在しない。MMLU-Pro では C3/C4/C5/C6 が 0.845 / 0.845 / 0.839 / 0.845（幅 0.6pp）、SuperGPQA（<span class="math inline">\(n=2000\)</span>、4 シード）では 0.606 / 0.605 / 0.599 / 0.602（幅 0.7pp）である。厳密最大重みマッチング（C6）は貪欲 RGFM（C5）と区別がつかず、逆極性である最近接ペアリング（C4）はランダムペアリングと同率である。図<a href="#fig:matchings" data-reference-type="ref" data-reference="fig:matchings">5</a>は、4 つの規則が同一の応答をいかに異なって配線するかを可視化する。精度にとって配線は問題にならない。</p>
+<p><img src="/research/who-should-review-whom/figures/F2_distance_matchings_mmlu_pro.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="Distance matrices and the matchings induced by Random / Nearest / RGFM / MaxWeight on identical response sets (left: MMLU-Pro; right: SuperGPQA, seed 0 shown for illustration; pooled results in Tables 1 and 3)." /> <img src="/research/who-should-review-whom/figures/F2_distance_matchings_supergpqa.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="Distance matrices and the matchings induced by Random / Nearest / RGFM / MaxWeight on identical response sets (left: MMLU-Pro; right: SuperGPQA, seed 0 shown for illustration; pooled results in Tables 1 and 3)." /></p>
+<h4 id="review-vs.-no-review-c2-synthesizer-vs.-vote-c1.">査読対査読なし（C2）、合成器対多数決（C1）</h4>
+<p>MMLU-Pro では、査読条件（0.839–0.845）は査読なし合成条件 C2（0.837）から 0.8pp 以内に位置し、C1 多数決（0.845）はごくわずかなコストで最良の査読条件と同率である。SuperGPQA では順序が逆転する。C2（0.614）が最良の条件であり、すべての査読条件（0.599–0.606）を<em>上回り</em>、C1 は 0.598 である。4 シードではこの差は統計的に検出可能である（C5 対 C2：<span class="math inline">\(-1.5\)</span>pp、95% CI [<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]、<span class="math inline">\(p=0.010\)</span> 未補正。表<a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>）。したがって相互査読は、どちらの集約ベースラインに対しても付加価値をもたらさない——より難しいベンチマークではむしろわずかに減じる。</p>
+<h4 id="compute-matching-c9.">計算量整合（C9）</h4>
+<p>同一呼び出し予算での自己査読は FPRR をほぼ正確に再現する（MMLU-Pro：0.839 対 0.839。SuperGPQA：0.595 対 0.599。C5 対 C9 の差：<span class="math inline">\(0.0\)</span>pp / <span class="math inline">\(+0.4\)</span>pp、<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>）。査読予算を自己批評に費やすことは、相互査読に費やすのとまったく同じだけ良く——そして同じだけ限定的——である。予算は固定されているため、この null 結果は<em>ルーティング</em>に帰着する。</p>
+<h4 id="distance-metric-d1d4-and-pilot-lambda.">距離指標（D1–D4）とパイロット <span class="math inline">\(\lambda\)</span></h4>
+<p>事前登録に従い、ハイブリッド距離 D3 の <span class="math inline">\(\lambda\)</span> は本実行前に <span class="math inline">\(0.5\)</span> に固定した。これはヘッドルームの大きいベンチマークでのパイロット最良値であり、それ以外では中点である（C5 下のパイロット距離アブレーション、ベンチマークあたり 100 問、シード 0。パイロットデータは調整のみに用い、証拠としては報告しない）。表<a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>は本実験の 200 問距離アブレーションを報告する（D2/D3/D4 下の C5、シード 0。各ベンチマーク内で D3/D4 は D2 のキャッシュ済み初期応答を再利用するため、指標間のペア比較は各指標が誘導するトポロジーを単離する）。この分析は<em>探索的</em>である（事前登録・修正 8：メカニズム的分析、Holm 補正された一次ファミリーの外部）。</p>
+<p>SuperGPQA では、不一致感知型の指標が純粋な意味距離を上回った。D4（NLI 矛盾）は <span class="math inline">\(0.680\)</span> に達し、D2（結論＋正当化のコサイン）の <span class="math inline">\(0.650\)</span> に対して優位である。ペア差 D4 <span class="math inline">\(-\)</span> D2 は <span class="math inline">\(+3.0\)</span>pp で、ブートストラップ CI はゼロを含まない（<span class="math inline">\([+0.5, +6.0]\)</span>）——ただし不一致問題はわずか <span class="math inline">\(7\)</span> 対 <span class="math inline">\(1\)</span>（McNemar <span class="math inline">\(p=0.077\)</span>）、単一シード、200 問である。この信号は実在するが脆弱であり、再検証を要する。メカニズムは §<a href="#sec:mechanism" data-reference-type="ref" data-reference="sec:mechanism">7</a> と整合する。D4 では多数派毀損率が D2 に対して 6 分の 1 に低下し（<span class="math inline">\(0.008\)</span> 対 <span class="math inline">\(0.048\)</span>。D3：<span class="math inline">\(0.024\)</span>）、訂正率は 3 指標中最高である（<span class="math inline">\(0.289\)</span> 対 D2 の <span class="math inline">\(0.268\)</span>。査読レベルの誤反対判定率は <span class="math inline">\(0.047\)</span>–<span class="math inline">\(0.052\)</span> で平坦）——NLI 矛盾は埋め込みコサインよりも<em>認識論的</em>対立に近いため、D4 下の最遠ペアリングはより頻繁に「やる価値のある争い」を選ぶ。MMLU-Pro ではすべての指標差が null である（D2/D3 は互いに、また多数決に対しても <span class="math inline">\(0.5\)</span>pp 以内）。飽和したベンチマークにはルーティング信号の入るヘッドルームがない。MMLU-Pro D4 は未実行である（予算）。</p>
+<div id="tab:dist-ablation">
+<table>
+<caption>C5 下の距離指標アブレーション（ベンチマークあたり 200 問、シード 0、探索的、修正 8）。各ベンチマーク内ですべての指標は同一のキャッシュ済み初期応答を査読するため、ペア差は指標誘導トポロジーを単離する。C1（多数決）は同一の応答集合上で算出される。差はパーセントポイント。<span class="math inline">\(p\)</span> 値は連続性補正付き McNemar、未補正。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">ベンチマーク</th>
+<th style="text-align: left;">指標</th>
+<th style="text-align: center;">C5 精度</th>
+<th style="text-align: center;">C1 精度</th>
+<th style="text-align: center;">C5 <span class="math inline">\(-\)</span> C1 [95% CI], <span class="math inline">\(p\)</span></th>
+<th style="text-align: center;">D2 とのペア差 [95% CI], <span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D2（コサイン）</td>
+<td style="text-align: center;">0.650 [0.585, 0.715]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-2.0\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.45\)</span></td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.670 [0.605, 0.735]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+4.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+7.5\)</span>], <span class="math inline">\(0.061\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+2.0\)</span> [<span class="math inline">\(-0.5\)</span>, <span class="math inline">\(+5.0\)</span>], <span class="math inline">\(0.29\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">D4（NLI 矛盾）</td>
+<td style="text-align: center;">0.680 [0.615, 0.745]</td>
+<td style="text-align: center;">0.630</td>
+<td style="text-align: center;"><span class="math inline">\(+5.0\)</span> [<span class="math inline">\(+2.0\)</span>, <span class="math inline">\(+8.5\)</span>], <span class="math inline">\(0.009\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+3.0\)</span> [<span class="math inline">\(+0.5\)</span>, <span class="math inline">\(+6.0\)</span>], <span class="math inline">\(0.077\)</span> (7:1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D2（コサイン）</td>
+<td style="text-align: center;">0.860 [0.810, 0.905]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(-0.5\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+1.5\)</span>], NS</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D3 <span class="math inline">\(\lambda{=}0.5\)</span></td>
+<td style="text-align: center;">0.865 [0.815, 0.910]</td>
+<td style="text-align: center;">0.865</td>
+<td style="text-align: center;"><span class="math inline">\(0.0\)</span> [<span class="math inline">\(-2.5\)</span>, <span class="math inline">\(+3.0\)</span>], NS</td>
+<td style="text-align: center;"><span class="math inline">\(+0.5\)</span> [<span class="math inline">\(-1.5\)</span>, <span class="math inline">\(+2.5\)</span>], <span class="math inline">\(1.0\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">D4（NLI 矛盾）</td>
+<td style="text-align: center;" colspan="4"><em>未実行（予算）</em></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="agent-count-n-and-pairing-seed-variance.">エージェント数 <span class="math inline">\(N\)</span> とペアリングシード分散</h4>
+<p>未実行（予算）。<span class="math inline">\(N \in \{2,6,8\}\)</span> のアブレーションとペアリングシード分散研究（C3/C5 のペアリングシード 1、2、MMLU-Pro の 200 問部分集合）は事前登録（修正 8）で設計・凍結されていたが、残りの API 予算内では実行できなかった。これらを黙って落とすのではなく欠損として報告し、その不在を限界として数える（§<a href="#sec:limitations" data-reference-type="ref" data-reference="sec:limitations">10</a>）。</p>
+<h1 id="sec:mechanism">メカニズム分析</h1>
+<p>集約的な null 結果は、より鋭い問いを提起する。非相称エッジは<em>何らかの</em>追加信号を運ぶのか、運ぶとすればどこで消えるのか。我々は査読段階を、互いに逆方向に進む2つの連鎖に分解する（図<a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>）。<em>順方向連鎖</em>——問題に少なくとも1つの誤った初期回答がある（E0）、査読者が誤りを検出する（E1）、正しい修正が提案される（E2）、最終回答が正しい（E3）。<em>逆方向連鎖</em>——問題に少なくとも1つの正しい初期回答がある（C0）、査読者が正しい相手に誤って反対する（C1）、正しい査読者が有効な回答を変えたり疑ったりして不安定化する（C2）、最終回答が誤りになる（C3）。</p>
+<figure>
+<img src="/research/who-should-review-whom/figures/F8_repair_funnels.png" id="fig:funnels" style="width:95.0%" alt="Dual question-level funnels on both benchmarks (MMLU-Pro: n=1500, 3 seeds; SuperGPQA: n=2000, 4 seeds). Forward chain E0\toE3 (error exposure \to detection \to fix proposed \to final correct) and reverse chain C0\toC3 (correct answer present \to false opposition \to destabilization \to final wrong). Detection rises with pair distance; resolution does not rise with it; and the reverse chain grows heavier under disassortative pairing." /><figcaption aria-hidden="true">両ベンチマークにおける二重の問題レベルファネル（MMLU-Pro：<span class="math inline">\(n=1500\)</span>、3 シード。SuperGPQA：<span class="math inline">\(n=2000\)</span>、4 シード）。順方向連鎖 E0<span class="math inline">\(\to\)</span>E3（誤りへの曝露 <span class="math inline">\(\to\)</span> 検出 <span class="math inline">\(\to\)</span> 修正提案 <span class="math inline">\(\to\)</span> 最終正解）と逆方向連鎖 C0<span class="math inline">\(\to\)</span>C3（正解の存在 <span class="math inline">\(\to\)</span> 誤反対 <span class="math inline">\(\to\)</span> 不安定化 <span class="math inline">\(\to\)</span> 最終誤答）。検出はペア距離とともに上昇するが、解決は上昇しない。そして逆方向連鎖は非相称ペアリングの下で重くなる。</figcaption>
+</figure>
+<h2 id="sec:fwd">順方向連鎖：距離がもたらす曝露</h2>
+<p>FPRR は確かに、不一致が起こりうるペアへ査読トラフィックを移行させる。方向付き査読を査読者・被査読者の正誤で数えると、C5 は MMLU-Pro の査読の <span class="math inline">\(412/6000\)</span>（<span class="math inline">\(6.9\%\)</span>）を正誤混合ペアに配置する。ランダムペアリングでは <span class="math inline">\(328\)</span>（<span class="math inline">\(5.5\%\)</span>）、最近接ペアリングでは <span class="math inline">\(320\)</span>（<span class="math inline">\(5.3\%\)</span>）であり、誤り横断エッジの相対的増加は <span class="math inline">\(25\)</span>–<span class="math inline">\(30\%\)</span> で、厳密最大重みマッチング（C6：<span class="math inline">\(416\)</span>、<span class="math inline">\(6.9\%\)</span>）と一致する。SuperGPQA では移行はより小さい。C5 は査読の <span class="math inline">\(1270/8000\)</span>（<span class="math inline">\(15.9\%\)</span>）を混合ペアに配置し、ランダムペアリングの <span class="math inline">\(1194\)</span>（<span class="math inline">\(14.9\%\)</span>）、最近接ペアリングの <span class="math inline">\(1098\)</span>（<span class="math inline">\(13.7\%\)</span>）と比較される（C6：<span class="math inline">\(1330\)</span>、<span class="math inline">\(16.6\%\)</span>）。</p>
+<p>表<a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a>はすべての C5 査読をペア距離の十分位で層別し、表<a href="#tab:review-outcomes" data-reference-type="ref" data-reference="tab:review-outcomes">8</a>は査読レベルの全体的な結果を示す。検出は両ベンチマークおよび 4 つすべてのペアリング規則の下で距離とともに急峻に上昇するが、軽微な局所的非単調性がある（図<a href="#fig:deciles" data-reference-type="ref" data-reference="fig:deciles">8</a>）。C5 では、P(判定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被査読者が誤り) は最下位十分位から最上位十分位までに MMLU-Pro で <span class="math inline">\(0.000\)</span> から <span class="math inline">\(0.379\)</span> へ、SuperGPQA で <span class="math inline">\(0.050\)</span> から <span class="math inline">\(0.361\)</span> へ上昇する。C3–C6 全体で最上位十分位の検出率は <span class="math inline">\(0.368\)</span>–<span class="math inline">\(0.436\)</span>（MMLU-Pro）、<span class="math inline">\(0.301\)</span>–<span class="math inline">\(0.361\)</span>（SuperGPQA）に及ぶ。相互査読は自己査読よりもはるかに頻繁に誤答を検出する（C9：<span class="math inline">\(0.091\)</span> / <span class="math inline">\(0.135\)</span>、C3–C6 では <span class="math inline">\(0.19\)</span>–<span class="math inline">\(0.26\)</span>）。なお、MMLU-Pro で最高の検出率（<span class="math inline">\(0.227\)</span>）を達成するのは C5 ではなく C6 であるが、精度では C3/C4 と同率である。ランダムベースラインを超える追加の検出は、どのルーティング規則の下でも集約的な見返りを持たない。</p>
+<div id="tab:deciles">
+<table>
+<caption>両ベンチマークにおけるペア距離十分位別の C5（FPRR）査読挙動（MMLU-Pro：6000 件の査読。SuperGPQA：8000 件、4 シード）。det = P(判定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被査読者が誤り)。cor = P(誤り訂正 <span class="math inline">\(\mid\)</span> 被査読者が誤り)。f.o. = P(誤反対 <span class="math inline">\(\mid\)</span> 被査読者が正しい)。十分位範囲はコサイン距離。エッジは C3–C6 でプール。</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="4">MMLU-Pro (6000 件の査読)</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (8000 件の査読)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"> 十分位</td>
+<td style="text-align: center;">距離範囲</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;">距離範囲</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">[0.000, 0.028]</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.000</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.000, 0.034]</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.027</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">[0.028, 0.043]</td>
+<td style="text-align: center;">0.073</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">0.002</td>
+<td style="text-align: center;">[0.034, 0.051]</td>
+<td style="text-align: center;">0.083</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.018</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">[0.043, 0.056]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.006</td>
+<td style="text-align: center;">[0.051, 0.066]</td>
+<td style="text-align: center;">0.178</td>
+<td style="text-align: center;">0.079</td>
+<td style="text-align: center;">0.030</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">[0.056, 0.069]</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">[0.066, 0.078]</td>
+<td style="text-align: center;">0.233</td>
+<td style="text-align: center;">0.123</td>
+<td style="text-align: center;">0.039</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">[0.069, 0.081]</td>
+<td style="text-align: center;">0.105</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">[0.078, 0.090]</td>
+<td style="text-align: center;">0.229</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.079</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">[0.081, 0.094]</td>
+<td style="text-align: center;">0.200</td>
+<td style="text-align: center;">0.130</td>
+<td style="text-align: center;">0.023</td>
+<td style="text-align: center;">[0.090, 0.104]</td>
+<td style="text-align: center;">0.258</td>
+<td style="text-align: center;">0.129</td>
+<td style="text-align: center;">0.065</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">[0.094, 0.111]</td>
+<td style="text-align: center;">0.156</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.013</td>
+<td style="text-align: center;">[0.104, 0.119]</td>
+<td style="text-align: center;">0.279</td>
+<td style="text-align: center;">0.155</td>
+<td style="text-align: center;">0.072</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">[0.111, 0.130]</td>
+<td style="text-align: center;">0.236</td>
+<td style="text-align: center;">0.127</td>
+<td style="text-align: center;">0.030</td>
+<td style="text-align: center;">[0.119, 0.138]</td>
+<td style="text-align: center;">0.262</td>
+<td style="text-align: center;">0.139</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">[0.130, 0.161]</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.103</td>
+<td style="text-align: center;">0.043</td>
+<td style="text-align: center;">[0.138, 0.168]</td>
+<td style="text-align: center;">0.268</td>
+<td style="text-align: center;">0.151</td>
+<td style="text-align: center;">0.090</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">[0.161, 1.000]</td>
+<td style="text-align: center;">0.379</td>
+<td style="text-align: center;">0.209</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">[0.168, 1.000]</td>
+<td style="text-align: center;">0.361</td>
+<td style="text-align: center;">0.171</td>
+<td style="text-align: center;">0.097</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="tab:review-outcomes">
+<table>
+<caption>査読レベルの結果。det = P(判定 <code>INCORRECT</code> <span class="math inline">\(\mid\)</span> 被査読者が誤り)。f.o. = P(誤反対 <span class="math inline">\(\mid\)</span> 被査読者が正しい)。SuperGPQA：<span class="math inline">\(n=2000\)</span>、4 シード。</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 シード)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> 件の査読</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+<td style="text-align: center;"><span class="math inline">\(n\)</span> 件の査読</td>
+<td style="text-align: center;">det</td>
+<td style="text-align: center;">f.o.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3 ランダム</td>
+<td style="text-align: center;">5928</td>
+<td style="text-align: center;">0.202</td>
+<td style="text-align: center;">0.012</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.241</td>
+<td style="text-align: center;">0.054</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4 最近接</td>
+<td style="text-align: center;">5918</td>
+<td style="text-align: center;">0.192</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">7568</td>
+<td style="text-align: center;">0.231</td>
+<td style="text-align: center;">0.057</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5 FPRR</td>
+<td style="text-align: center;">5912</td>
+<td style="text-align: center;">0.212</td>
+<td style="text-align: center;">0.020</td>
+<td style="text-align: center;">7570</td>
+<td style="text-align: center;">0.256</td>
+<td style="text-align: center;">0.063</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6 最大重み</td>
+<td style="text-align: center;">5902</td>
+<td style="text-align: center;">0.227</td>
+<td style="text-align: center;">0.018</td>
+<td style="text-align: center;">7561</td>
+<td style="text-align: center;">0.254</td>
+<td style="text-align: center;">0.062</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9 自己査読</td>
+<td style="text-align: center;">5943</td>
+<td style="text-align: center;">0.091</td>
+<td style="text-align: center;">0.009</td>
+<td style="text-align: center;">7668</td>
+<td style="text-align: center;">0.135</td>
+<td style="text-align: center;">0.037</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/research/who-should-review-whom/figures/F5_decile_correction_mmlu_pro.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="Detection, correction, and false-opposition rates by pair-distance decile for C3–C6 (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Detection rises with distance under every pairing rule; correction saturates; false opposition climbs." /> <img src="/research/who-should-review-whom/figures/F5_decile_correction_supergpqa.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="Detection, correction, and false-opposition rates by pair-distance decile for C3–C6 (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Detection rises with distance under every pairing rule; correction saturates; false opposition climbs." /></p>
+<h4 id="stage-wise-regressions-exposure-vs.-resolution.">段階別回帰：曝露対解決</h4>
+<p>距離が<em>どこで</em>作用するかを特定するため、ペア距離に対して3つのロジスティック回帰をあてはめた（C3–C6 の査読をプール）。誤った被査読者の検出、検出を条件とした正しい修正、修正の存在を条件とした最終正解である（表<a href="#tab:stage-reg" data-reference-type="ref" data-reference="tab:stage-reg">9</a>）。MMLU-Pro では検出段階のみが距離感受性を持つ（<span class="math inline">\(\beta = +12.2\)</span>、<span class="math inline">\(p&lt;0.0001\)</span>）。修正への伝播（<span class="math inline">\(p=0.20\)</span>）と採用への伝播（<span class="math inline">\(p=0.84\)</span>）は平坦である。SuperGPQA では3段階すべてが有意である（<span class="math inline">\(\beta = +7.5\)</span>、<span class="math inline">\(+1.7\)</span>、<span class="math inline">\(+7.3\)</span>。それぞれ <span class="math inline">\(p&lt;0.0001\)</span>、<span class="math inline">\(p=0.016\)</span>、<span class="math inline">\(p&lt;0.0001\)</span>）——ここでは距離は解決まで伝播する——にもかかわらず、逆方向連鎖（§<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a>）が同じ距離でスケールするため、集約精度はやはり動かない。したがって正確な記述はこうなる。<em>距離は誤りへの曝露を改善する。曝露が解決に伝播するかどうかはレジーム依存である。</em></p>
+<div id="tab:stage-reg">
+<table>
+<caption>順方向連鎖事象のペアコサイン距離に対する段階別ロジスティック回帰（C3–C6 の査読をプール。SuperGPQA：4 シード）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">ベンチマーク</th>
+<th style="text-align: left;">段階（アウトカム）</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(\beta_{\mathrm{dist}}\)</span> (SE)</th>
+<th style="text-align: center;"><span class="math inline">\(p\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(検出 <span class="math inline">\(\mid\)</span> 被査読者が誤り)</td>
+<td style="text-align: center;">4040</td>
+<td style="text-align: center;"><span class="math inline">\(+12.20\)</span> (0.75)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(正しい修正 <span class="math inline">\(\mid\)</span> 検出済み)</td>
+<td style="text-align: center;">796</td>
+<td style="text-align: center;"><span class="math inline">\(+1.64\)</span> (1.29)</td>
+<td style="text-align: center;"><span class="math inline">\(0.203\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">P(最終正解 <span class="math inline">\(\mid\)</span> 修正が存在)</td>
+<td style="text-align: center;">321</td>
+<td style="text-align: center;"><span class="math inline">\(-0.52\)</span> (2.66)</td>
+<td style="text-align: center;"><span class="math inline">\(0.844\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(検出 <span class="math inline">\(\mid\)</span> 被査読者が誤り)</td>
+<td style="text-align: center;">14124</td>
+<td style="text-align: center;"><span class="math inline">\(+7.54\)</span> (0.37)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(正しい修正 <span class="math inline">\(\mid\)</span> 検出済み)</td>
+<td style="text-align: center;">3161</td>
+<td style="text-align: center;"><span class="math inline">\(+1.68\)</span> (0.70)</td>
+<td style="text-align: center;"><span class="math inline">\(0.016\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">P(最終正解 <span class="math inline">\(\mid\)</span> 修正が存在)</td>
+<td style="text-align: center;">1224</td>
+<td style="text-align: center;"><span class="math inline">\(+7.30\)</span> (1.52)</td>
+<td style="text-align: center;"><span class="math inline">\(&lt;0.0001\)</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:oracle">査読は初期応答選択オラクルを上回る——しかし届くことはほとんどない</h2>
+<p><em>初期応答選択オラクル</em>——4つのキャッシュ済み初期回答から常に最良のものを選ぶ仮想的存在——は、MMLU-Pro で <span class="math inline">\(0.883\)</span>、SuperGPQA で <span class="math inline">\(0.697\)</span> を記録する。最良の実条件である <span class="math inline">\(0.845\)</span> と <span class="math inline">\(0.614\)</span> と比較して（ギャップは <span class="math inline">\({\approx}3.7\)</span>pp と <span class="math inline">\(8.3\)</span>pp。丸め前の値 <span class="math inline">\(0.8827\)</span> 対 <span class="math inline">\(0.8453\)</span>、<span class="math inline">\(0.6965\)</span> 対 <span class="math inline">\(0.614\)</span> から算出。丸め後の表の値では <span class="math inline">\(3.8\)</span>pp を示唆する）。並行研究ははるかに大規模に同じ診断に到達している。15<span>,</span>336 問・81<span>,</span>390 の固定候補プールにわたり、Ji ら [<a href="#ref-ji2026candidate">41</a>] は、正解が候補集合内に頻繁に存在しながら選択されないこと、判定者の信頼性がタスク・生成器・正解の稀少性によって変動することを示した。我々の選択オラクルギャップは、完全に制御された同一応答集合の下でこの候補供給ボトルネックを確認し、査読が候補プールを<em>超えて</em>何を加えるかを測定することでこれを拡張する。しかしこのオラクルは熟議システムの天井では<em>ない</em>。査読者は初期集合 <span class="math inline">\(R_x\)</span> に存在しない回答を生成しうるからである。実際に生成している。4つの初期回答がすべて誤りの問題（MMLU-Pro：176/1500、<span class="math inline">\(11.7\%\)</span>。SuperGPQA：607/2000、<span class="math inline">\(30.4\%\)</span>）において、査読は <span class="math inline">\(R_x\)</span> の外の正解を、全条件にわたり <span class="math inline">\(0\)</span>–<span class="math inline">\(2.3\%\)</span>（MMLU-Pro）・<span class="math inline">\(3.1\)</span>–<span class="math inline">\(4.1\%\)</span>（SuperGPQA）のケースで生成した。査読段階の出力は経験的に初期回答のみの関数ではない。</p>
+<p>しかし、この新しい情報が消えるのはデリバリーの地点である（表<a href="#tab:delivery" data-reference-type="ref" data-reference="tab:delivery">10</a>）。エンドツーエンドで、新規の正解提案が最終回答に到達したのは、MMLU-Pro の C5 で <span class="math inline">\(1/176\)</span> 問（<span class="math inline">\(0.6\%\)</span>）、SuperGPQA では最大でも <span class="math inline">\(9/607\)</span>（<span class="math inline">\(1.5\%\)</span>、C9。C5：<span class="math inline">\(8/607 = 1.3\%\)</span>）であった。「提案されたが届かず」列がこの損失を定量化する。例えば、C3 は MMLU-Pro で <span class="math inline">\(4\)</span> 件の新規正解を提案しながら 1 件も届けず、C5 は SuperGPQA で <span class="math inline">\(25\)</span> 件を提案しながら <span class="math inline">\(6\)</span> 件のみ採用した（<span class="math inline">\(19\)</span> 件喪失）。全員一致で誤りの部分集合（120 問と 401 問）内では、すべての条件で最終回答が少なくとも <span class="math inline">\(99.2\%\)</span>（MMLU-Pro）・<span class="math inline">\(98.0\%\)</span>（SuperGPQA）のケースで誤りのままである。査読は欠けた回答を<em>創り出せる</em>が、パイプラインはそれを<em>認識</em>できない。</p>
+<div id="tab:delivery">
+<table>
+<caption>全問不正解問題に対する新規正解デリバリー監査（4つの初期回答がすべて誤り。MMLU-Pro：176 問、3 シード。SuperGPQA：607、4 シード）。novel prop. = 査読が初期応答に存在しない正解を提案。final corr. = 問題が最終的に正解。prop. not deliv. = 提案されたが最終回答に採用されず。</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="4">MMLU-Pro</td>
+<td style="text-align: center;" colspan="4">SuperGPQA (4 シード)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">新規提案</td>
+<td style="text-align: center;">最終正解</td>
+<td style="text-align: center;">採用</td>
+<td style="text-align: center;">提案・未達</td>
+<td style="text-align: center;">新規提案</td>
+<td style="text-align: center;">最終正解</td>
+<td style="text-align: center;">採用</td>
+<td style="text-align: center;">提案・未達</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">25</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">19</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">21</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">13</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:rev">逆方向連鎖：不安定化であり、外れ値増幅ではない</h2>
+<p>正しい多数派の毀損に対するパイロット時期の作業仮説は<em>外れ値増幅</em>であった。すなわち、最遠ペアリングは唯一の誤った外れ値を正しいエージェントに優先的に配線する、というものである。本データはこれを集約メカニズムとして棄却する。3:1 の回答分裂内で——同一の分裂構造を持つ問題のみを比較することで問題難度を制御すると——少数単独票が正しい確率は確かに多数派よりはるかに低い（MMLU-Pro：<span class="math inline">\(20.8\%\)</span> 対 <span class="math inline">\(57.6\%\)</span>。SuperGPQA：<span class="math inline">\(28.4\%\)</span> 対 <span class="math inline">\(44.7\%\)</span>）。遠くて珍しい回答は不均衡に誤っている。しかし各問題の<em>最大距離</em>エッジの端点は本質的にベースレートで誤る（最小距離エッジの <span class="math inline">\(16.3\%\)</span> に対し <span class="math inline">\(17.1\%\)</span>、ベースレート <span class="math inline">\(16.8\%\)</span>、MMLU-Pro。<span class="math inline">\(44.7\%\)</span> 対 <span class="math inline">\(43.6\%\)</span>、ベース <span class="math inline">\(44.1\%\)</span>、SuperGPQA）。最遠ペアリングは系統的に誤った相手を選ぶわけでは<em>ない</em>。したがって我々は外れ値増幅を集約的説明として退かせる。3:1 の結果は「外れ値回答は精度が低い」としてのみ成り立ち、「FPRR が悪い相手を選ぶ」とはならない。</p>
+<p>逆方向連鎖が代わりに示すのは、<em>誤反対と有効な回答の不安定化</em>である。誤反対はペア距離とともに上昇する（表<a href="#tab:deciles" data-reference-type="ref" data-reference="tab:deciles">7</a>：MMLU-Pro の C5 で <span class="math inline">\(0.002\)</span> から <span class="math inline">\(0.051\)</span> へ。SuperGPQA の最大重みペアリングでは最大 <span class="math inline">\(0.104\)</span>）。問題レベルでは（図<a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>、C 側）、MMLU-Pro で正しい査読者の不安定化は C3 より C5 で重い（<span class="math inline">\(50/1324 = 4\%\)</span> 対 <span class="math inline">\(27/1324 = 2\%\)</span>。最終誤答は <span class="math inline">\(33\)</span> 対 <span class="math inline">\(23\)</span>）——C5 は MMLU-Pro の逆方向ファネルの頂点に位置する——一方、SuperGPQA では逆方向連鎖はすべての査読条件で重い（<span class="math inline">\(0.07\)</span>–<span class="math inline">\(0.08\)</span> が不安定化）。意味的非類似性は誤った相手へルーティングするのではなく、正しい相手への反対を製造する。</p>
+<p>事前登録された二次指標（表<a href="#tab:secondary" data-reference-type="ref" data-reference="tab:secondary">11</a>）とコンセンサス遷移（図<a href="#fig:transitions" data-reference-type="ref" data-reference="fig:transitions">10</a>）は、結果として生じる収支を定量化する。査読条件は多数決よりも頻繁に多数派の誤りを回復する——しかし MMLU-Pro で名目上最良なのは FPRR ではなく<em>ランダム</em>ペアリングである（回復 <span class="math inline">\(0.099\)</span>、救出 <span class="math inline">\(0.082\)</span>）。SuperGPQA では査読なし合成 C2（<span class="math inline">\(0.099\)</span> / <span class="math inline">\(0.100\)</span>）が、査読を一切行わずに最良の査読条件（C4：<span class="math inline">\(0.098\)</span> / <span class="math inline">\(0.106\)</span>）に匹敵し、C5 は C9 を除けば最弱の査読条件である（<span class="math inline">\(0.089\)</span> / <span class="math inline">\(0.096\)</span>）。エージェント 0 の初期回答を基準にすると、MMLU-Pro の査読条件は初期誤答の <span class="math inline">\(15.2\)</span>–<span class="math inline">\(18.0\%\)</span> を正解に転じる一方、初期正解の <span class="math inline">\(1.5\)</span>–<span class="math inline">\(2.1\%\)</span> を毀損する（C5：<span class="math inline">\(16.0\%\)</span> / <span class="math inline">\(2.1\%\)</span>。C1 多数決：<span class="math inline">\(11.7\%\)</span> / <span class="math inline">\(0.5\%\)</span>）。SuperGPQA ではトレードオフはほぼ対称である（C5：<span class="math inline">\(17.2\%\)</span> 対 <span class="math inline">\(6.8\%\)</span>）——これこそが、より難しいベンチマークで正味の利得が現れない理由そのものである。</p>
+<div id="tab:secondary">
+<table>
+<caption>二次指標（条件別レート）。rec = 多数派誤りの回復。cor = 正しい多数派の毀損。res = 少数派の救出。SuperGPQA：<span class="math inline">\(n=2000\)</span>、4 シード。</caption>
+<tbody>
+<tr class="odd">
+
+<td style="text-align: center;" colspan="3">MMLU-Pro</td>
+<td style="text-align: center;" colspan="3">SuperGPQA (4 シード)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"> 条件</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+<td style="text-align: center;">rec</td>
+<td style="text-align: center;">cor</td>
+<td style="text-align: center;">res</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C0</td>
+<td style="text-align: center;">0.026</td>
+<td style="text-align: center;">0.024</td>
+<td style="text-align: center;">0.032</td>
+<td style="text-align: center;">0.048</td>
+<td style="text-align: center;">0.094</td>
+<td style="text-align: center;">0.064</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C2</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.022</td>
+<td style="text-align: center;">0.050</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.040</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C3</td>
+<td style="text-align: center;">0.099</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.082</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.100</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C4</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.016</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.098</td>
+<td style="text-align: center;">0.054</td>
+<td style="text-align: center;">0.106</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C5</td>
+<td style="text-align: center;">0.078</td>
+<td style="text-align: center;">0.021</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.089</td>
+<td style="text-align: center;">0.059</td>
+<td style="text-align: center;">0.096</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C6</td>
+<td style="text-align: center;">0.086</td>
+<td style="text-align: center;">0.017</td>
+<td style="text-align: center;">0.064</td>
+<td style="text-align: center;">0.096</td>
+<td style="text-align: center;">0.058</td>
+<td style="text-align: center;">0.099</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C9</td>
+<td style="text-align: center;">0.065</td>
+<td style="text-align: center;">0.019</td>
+<td style="text-align: center;">0.036</td>
+<td style="text-align: center;">0.070</td>
+<td style="text-align: center;">0.051</td>
+<td style="text-align: center;">0.075</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/research/who-should-review-whom/figures/F6_error_transitions_mmlu_pro.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="Error transitions relative to agent 0’s initial answer (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Recovery and corruption nearly cancel under every review topology." /> <img src="/research/who-should-review-whom/figures/F6_error_transitions_supergpqa.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="Error transitions relative to agent 0’s initial answer (left: MMLU-Pro; right: SuperGPQA, n=2000, 4 seeds). Recovery and corruption nearly cancel under every review topology." /></p>
+<h2 id="sec:btr">査読は活動的だが正味ゼロ：有益遷移比</h2>
+<p>C5 が精度で自己査読コントロール C9 と同率であることは、査読が冗長であることを意味しうる——あるいは、両方向に活動的で相殺されていることを意味しうる。C2<span class="math inline">\(\leftrightarrow\)</span>C5 の問題レベル遷移がこれを決着させる。同一の合成パイプラインに査読を加えると、MMLU-Pro では <span class="math inline">\(27\)</span> 問が誤答から正解へ、<span class="math inline">\(23\)</span> 問が正解から誤答へ転じる（正味 <span class="math inline">\(+4\)</span>、<span class="math inline">\(1450\)</span> 問不変）。SuperGPQA では <span class="math inline">\(49\)</span> 対 <span class="math inline">\(79\)</span>（正味 <span class="math inline">\(-30\)</span>、<span class="math inline">\(1872\)</span> 問不変）。査読は<em>活動的</em>であり、SuperGPQA では能動的に正味負である——表<a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>の有意な C2 <span class="math inline">\(&gt;\)</span> C5 のギャップを反映する。我々はこれを<strong>有益遷移比</strong> <span class="math inline">\(\mathrm{BTR} = \#\text{rescued} / (\#\text{rescued} + \#\text{harmed})\)</span> として要約する。MMLU-Pro で <span class="math inline">\(0.54\)</span>、SuperGPQA で <span class="math inline">\(0.383\)</span>。（BTR は C2 対 C5 の問題ごとの遷移数から算出される。すべての回答改訂事象にわたる適合率ではない。それには査読誘発の編集すべての個別監査が必要となる。）</p>
+<h2 id="sec:subsets">トポロジーが作用しうる部分集合</h2>
+<p>希釈批判によれば、ほとんどの問題が全員一致でありトポロジーが作用できないため、集約的 null は情報を持たないという。そこで<em>不一致部分集合</em>（初期回答が全員一致でないもの。MMLU-Pro：<span class="math inline">\(223\)</span> 問、<span class="math inline">\(14.9\%\)</span>。SuperGPQA：<span class="math inline">\(754\)</span>、<span class="math inline">\(37.7\%\)</span>）と<em>回復可能部分集合</em>（正解が初期回答内に現れる不一致問題。<span class="math inline">\(59\)</span>、<span class="math inline">\(3.9\%\)</span>。<span class="math inline">\(234\)</span>、<span class="math inline">\(11.7\%\)</span>）に限定する。表<a href="#tab:subsets" data-reference-type="ref" data-reference="tab:subsets">12</a>は希釈反論を棄却するが、条件付きの主張を許容するものでもない。C5 は両ベンチマークで C3 に<em>劣後</em>する——MMLU-Pro の不一致・回復可能部分集合で <span class="math inline">\(3.1\)</span>pp・<span class="math inline">\(13.6\)</span>pp、対応する SuperGPQA の部分集合で <span class="math inline">\(2.0\)</span>pp・<span class="math inline">\(1.7\)</span>pp（SuperGPQA 回復可能での C5 対 C4：<span class="math inline">\(-3.4\)</span>pp）。方向は両ベンチマークで一貫して負となったが、すべての信頼区間はゼロをまたぐ。トポロジーに作用の余地がある場所で、FPRR は利益を示さず、一貫した非有意のペナルティを示す。</p>
+<div id="tab:subsets">
+<table>
+<caption>ペアリングトポロジーが作用しうる部分集合における C5 対 C3（ペアブートストラップ CI。SuperGPQA：<span class="math inline">\(n=2000\)</span>、4 シード）。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">ベンチマーク</th>
+<th style="text-align: left;">部分集合</th>
+<th style="text-align: center;"><span class="math inline">\(n\)</span></th>
+<th style="text-align: center;">C3 精度</th>
+<th style="text-align: center;">C5 精度</th>
+<th style="text-align: center;">C5<span class="math inline">\(-\)</span>C3 (pp)</th>
+<th style="text-align: center;">95% CI (pp)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">不一致</td>
+<td style="text-align: center;">223</td>
+<td style="text-align: center;">0.498</td>
+<td style="text-align: center;">0.466</td>
+<td style="text-align: center;"><span class="math inline">\(-3.1\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.1\)</span>, <span class="math inline">\(+1.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMLU-Pro</td>
+<td style="text-align: left;">回復可能</td>
+<td style="text-align: center;">59</td>
+<td style="text-align: center;">0.475</td>
+<td style="text-align: center;">0.339</td>
+<td style="text-align: center;"><span class="math inline">\(-13.6\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-25.4\)</span>, <span class="math inline">\(+0.0\)</span>]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">不一致</td>
+<td style="text-align: center;">754</td>
+<td style="text-align: center;">0.488</td>
+<td style="text-align: center;">0.468</td>
+<td style="text-align: center;"><span class="math inline">\(-2.0\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-4.8\)</span>, <span class="math inline">\(+0.8\)</span>]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SuperGPQA</td>
+<td style="text-align: left;">回復可能</td>
+<td style="text-align: center;">234</td>
+<td style="text-align: center;">0.402</td>
+<td style="text-align: center;">0.385</td>
+<td style="text-align: center;"><span class="math inline">\(-1.7\)</span></td>
+<td style="text-align: center;">[<span class="math inline">\(-8.6\)</span>, <span class="math inline">\(+5.1\)</span>]</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec:what">非相称エッジを横断したものは何か</h2>
+<p>本論文の問いに直接答えよう。最遠ペアエッジは、ランダム・最近接エッジがより少なくしか運ばなかった信号を確かに運んだ——真に誤った相手のより多くの検出である（MMLU-Pro の <code>PEER INCORRECT</code> 判定で <span class="math inline">\(301\)</span> 対 <span class="math inline">\(254\)</span>・<span class="math inline">\(260\)</span>。検出率 <span class="math inline">\(0.212\)</span> 対 <span class="math inline">\(0.202\)</span>/<span class="math inline">\(0.192\)</span>）。それは検出率が下位十分位の <span class="math inline">\(3\)</span>–<span class="math inline">\(10\times\)</span> となる高距離十分位に集中していた。その信号の行方を3つの知見が要約する。<em>(a)</em> 意味距離は誤りへの曝露を確実に増加させる。曝露が修復と採用に伝播するかはレジーム依存である（MMLU-Pro：検出のみ。SuperGPQA：3 段階すべて）。そして逆方向連鎖はすべての段階で同じ距離でスケールする——したがって正味の利得は MMLU-Pro でゼロ、SuperGPQA で負となる（BTR <span class="math inline">\(0.54\)</span> 対 <span class="math inline">\(0.383\)</span>）。<em>(b)</em> 査読は全問不正解問題の <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> で初期応答選択オラクルを超える新規正解を生成するが、エンドツーエンドのデリバリーは <span class="math inline">\(\le 1.5\%\)</span> であり、ほとんどの提案は提案から採用の間に失われる。<em>(c)</em> 拘束条件は認識論的信用配分である。非対称な検証がなければ、システムは是正する不一致と誤反対を区別できない。「異なる」<span class="math inline">\(\neq\)</span>「教示的」。</p>
+<h1 id="sec:cases">ケーススタディ</h1>
+<p>4 つの MMLU-Pro の問題（すべてシード 0）が上記で定量化したメカニズムを例示する。完全なトランスクリプト・距離行列・条件別最終結果は <code>results/case_studies_mmlu_pro.md</code> にある。</p>
+<h4 id="successful-correction-qid-11344.">成功した訂正（qid 11344）</h4>
+<p>熱交換器設計の問題（正解：D）。4 つのエージェントは B、E、D、C と回答——誤った多数派（B）と単一の正解エージェント（2）である。C5 は <span class="math inline">\((0,1)\)</span> と <span class="math inline">\((2,3)\)</span> をペアにする。エージェント 2 はエージェント 3 を <code>PEER INCORRECT</code> と判定し、エージェント 3 は D に更新してエージェント 2 を支持する（<code>PEER CORRECT</code>）。合成器は D を回復する一方、C0・C1・C2・C9 はすべて多数派の B を出力する。これは設計通りに機能したパイプラインである——ただし注目すべきことに、ここでは C3・C4・C6 も D を回復しており、この成功は最遠ペアリング固有のものではない。</p>
+<h4 id="minority-rescue-qid-10203.">少数派の救出（qid 10203）</h4>
+<p>偏光板/半波長板スタックの問題（正解：J）。エージェント 0 と 1 はパース可能な回答を生成できず、エージェント 2 のみが J と回答し、エージェント 3 は C と回答する。C5（ペア <span class="math inline">\((0,1)\)</span>、<span class="math inline">\((2,3)\)</span>）の下で、4 つの査読すべてが収束する。正解ペアの両エージェントが J を支持し、エージェント 2 がエージェント 3 を <code>PEER INCORRECT</code> と指摘し、全査読者が J に更新する。すべての集約条件が J を回復し、C0（エージェント 0）のみが誤りのままである。査読は脆弱な単一の正解サンプルをコンセンサスに転換する——しかしここでは単純な多数決も同じことをする（パース不能な回答は投票しない）。これもまた、トポロジーが活性成分でないことを示している。</p>
+<h4 id="destabilization-of-a-correct-majority-qid-12037.">正しい多数派の不安定化（qid 12037）</h4>
+<p>管路流の動力に関する問題（正解：D）。3 つのエージェントが D と回答し、外れ値のエージェント 2 が A と回答する。最遠ペアリング（C5、C6 も同一）は外れ値を正しいエージェント 0 に配線する。外れ値はエージェント 0 を <code>PEER INCORRECT</code> と宣言して A を維持する。一方、エージェント 1 の正しい D を査読したエージェント 3 は H に切り替える。混乱した査読記録を前に、合成器は C5（および C3）で A を出力する——正しい多数派の破壊である——一方 C4 と C6 は D のままである。我々はこれを §<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a> の<em>不安定化</em>メカニズム——遠い相手が正しい回答への反対を製造する——の事例として提示するのであり、最遠ペアリングが系統的に誤った相手を選ぶことの証拠としてではない。集約レベルではそうではない（最大距離エッジの端点はベースレートで誤る）。</p>
+<h4 id="shared-misconception-qid-10012.">共有された誤解（qid 10012）</h4>
+<p>エネルギー保存の投射体問題（正解：I）。4 つのエージェントすべてが独立に A と回答し、ペアワイズ距離 <span class="math inline">\(0.099\)</span>–<span class="math inline">\(0.243\)</span> は純粋に、同じ誤った導出を異なる文言で正当化したことに由来する。すべての C5 査読は <code>PEER CORRECT</code> を返し、すべての条件——C0 から C9 まで——が A を出力する。埋め込み距離は言い回しを分離する。誤解は共有されているため、非相称査読はそれを追認する結果に終わる。</p>
+<h1 id="sec:discussion">考察</h1>
+<h4 id="a-clean-null-and-why-it-is-informative.">クリーンな null、そしてそれが有益である理由</h4>
+<p>同一の初期応答・同一のプロンプト・同一の計算量の下では、相互査読の「<em>誰が</em>」は問題にならない。最遠ペア・最近接ペア・ランダム・厳密最大重みの各マッチングは、MMLU-Pro で互いに 0.6pp 以内、SuperGPQA で 0.4pp 以内に収まり、いずれも多数決や計算量整合自己査読を上回らない。これは、同質エージェント間の通信が集約を上回ることは稀であるという新興の描像 [<a href="#ref-yang2025revisiting">6</a>, <a href="#ref-choi2025debateorvote">7</a>] をルーティングの次元へ拡張する。付加価値をもたらさないのはブロードキャスト討論だけではない——同一サンプルのどのようなペアワイズ配線も同様である。</p>
+<h4 id="why-the-correlated-cluster-intuition-did-not-pay-off-here.">相関クラスター直感がここで実を結ばなかった理由</h4>
+<p>FPRR は、サンプリングされた回答が相関する推論クラスターを形成し、クラスター間でペアを組めば診断的コントラストが最大化されるという前提で設計された。前提は成り立つが、クラスターはルーティングで回避するには小さすぎる。MMLU-Pro では観測の <span class="math inline">\(85.1\%\)</span> が全員一致であり（<span class="math inline">\(77.1\%\)</span> が全員一致で正解、<span class="math inline">\(8.0\%\)</span> が全員一致で誤り）、4 サンプル中のユニーク回答数の平均は <span class="math inline">\(1.166\)</span>、ペアワイズコサイン距離の平均は <span class="math inline">\(0.087\)</span> である。SuperGPQA はより争いがあるが、それでも低多様である（<span class="math inline">\(62.3\%\)</span> が全員一致、<span class="math inline">\(1.355\)</span> のユニーク回答、平均距離 <span class="math inline">\(0.095\)</span>）。4 つのうち 3 つのエージェントが同じことを言うとき、どのマッチング規則も1ペアの差を除いてほぼ同じエッジ集合を生成する——これは精度の表が示すとおりである。非相称ルーティングは利用可能な不一致の塊を前提とする。温度 <span class="math inline">\(0.8\)</span>・強力なモデル・飽和したベンチマークでは、その塊は最小限である。</p>
+<h4 id="exposure-is-not-resolution-and-neither-is-free.">曝露は解決ではなく、どちらも無償ではない</h4>
+<p>メカニズムの結果は、討論文献がしばしば混同する2つの量を分離する。意味距離は誤りへの<em>曝露</em>を頑健に増加させる。査読者は最上位距離十分位で最下位十分位より最大1桁多く誤った相手を指摘する。しかし、その曝露が修復と採用へ伝播するかはレジーム依存であり——MMLU-Pro では平坦、SuperGPQA では3段階すべてで有意——逆方向連鎖はあらゆる場所で同じ距離でスケールする。誤反対（最上位十分位で最大 <span class="math inline">\(0.10\)</span>）と正しい査読者の不安定化（MMLU-Pro で C5 下 <span class="math inline">\(4\%\)</span>、C3 下 <span class="math inline">\(2\%\)</span> の問題）である。注目すべきは、逆方向連鎖は最遠ペアリングが悪い相手を選ぶことでは説明されない点である。最大距離エッジの端点はベースレートで誤る。このレジームで査読ベースのパイプラインを縛るのは<em>認識論的信用配分</em>である。遠く、自信に満ちて論じられた回答は、誤りを是正する場合でも異議をでっち上げる場合でも、査読者と合成器には同じに見える。したがって非対称な検証がなければ、トポロジーが獲得する曝露の1単位ごとに不安定化として返済される。</p>
+<h4 id="system-level-gains-are-not-intrinsic-gains.">システムレベルの利得は本質的利得ではない</h4>
+<p>複数サンプル条件が単一ベースラインを実際に上回る場所——最も明確なのは SuperGPQA で、すべての <span class="math inline">\(N{=}4\)</span> 条件が C0 を <span class="math inline">\({\approx}+4\)</span>pp 上回る——その利得は多数決と査読なし合成に等しく取り込まれる。実際、SuperGPQA では査読なし合成が相互査読を<em>有意に</em>上回る（C2 対 C5：<span class="math inline">\(+1.5\)</span>pp、<span class="math inline">\(p=0.010\)</span> 未補正）。より難しいベンチマークでは、査読は査読なしより測定可能なほど悪い。我々の結果のどこにも、相互査読がモデルの<em>知っていること</em>を変えるという示唆はない。それはモデルがすでに生成する回答に重みを付け直すのであり、これらのベンチマークでは多数決も5分の1のトークンコストで同じくらいうまく重み付けし直す。査読ベース・討論ベースの利得の報告は、計算量整合の自己査読コントロールと多数決の下駄に照らして読むべきである。我々のデータでは、その両方が効果を完全に説明する。</p>
+<h1 id="sec:limitations">限界</h1>
+<p>いくつかの妥当性への脅威がこれらの知見を限定する。</p>
+<p><strong>計算オーバーヘッド。</strong>査読条件は多数決の <span class="math inline">\({\sim}5\times\)</span>、単一応答の <span class="math inline">\({\sim}20\times\)</span> のトークンを要し、集約利得はゼロである。我々のコスト分析は記述的であり、より安価な査読変種（より短い査読、より少ないペア数）は検証していない。</p>
+<p><strong>相関誤差は構造的である。</strong>すべてのエージェントは1つのプロバイダが提供する1つのチェックポイントであるため、同源の相関誤差（共有された誤解、観測の <span class="math inline">\(8.0\%\)</span>–<span class="math inline">\(21.6\%\)</span>）が、モデル内査読スキームが回復しうる範囲を制約する。異種モデルプールは異なる振る舞いをするかもしれない。</p>
+<p><strong>ベンチマークのコンタミネーション。</strong>MMLU-Pro と SuperGPQA は公開ベンチマークであり、訓練データに部分的に露出している可能性がある。コンタミネーションは絶対精度を押し上げ、ヘッドルームを圧縮する。すべての条件に同一に適用されるためペア差は解釈可能なままだが、検出可能な効果量は残されたヘッドルームによって制約される。</p>
+<p><strong>埋め込みへの依存。</strong>距離は結論＋正当化テキストに対する単一エンコーダ（bge-m3）に由来する。埋め込み距離は表層的意味的非類似性を測るのであり、論理的不一致ではない——qid 10012 は距離 <span class="math inline">\(0.24\)</span> で同一の誤解を示した。探索的な指標アブレーション（表<a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>）はこれを部分的にしか緩和しない。単一シード・ベンチマークあたり 200 問であり、MMLU-Pro D4 が欠けているため、SuperGPQA での D4 の優位は、一次の null に対抗する証拠となりうる前に再検証を要する。</p>
+<p><strong>判定者と合成器のバイアス。</strong>合成器はエージェントと同一モデルであり、バイアスを共有しうる（例えば、自信ある回答や冗長な回答への偏り）。プロンプトは条件間で凍結されているため、このバイアスは条件差を説明できないが、すべての査読条件の結果を形作る。</p>
+<p><strong>単一モデル・単一デコード設定。</strong>本実行では1つのチェックポイント、1つの温度（<span class="math inline">\(0.8\)</span>）、1つの <span class="math inline">\(N\)</span> である。プロバイダはシードパラメータを公開しないため、API の非決定性はシード固定できない（我々が制御するすべての確率的要素——サンプリング・ペアリング・シャッフル——はシード付きでログ記録される）。不一致の塊が大きい、より多様性の高いレジーム（より高い温度・異種アンサンブル・より難しいか飽和度の低いタスク）へは、この null は移行しないかもしれない。</p>
+<p><strong>範囲と依存性。</strong>2 つのベンチマーク。SuperGPQA は 4 シードに依拠する（MMLU-Pro は 3）。シード間観測は問題を共有するため、プールされたブートストラップ CI と McNemar <span class="math inline">\(p\)</span> 値は軽度に反保守的である——これはむしろ一次比較について null 結論を保守的にするものであり、一次比較のいずれも有意に近くはない。事前登録された <span class="math inline">\(N\)</span> アブレーションとペアリングシード分散研究（修正 8）は予算の都合で未実行のため、null が <span class="math inline">\(N\)</span> やペアリングのランダム性にどの程度敏感かを定量化できない。距離アブレーションは単一シードである。</p>
+<h1 id="sec:conclusion">結論</h1>
+<p>事前登録された判定基準の下で、本研究は<strong>結果カテゴリ D——null 結果</strong>に分類される。同一のキャッシュ済み応答上で、最遠ペア相互査読は、MMLU-Pro（最終、3 シード）と SuperGPQA（4 シード）において、ランダムペアリング・最近接ペアリング・厳密最大重みマッチング・多数決・計算量整合自己査読と統計的に区別がつかない。すべての一次効果量は <span class="math inline">\(\pm 1\)</span>pp 以内、すべての Holm 調整済み <span class="math inline">\(p\)</span> 値は <span class="math inline">\(\geq 0.92\)</span> である。誰が誰を査読するかは問題にならない——このレジームでは。むしろ、より難しいベンチマークでは査読は査読なしよりわずかに悪い（C2 <span class="math inline">\(&gt;\)</span> C5 は <span class="math inline">\(1.5\)</span>pp、<span class="math inline">\(p=0.010\)</span> 未補正）。1 つの探索的知見はこの分類を限定するが、変更はしない。単一シードの距離アブレーションで、不一致感知型の NLI 矛盾指標（D4）はより難しいベンチマークで純粋な意味距離を上回る（D4 <span class="math inline">\(-\)</span> D2 <span class="math inline">\(= +3.0\)</span>pp、CI <span class="math inline">\([+0.5, +6.0]\)</span>、不一致 <span class="math inline">\(7\)</span> 対 <span class="math inline">\(1\)</span>。表<a href="#tab:dist-ablation" data-reference-type="ref" data-reference="tab:dist-ablation">6</a>）——<em>認識論的対立</em>こそがテキストの相違ではなくルーティングに値する量であることを示す最初の手がかりであり、この null を不一致感知ルーティングの研究へ接続する。</p>
+<p>メカニズム分析こそが、我々が信じるところの永続的な貢献である。意味距離は両ベンチマークとすべてのペアリング規則で誤りへの<em>曝露</em>を確実に増加させるが、曝露が修復と採用に伝播するかはレジーム依存であり——誤反対と不安定化の逆方向連鎖はすべての段階で同じ距離でスケールするため、正味の利得はゼロかそれ以下となる。査読は冗長でも、初期回答集合に制約されるものでもない。両方向に問題を転じ（BTR <span class="math inline">\(0.54\)</span> / <span class="math inline">\(0.383\)</span>）、全問不正解問題の <span class="math inline">\(0\)</span>–<span class="math inline">\(4\%\)</span> で新規正解を生成するが、その新情報のエンドツーエンドのデリバリーは <span class="math inline">\(\le 1.5\%\)</span> である。同質エージェント間の相互査読が失敗するのは、査読者に不一致が見えないからでも、新しく言えることが何もないからでもない——システムが信用を配分できないからである。非対称な検証がなければ、是正する不一致と誤反対は区別できない。</p>
+<p>3 つの方向が導かれる。第一に、不一致の塊が実在する場所で非相称ルーティングを再検証すること。より高い温度または異種モデルのプール、飽和度の低いタスク、より大きな <span class="math inline">\(N\)</span> である。第二に、ルーティングの前に安定化すること。距離誘発の誤反対から正解を守る（例えば、判定条件付き合成や挑戦の非対称的検証）、不安定化連鎖を直接標的とする。第三に、認識論的信用配分そのものを研究対象とすること——査読者のキャリブレーション、提案から採用へのデリバリー、衝突する査読下での裁定——である。我々のファネルと段階別回帰は、ルーティングではなく信用配分こそが査読ベースのテスト時スケーリングの拘束条件であることを特定しているからである。</p>
+<h1 class="unnumbered" id="declarations">宣言</h1>
+<h2 class="unnumbered" id="data-availability">データ利用可能性</h2>
+<p>キャッシュされた生レコード（JSONL：完全なプロンプト・生出力・パース済みフィールド・トークン使用量・シード）、分析出力、図データはプロジェクトリポジトリで公開している。ベンチマークデータセットは公開である：MMLU-Pro（CC-BY-4.0）および SuperGPQA（ODC-BY）。</p>
+<h2 class="unnumbered" id="code-availability">コード利用可能性</h2>
+<p>完全な実験パイプラインと分析スクリプト（シード付きペアリング・決定論的パース・ペアブートストラップ統計）はプロジェクトリポジトリで公開している。</p>
+<h2 class="unnumbered" id="author-contributions">著者貢献</h2>
+<p>全著者は研究の構想と設計、実験の実行、データ分析、原稿作成に貢献し、最終版を承認した。</p>
+<h2 class="unnumbered" id="funding">資金</h2>
+<p>本研究は Gi (Beijing) Tech Design Ltd. により実施・資金提供された。外部資金は受けていない。</p>
+<h2 class="unnumbered" id="competing-interests">競合利益</h2>
+<p>全著者は Gi (Beijing) Tech Design Ltd. の従業員である。</p>
+<h2 class="unnumbered" id="ethics-approval">倫理承認</h2>
+<p>該当なし。本研究はヒト参加者・動物・個人特定可能データを含まない。</p>
+<div class="thebibliography">
+<h2>参考文献</h2>
+<ol>
+<li id="ref-wang2022selfconsistency">Wang, X. et al. Self-Consistency Improves Chain of Thought Reasoning in Language Models. ICLR 2023 (arXiv:2203.11171).</li>
+<li id="ref-du2023multiagent">Du, Y. et al. Improving Factuality and Reasoning in Language Models through Multiagent Debate. ICML 2024 (arXiv:2305.14325).</li>
+<li id="ref-chen2023reconcile">Chen, J. et al. ReConcile: Round-Table Conference Improves Reasoning via Consensus among Diverse LLMs. ACL 2024 (arXiv:2309.13007).</li>
+<li id="ref-li2024moreagents">Li, J. et al. More Agents Is All You Need. arXiv:2402.05120, 2024.</li>
+<li id="ref-estornell2024multillm">Estornell, A. and Liu, Y. Multi-LLM Debate: Framework, Principals, and Interventions. NeurIPS 2024 (OpenReview sy7eSEXdPC).</li>
+<li id="ref-yang2025revisiting">Yang, Z. et al. Revisiting Multi-Agent Debate as Test-Time Scaling: A Systematic Study of Conditional Effectiveness. arXiv:2505.22960, 2025.</li>
+<li id="ref-choi2025debateorvote">Choi, Zhu, Li. Debate or Vote: Which Yields Better Decisions in Multi-Agent Large Language Models? NeurIPS 2025 (arXiv:2508.17536).</li>
+<li id="ref-wu2025reallydebate">Wu, et al. Can LLM Agents Really Debate? A Controlled Study of Multi-Agent Debate in Logical Reasoning. arXiv:2511.07784, 2025.</li>
+<li id="ref-zhu2026demystifying">Zhu, et al. Demystifying Multi-Agent Debate: The Role of Confidence and Diversity. arXiv:2601.19921, 2026.</li>
+<li id="ref-nguyen2026dars">Nguyen, et al. Hear Both Sides: Efficient Multi-Agent Debate via Diversity-Aware Message Retention. arXiv:2603.20640, 2026.</li>
+<li id="ref-zeng2025s2mad">Zeng, et al. S\(^2\)-MAD: Breaking the Token Barrier to Enhance Multi-Agent Debate Efficiency. NAACL 2025 (arXiv:2502.04790).</li>
+<li id="ref-rmoa2025">Xie, et al. RMoA: Optimizing Mixture-of-Agents through Diversity Maximization and Residual Compensation. Findings of ACL 2025.</li>
+<li id="ref-cortexdebate2025">Sun, et al. CortexDebate: Debating with Sparse, Dynamic and Trust-Aware Topology. Findings of ACL 2025 (arXiv:2507.03928).</li>
+<li id="ref-dysco2026">Gou and Liu. DySCo: Dynamic Trust-Aware Sparse Consensus. arXiv:2606.01828, 2026.</li>
+<li id="ref-dytopo2026">DyTopo: Dynamic Topology Routing for Multi-Agent Systems. arXiv:2602.06039, 2026.</li>
+<li id="ref-mace2026">Li, et al. Multi-Agent LLMs Fail to Explore Each Other / MACE. arXiv:2607.11250, 2026.</li>
+<li id="ref-gptswarm">Zhuge, et al. GPTSwarm: Language Agents as Optimizable Graphs. ICML 2024 (arXiv:2402.16823).</li>
+<li id="ref-dylan">Liu, et al. Dynamic LLM-Agent Network (DyLAN). COLM 2024 (arXiv:2310.02170).</li>
+<li id="ref-agentprune">Zhang, et al. AgentPrune: Reducing Redundancy in Multi-Agent Communication. ICLR 2025 (arXiv:2410.02506).</li>
+<li id="ref-gdesigner">Zhang, et al. G-Designer: Architecting Multi-agent Communication Topologies via Graph Neural Networks. arXiv:2410.11782, 2024.</li>
+<li id="ref-macnet">Qian, et al. MacNet: Multi-Agent Collaboration Networks. arXiv:2406.07155, 2024.</li>
+<li id="ref-graphgrpo">Graph-GRPO: Graph Topology Optimization via GRPO. arXiv:2603.02701, 2026.</li>
+<li id="ref-gtd2025">Jiang, et al. Guided Topology Diffusion for Multi-Agent Systems. ACL 2026 (arXiv:2510.07799).</li>
+<li id="ref-codebookagent">Codebook Agent: Query-Conditioned Topology Prediction. arXiv:2609.02264, 2026.</li>
+<li id="ref-xu2023peerreview">Xu, et al. Towards Reasoning in LLMs via Multi-Agent Peer Review Collaboration. arXiv:2311.08152, 2023.</li>
+<li id="ref-pico2024">PiCO: Peer-based Collaborative Optimization. arXiv:2402.01830, 2024.</li>
+<li id="ref-qdtournament">Quality-Diversity Debate Tournaments. arXiv:2510.05909, 2025.</li>
+<li id="ref-madsurvey2026">Motger, et al. A Survey of Multi-Agent Debate Systems (141 studies). arXiv:2607.26212, 2026.</li>
+<li id="ref-slimsc">Slim-SC: Efficient Self-Consistency via Similarity Pruning. arXiv:2509.13990, 2025.</li>
+<li id="ref-ssdp">SSDP: Semantic-Similarity-Based Diverse Pruning. arXiv:2511.08595, 2025.</li>
+<li id="ref-deepprune">DeepPrune: Efficient Trace Pruning for Test-Time Scaling. arXiv:2510.08483, 2025.</li>
+<li id="ref-divse">Naik, et al. DIVSE: Diverse Self-Consistency. arXiv:2310.07088, 2023.</li>
+<li id="ref-spmad">Li, et al. Sparse Communication Topology in Multi-Agent Debate. Findings of EMNLP 2024 (arXiv:2406.11776).</li>
+<li id="ref-failuremodes">Wynn, et al. Understanding Failure Modes in Multi-Agent Debate. arXiv:2509.05396, 2025.</li>
+<li id="ref-mmlupro">Wang, Y. et al. MMLU-Pro: A More Robust and Challenging Multi-Task Language Understanding Benchmark. NeurIPS 2024 D&amp;B.</li>
+<li id="ref-supergpqa">M-A-P. SuperGPQA: Scaling LLM Evaluation across 285 Graduate Disciplines. 2025.</li>
+<li id="ref-gsm8k">Cobbe, et al. Training Verifiers to Solve Math Word Problems. arXiv:2110.14168, 2021.</li>
+<li id="ref-math500">Hendrycks, et al. / Lightman, et al. MATH-500. 2024.</li>
+<li id="ref-bgem3">Chen, et al. BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings. 2024.</li>
+<li id="ref-robertamnli">Liu, et al. RoBERTa (roberta-large-mnli). 2019.</li>
+<li id="ref-ji2026candidate">Ji, J.-H., Li, S., Cheng, J., She, Z., Yu, J.-T., and Yuan, Z. Candidate Supply and Answer Selection Shape the Value of LLM Judging in Multi-Agent Systems. arXiv:2608.25937, 2026.</li>
+</ol>
+</div>
+</body>
+</html>

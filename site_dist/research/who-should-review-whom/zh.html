@@ -148,6 +148,42 @@
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
+
+<style>
+/* site override: restrained academic page on top of pandoc defaults */
+html { background: #fafafa; }
+body { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 5rem;
+       font-family: -apple-system, "Segoe UI", "Helvetica Neue", "PingFang SC",
+                    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+       color: #1d1d1f; line-height: 1.75; background: #fafafa; }
+h1, h2, h3, h4 { line-height: 1.3; color: #111; margin-top: 2.2em; }
+h1 { font-size: 1.7rem; }
+h2 { font-size: 1.3rem; border-bottom: 1px solid #e3e3e6; padding-bottom: .3em; }
+h3 { font-size: 1.1rem; }
+header#title-block-header h1.title { font-size: 1.9rem; }
+header#title-block-header p.author, header#title-block-header p.date {
+  color: #6e6e73; margin: .2em 0; }
+a { color: #0b5cad; text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; height: auto; display: block; margin: 1.2rem auto; }
+figure { margin: 1.6rem 0; }
+figcaption { font-size: .86rem; color: #6e6e73; margin-top: .5rem; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem;
+        margin: 1.4rem 0; }
+th, td { border-top: 1px solid #d8d8dc; padding: .35em .55em; }
+thead th { border-top: 2px solid #1d1d1f; border-bottom: 1px solid #1d1d1f; }
+tbody tr:last-child td { border-bottom: 2px solid #1d1d1f; }
+code { font-size: .88em; background: #f0f0f2; padding: .1em .3em;
+       border-radius: 4px; }
+pre { background: #f5f5f7; padding: 1rem; overflow-x: auto; border-radius: 8px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 3px solid #d8d8dc; margin-left: 0;
+             padding-left: 1.2rem; color: #3a3a3c; }
+.thebibliography ol { font-size: .86rem; color: #3a3a3c; }
+.thebibliography li { margin-bottom: .35em; }
+.abstract { font-size: .95rem; }
+hr { border: none; border-top: 1px solid #e3e3e6; margin: 2.5rem 0; }
+</style>
 </head>
 <body>
 <header id="title-block-header">
@@ -224,7 +260,7 @@ for Test-Time LLM Reasoning</span></h1>
 <h1 id="sec:results">主要结果</h1>
 <p>图 <a href="#fig:architecture" data-reference-type="ref" data-reference="fig:architecture">1</a> 回顾了流水线（第 <a href="#sec:method" data-reference-type="ref" data-reference="sec:method">3</a> 节）；本节中所有配对条件在每个（题目, 种子）上消费完全相同的缓存初始回答。</p>
 <figure>
-<img src="../figures/F1_architecture.png" id="fig:architecture" style="width:90.0%" alt="流水线概览：N 个缓存初始回答、bge-m3 距离矩阵、配对规则（随机 / 最近 / RGFM / 最大权重）、互惠配对限定互审，以及对全部回答与评审的最终合成。" /><figcaption aria-hidden="true">流水线概览：<span class="math inline">\(N\)</span> 个缓存初始回答、bge-m3 距离矩阵、配对规则（随机 / 最近 / RGFM / 最大权重）、互惠配对限定互审，以及对全部回答与评审的最终合成。</figcaption>
+<img src="/research/who-should-review-whom/figures/F1_architecture.png" id="fig:architecture" style="width:90.0%" alt="流水线概览：N 个缓存初始回答、bge-m3 距离矩阵、配对规则（随机 / 最近 / RGFM / 最大权重）、互惠配对限定互审，以及对全部回答与评审的最终合成。" /><figcaption aria-hidden="true">流水线概览：<span class="math inline">\(N\)</span> 个缓存初始回答、bge-m3 距离矩阵、配对规则（随机 / 最近 / RGFM / 最大权重）、互惠配对限定互审，以及对全部回答与评审的最终合成。</figcaption>
 </figure>
 <h2 id="总体准确率">总体准确率</h2>
 <p>表 <a href="#tab:mmlu-acc" data-reference-type="ref" data-reference="tab:mmlu-acc">1</a> 报告 MMLU-Pro 上的准确率（500 题 <span class="math inline">\(\times\)</span> 3 个实验种子，<span class="math inline">\(n=1500\)</span> 条合并观测）。所有 <span class="math inline">\(N{=}4\)</span> 聚合条件聚集在 0.8 个百分点的带内（0.837–0.845）；FPRR（C5，0.839）与算力匹配自审对照（C9，0.839）同处该带底部，比随机配对、最近配对、最大权重匹配与纯多数投票（均为 0.845）低 0.6 个百分点。图 <a href="#fig:accuracy" data-reference-type="ref" data-reference="fig:accuracy">2</a> 直观展示了这些几乎相同的准确率。</p>
@@ -535,7 +571,7 @@ for Test-Time LLM Reasoning</span></h1>
 </table>
 </div>
 <figure>
-<img src="../figures/F3_accuracy_by_condition.png" id="fig:accuracy" style="width:85.0%" alt="两个基准上各条件的准确率（MMLU-Pro：n=1500，3 种子；SuperGPQA：n=2000，4 种子）。每个基准内所有 N{=}4 条件在统计上不可区分，唯一例外是无互审合成（C2）在 SuperGPQA 上超过 FPRR。" /><figcaption aria-hidden="true">两个基准上各条件的准确率（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。每个基准内所有 <span class="math inline">\(N{=}4\)</span> 条件在统计上不可区分，唯一例外是无互审合成（C2）在 SuperGPQA 上超过 FPRR。</figcaption>
+<img src="/research/who-should-review-whom/figures/F3_accuracy_by_condition.png" id="fig:accuracy" style="width:85.0%" alt="两个基准上各条件的准确率（MMLU-Pro：n=1500，3 种子；SuperGPQA：n=2000，4 种子）。每个基准内所有 N{=}4 条件在统计上不可区分，唯一例外是无互审合成（C2）在 SuperGPQA 上超过 FPRR。" /><figcaption aria-hidden="true">两个基准上各条件的准确率（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。每个基准内所有 <span class="math inline">\(N{=}4\)</span> 条件在统计上不可区分，唯一例外是无互审合成（C2）在 SuperGPQA 上超过 FPRR。</figcaption>
 </figure>
 <h2 id="成本">成本</h2>
 <p>互审昂贵，且在此一无所获（表 <a href="#tab:tokens" data-reference-type="ref" data-reference="tab:tokens">5</a>，图 <a href="#fig:tokens" data-reference-type="ref" data-reference="fig:tokens">3</a>）。在 MMLU-Pro 上，C5 消耗 <span class="math inline">\(11.89\)</span>M token——单回答基线的 <span class="math inline">\(19.7\times\)</span>、多数投票的 <span class="math inline">\(4.9\times\)</span>——准确率却比投票<em>低</em> 0.6pp；每百万 token 的准确率从 1.37（C0）、0.35（C1）降至所有互审条件的 0.07。SuperGPQA 在每种子可比的 token 成本下呈现相同模式（C5 在 <span class="math inline">\(4\)</span> 个种子上共 <span class="math inline">\(23.87\)</span>M），且互审还显著落后于无互审合成。</p>
@@ -615,14 +651,14 @@ for Test-Time LLM Reasoning</span></h1>
 </table>
 </div>
 <figure>
-<img src="../figures/F4_accuracy_vs_tokens.png" id="fig:tokens" style="width:85.0%" alt="准确率与总 token 消耗。互审条件（C3–C6, C9）占据一个昂贵的高原；投票（C1）在成本—准确率权衡上全面占优。" /><figcaption aria-hidden="true">准确率与总 token 消耗。互审条件（C3–C6, C9）占据一个昂贵的高原；投票（C1）在成本—准确率权衡上全面占优。</figcaption>
+<img src="/research/who-should-review-whom/figures/F4_accuracy_vs_tokens.png" id="fig:tokens" style="width:85.0%" alt="准确率与总 token 消耗。互审条件（C3–C6, C9）占据一个昂贵的高原；投票（C1）在成本—准确率权衡上全面占优。" /><figcaption aria-hidden="true">准确率与总 token 消耗。互审条件（C3–C6, C9）占据一个昂贵的高原；投票（C1）在成本—准确率权衡上全面占优。</figcaption>
 </figure>
 <h2 id="h1h3-的裁定">H1–H3 的裁定</h2>
 <p><strong>H1（FPRR <span class="math inline">\(&gt;\)</span> 随机配对）：不支持。</strong> MMLU-Pro 上 <span class="math inline">\(-0.5\)</span>pp，SuperGPQA 上 <span class="math inline">\(-0.7\)</span>pp；两个 CI 均跨零（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。 <strong>H2（FPRR <span class="math inline">\(&gt;\)</span> 最近配对）：不支持。</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(-0.6\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(0.987\)</span>）。 <strong>H3（FPRR <span class="math inline">\(&gt;\)</span> 多数投票）：不支持。</strong> <span class="math inline">\(-0.6\)</span>pp / <span class="math inline">\(+0.1\)</span>pp（<span class="math inline">\(p_{\mathrm{Holm}} = 0.920\)</span> / <span class="math inline">\(1.000\)</span>）。 精确最大权重匹配（C6）不优于贪心 RGFM；算力匹配自审对照（C9）在两个基准上几乎精确复现 FPRR 的准确率，因此该零结果不能归因于匹配次优或互审算力本身。</p>
 <h1 id="sec:ablations">消融实验</h1>
 <h4 id="配对规则c3c6相同初始回答">配对规则（C3–C6，相同初始回答）。</h4>
 <p>由于四个配对条件互审的是<em>同一</em>批缓存初始回答，它们之间的任何准确率差异都只能归因于匹配本身。而这样的差异基本不存在：MMLU-Pro 上 C3/C4/C5/C6 为 0.845 / 0.845 / 0.839 / 0.845（离散度 0.6pp）；SuperGPQA（<span class="math inline">\(n=2000\)</span>，4 种子）上为 0.606 / 0.605 / 0.599 / 0.602（离散度 0.7pp）。精确最大权重匹配（C6）与贪心 RGFM（C5）不可区分；极性相反的最近配对（C4）与随机配对持平。图 <a href="#fig:matchings" data-reference-type="ref" data-reference="fig:matchings">5</a> 直观展示四种规则如何以截然不同的方式连接同一批回答；连线方式对准确率没有影响。</p>
-<p><img src="../figures/F2_distance_matchings_mmlu_pro.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="距离矩阵，以及随机 / 最近 / RGFM / 最大权重在相同回答集上诱导的匹配（左：MMLU-Pro；右：SuperGPQA，图中展示种子 0 作为示例；合并结果见表 1 与 3）。" /> <img src="../figures/F2_distance_matchings_supergpqa.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="距离矩阵，以及随机 / 最近 / RGFM / 最大权重在相同回答集上诱导的匹配（左：MMLU-Pro；右：SuperGPQA，图中展示种子 0 作为示例；合并结果见表 1 与 3）。" /></p>
+<p><img src="/research/who-should-review-whom/figures/F2_distance_matchings_mmlu_pro.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="距离矩阵，以及随机 / 最近 / RGFM / 最大权重在相同回答集上诱导的匹配（左：MMLU-Pro；右：SuperGPQA，图中展示种子 0 作为示例；合并结果见表 1 与 3）。" /> <img src="/research/who-should-review-whom/figures/F2_distance_matchings_supergpqa.png" title="fig:" id="fig:matchings" style="width:48.0%" alt="距离矩阵，以及随机 / 最近 / RGFM / 最大权重在相同回答集上诱导的匹配（左：MMLU-Pro；右：SuperGPQA，图中展示种子 0 作为示例；合并结果见表 1 与 3）。" /></p>
 <h4 id="互审与不互审c2合成器与投票c1">互审与不互审（C2）、合成器与投票（C1）。</h4>
 <p>在 MMLU-Pro 上，互审条件（0.839–0.845）与无互审合成器条件 C2（0.837）相差在 0.8pp 以内，C1 投票（0.845）以极低得多的成本追平最好的互审条件。在 SuperGPQA 上排序反转：C2（0.614）是最好的条件，<em>高于</em>所有互审条件（0.599–0.606），C1 为 0.598——且四个种子下差距在统计上可检出（C5 对 C2：<span class="math inline">\(-1.5\)</span>pp，95% CI [<span class="math inline">\(-2.6\)</span>, <span class="math inline">\(-0.4\)</span>]，<span class="math inline">\(p=0.010\)</span> 未校正；表 <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a>）。因此，互惠互审相对任何一个聚合基线都不增值——在更难的基准上反而略有减值。</p>
 <h4 id="算力匹配c9">算力匹配（C9）。</h4>
@@ -697,7 +733,7 @@ for Test-Time LLM Reasoning</span></h1>
 <h1 id="sec:mechanism">机制分析</h1>
 <p>总体零结果引出一个更尖锐的问题：异配边是否携带<em>任何</em>额外信号？若有，它死在哪里？我们将互审阶段分解为两条方向相反的链（图 <a href="#fig:funnels" data-reference-type="ref" data-reference="fig:funnels">6</a>）：<em>正向链</em>——题目至少有一个错误初始答案（E0），互审者检出该错误（E1），提出正确修复（E2），最终答案正确（E3）；<em>反向链</em>——题目至少有一个正确初始答案（C0），互审者错误反对正确的同伴（C1），正确的互审者失稳而更改或怀疑有效答案（C2），最终答案错误（C3）。</p>
 <figure>
-<img src="../figures/F8_repair_funnels.png" id="fig:funnels" style="width:95.0%" alt="两个基准上的双层题目级漏斗（MMLU-Pro：n=1500，3 种子；SuperGPQA：n=2000，4 种子）。正向链 E0\toE3（错误暴露 \to 检出 \to 提出修复 \to 最终正确）与反向链 C0\toC3（存在正确答案 \to 错误反对 \to 失稳 \to 最终错误）。检出随配对距离上升；解决不随距离上升；反向链在异配配对下变得更重。" /><figcaption aria-hidden="true">两个基准上的双层题目级漏斗（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。正向链 E0<span class="math inline">\(\to\)</span>E3（错误暴露 <span class="math inline">\(\to\)</span> 检出 <span class="math inline">\(\to\)</span> 提出修复 <span class="math inline">\(\to\)</span> 最终正确）与反向链 C0<span class="math inline">\(\to\)</span>C3（存在正确答案 <span class="math inline">\(\to\)</span> 错误反对 <span class="math inline">\(\to\)</span> 失稳 <span class="math inline">\(\to\)</span> 最终错误）。检出随配对距离上升；解决不随距离上升；反向链在异配配对下变得更重。</figcaption>
+<img src="/research/who-should-review-whom/figures/F8_repair_funnels.png" id="fig:funnels" style="width:95.0%" alt="两个基准上的双层题目级漏斗（MMLU-Pro：n=1500，3 种子；SuperGPQA：n=2000，4 种子）。正向链 E0\toE3（错误暴露 \to 检出 \to 提出修复 \to 最终正确）与反向链 C0\toC3（存在正确答案 \to 错误反对 \to 失稳 \to 最终错误）。检出随配对距离上升；解决不随距离上升；反向链在异配配对下变得更重。" /><figcaption aria-hidden="true">两个基准上的双层题目级漏斗（MMLU-Pro：<span class="math inline">\(n=1500\)</span>，3 种子；SuperGPQA：<span class="math inline">\(n=2000\)</span>，4 种子）。正向链 E0<span class="math inline">\(\to\)</span>E3（错误暴露 <span class="math inline">\(\to\)</span> 检出 <span class="math inline">\(\to\)</span> 提出修复 <span class="math inline">\(\to\)</span> 最终正确）与反向链 C0<span class="math inline">\(\to\)</span>C3（存在正确答案 <span class="math inline">\(\to\)</span> 错误反对 <span class="math inline">\(\to\)</span> 失稳 <span class="math inline">\(\to\)</span> 最终错误）。检出随配对距离上升；解决不随距离上升；反向链在异配配对下变得更重。</figcaption>
 </figure>
 <h2 id="sec:fwd">正向链：距离买来错误暴露</h2>
 <p>FPRR 确实把互审流量转移到可能发生分歧的配对上。按互审者—被审者正误统计有向互审，C5 将 <span class="math inline">\(412/6000\)</span>（<span class="math inline">\(6.9\%\)</span>）的 MMLU-Pro 互审置于正误混合的配对上，随机配对为 <span class="math inline">\(328\)</span>（<span class="math inline">\(5.5\%\)</span>），最近配对为 <span class="math inline">\(320\)</span>（<span class="math inline">\(5.3\%\)</span>）——跨错误边相对增加 <span class="math inline">\(25\)</span>–<span class="math inline">\(30\%\)</span>，与精确最大权重匹配持平（C6：<span class="math inline">\(416\)</span>，<span class="math inline">\(6.9\%\)</span>）。SuperGPQA 上转移更小：C5 将 <span class="math inline">\(1270/8000\)</span>（<span class="math inline">\(15.9\%\)</span>）的互审置于混合配对，随机配对为 <span class="math inline">\(1194\)</span>（<span class="math inline">\(14.9\%\)</span>），最近配对为 <span class="math inline">\(1098\)</span>（<span class="math inline">\(13.7\%\)</span>）（C6：<span class="math inline">\(1330\)</span>，<span class="math inline">\(16.6\%\)</span>）。</p>
@@ -901,7 +937,7 @@ for Test-Time LLM Reasoning</span></h1>
 </tbody>
 </table>
 </div>
-<p><img src="../figures/F5_decile_correction_mmlu_pro.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="C3–C6 按配对距离十分位的检出率、纠正率与错误反对率（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。每种配对规则下检出率随距离上升；纠正率饱和；错误反对率攀升。" /> <img src="../figures/F5_decile_correction_supergpqa.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="C3–C6 按配对距离十分位的检出率、纠正率与错误反对率（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。每种配对规则下检出率随距离上升；纠正率饱和；错误反对率攀升。" /></p>
+<p><img src="/research/who-should-review-whom/figures/F5_decile_correction_mmlu_pro.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="C3–C6 按配对距离十分位的检出率、纠正率与错误反对率（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。每种配对规则下检出率随距离上升；纠正率饱和；错误反对率攀升。" /> <img src="/research/who-should-review-whom/figures/F5_decile_correction_supergpqa.png" title="fig:" id="fig:deciles" style="width:48.0%" alt="C3–C6 按配对距离十分位的检出率、纠正率与错误反对率（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。每种配对规则下检出率随距离上升；纠正率饱和；错误反对率攀升。" /></p>
 <h4 id="分阶段回归错误暴露与解决">分阶段回归：错误暴露与解决。</h4>
 <p>为定位距离<em>究竟</em>作用于何处，我们在配对距离上拟合三个 logistic 回归（C3–C6 合并互审）：检出错误的被审者、在检出条件下提出正确修复、在存在修复条件下最终答案正确（表 <a href="#tab:stage-reg" data-reference-type="ref" data-reference="tab:stage-reg">9</a>）。MMLU-Pro 上只有检出阶段对距离敏感（<span class="math inline">\(\beta = +12.2\)</span>，<span class="math inline">\(p&lt;0.0001\)</span>）；向修复（<span class="math inline">\(p=0.20\)</span>）与采纳（<span class="math inline">\(p=0.84\)</span>）的传播是平的。SuperGPQA 上三个阶段全部显著（<span class="math inline">\(\beta = +7.5\)</span>、<span class="math inline">\(+1.7\)</span>、<span class="math inline">\(+7.3\)</span>；<span class="math inline">\(p\)</span> 分别为 <span class="math inline">\(&lt;0.0001\)</span>、<span class="math inline">\(0.016\)</span>、<span class="math inline">\(&lt;0.0001\)</span>）——距离在那里确实传播到了解决——但总体准确率仍不动，因为反向链（§<a href="#sec:rev" data-reference-type="ref" data-reference="sec:rev">7.3</a>）随同一距离放大。因此精确的陈述是：<em>距离改善错误暴露；错误暴露是否传播为解决，取决于具体情形。</em></p>
 <div id="tab:stage-reg">
@@ -1131,7 +1167,7 @@ for Test-Time LLM Reasoning</span></h1>
 </tbody>
 </table>
 </div>
-<p><img src="../figures/F6_error_transitions_mmlu_pro.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="相对 0 号智能体初始答案的错误迁移（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。在每种互审拓扑下，挽回与腐化几乎相互抵消。" /> <img src="../figures/F6_error_transitions_supergpqa.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="相对 0 号智能体初始答案的错误迁移（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。在每种互审拓扑下，挽回与腐化几乎相互抵消。" /></p>
+<p><img src="/research/who-should-review-whom/figures/F6_error_transitions_mmlu_pro.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="相对 0 号智能体初始答案的错误迁移（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。在每种互审拓扑下，挽回与腐化几乎相互抵消。" /> <img src="/research/who-should-review-whom/figures/F6_error_transitions_supergpqa.png" title="fig:" id="fig:transitions" style="width:48.0%" alt="相对 0 号智能体初始答案的错误迁移（左：MMLU-Pro；右：SuperGPQA，n=2000，4 种子）。在每种互审拓扑下，挽回与腐化几乎相互抵消。" /></p>
 <h2 id="sec:btr">互审活跃但净零：有益迁移率</h2>
 <p>C5 与自审对照 C9 准确率持平，可能意味着互审是冗余的——也可能意味着它在两个方向上都活跃并相互抵消。C2<span class="math inline">\(\leftrightarrow\)</span>C5 的题目级迁移给出了裁决：在同一合成流水线上加入互审，把 <span class="math inline">\(27\)</span> 道 MMLU-Pro 题目从错翻正、<span class="math inline">\(23\)</span> 道从正翻错（净 <span class="math inline">\(+4\)</span>；<span class="math inline">\(1450\)</span> 道不变），SuperGPQA 上为 <span class="math inline">\(49\)</span> 对 <span class="math inline">\(79\)</span>（净 <span class="math inline">\(-30\)</span>；<span class="math inline">\(1872\)</span> 道不变）。互审是<em>活跃</em>的，且在 SuperGPQA 上活跃地为净负——与表 <a href="#tab:sg-paired" data-reference-type="ref" data-reference="tab:sg-paired">4</a> 中显著的 C2 <span class="math inline">\(&gt;\)</span> C5 差距互为镜像。我们将其概括为<strong>有益迁移率</strong>，<span class="math inline">\(\mathrm{BTR} = \#\text{获救} / (\#\text{获救} + \#\text{受害})\)</span>：MMLU-Pro 上 <span class="math inline">\(0.54\)</span>，SuperGPQA 上 <span class="math inline">\(0.383\)</span>。（BTR 由 C2 与 C5 的逐题迁移计数计算；它不是对所有答案修改事件的精度，后者需要对每一次互审引起的编辑做单独审计。）</p>
 <h2 id="sec:subsets">拓扑有处理作用的子集</h2>

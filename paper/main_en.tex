@@ -14,13 +14,13 @@
 \usepackage{caption}
 
 \title{Who Should Review Whom?\\Response-Conditioned Disassortative Peer Review for Test-Time LLM Reasoning}
-\author{[Author Names]\textsuperscript{1,}\thanks{\textsuperscript{1}[Department, Institution, City, Country]. Corresponding author: \texttt{[email@example.com]}. ORCID: \texttt{[0000-0000-0000-0000]}.}}
+\author{Rui Li, Chenglong Sun, Xueyan Zheng, Dan Liu\\[0.3em]Gi (Beijing) Tech Design Ltd., Beijing, China}
 \date{September 2026}
 
 \begin{document}
 \maketitle
 \pagestyle{myheadings}
-\markright{[Author Names]: Who Should Review Whom?}
+\markright{Li et al.: Who Should Review Whom?}
 
 % Running title: Who Should Review Whom? (45 characters incl. spaces: "Who Should Review Whom" = 22)
 
@@ -201,7 +201,7 @@ C5 vs C6 (max-weight)  & $-0.5$ & [$-1.4$, $0.3$] & 16/24 & 0.268 & --- \\
 
 Table~\ref{tab:mmlu-paired} gives the paired analysis. Every primary comparison's bootstrap CI crosses zero, and all four Holm-adjusted $p$-values equal $0.920$: there is no detectable difference between FPRR and random pairing (H1), nearest pairing (H2), majority voting (H3), or the compute-matched self-review control. Against the single-response baseline, FPRR gains $+1.0$pp, which does not reach significance ($p=0.087$, uncorrected).
 
-SuperGPQA (500 questions $\times$ 4 seeds, $n=2000$ pooled) tells the same story at lower accuracy, with one sharper twist (Table~\ref{tab:sg-acc}). FPRR (0.599) is indistinguishable from --- and if anything slightly below --- random pairing (0.606), nearest pairing (0.605), max-weight matching (0.602), majority voting (0.598), and self-review (0.595); all four primary Holm-adjusted $p$-values are $\ge 0.987$ (Table~\ref{tab:sg-paired}). On this harder benchmark every $N{=}4$ condition clearly exceeds the single-response baseline (C0, 0.561; C5 vs C0: $+3.8$pp, 95\% CI [$+2.3$, $+5.2$], $p<0.001$), so the ensemble machinery itself helps. But the no-review synthesizer condition C2 (0.614) is the best condition, and here the loss is no longer noise: \textbf{C2 beats C5 by $1.5$pp with a bootstrap CI that excludes zero} ($[-2.6, -0.4]$, McNemar $p=0.010$; a secondary comparison outside the Holm-corrected family, and anti-conservative under cross-seed dependence). On the harder benchmark, reciprocal peer review inflicts a small but statistically detectable net cost relative to simply synthesizing the same cached answers --- consistent with the transition analysis of \S\ref{sec:btr} (BTR $= 0.383$).
+SuperGPQA (500 questions $\times$ 4 seeds, $n=2000$ pooled) shows the same pattern at lower accuracy, with one sharper result (Table~\ref{tab:sg-acc}). FPRR (0.599) is indistinguishable from --- and if anything slightly below --- random pairing (0.606), nearest pairing (0.605), max-weight matching (0.602), majority voting (0.598), and self-review (0.595); all four primary Holm-adjusted $p$-values are $\ge 0.987$ (Table~\ref{tab:sg-paired}). On this harder benchmark every $N{=}4$ condition clearly exceeds the single-response baseline (C0, 0.561; C5 vs C0: $+3.8$pp, 95\% CI [$+2.3$, $+5.2$], $p<0.001$), so the ensemble machinery itself helps. But the no-review synthesizer condition C2 (0.614) is the best condition, and here the loss is no longer noise: \textbf{C2 beats C5 by $1.5$pp with a bootstrap CI that excludes zero} ($[-2.6, -0.4]$, McNemar $p=0.010$; a secondary comparison outside the Holm-corrected family, and anti-conservative under cross-seed dependence). On the harder benchmark, reciprocal peer review inflicts a small but statistically detectable net cost relative to simply synthesizing the same cached answers --- consistent with the transition analysis of \S\ref{sec:btr} (BTR $= 0.383$).
 
 \begin{table}[t]
 \centering
@@ -311,7 +311,7 @@ Because all four pairing conditions review the \emph{same} cached initial respon
 On MMLU-Pro the review conditions (0.839--0.845) sit within 0.8pp of the no-review synthesizer condition C2 (0.837), and C1 voting (0.845) ties the best review condition at a fraction of the cost. On SuperGPQA the ordering inverts: C2 (0.614) is the best condition, \emph{above} every review condition (0.599--0.606), with C1 at 0.598 --- and with four seeds the gap is statistically detectable (C5 vs C2: $-1.5$pp, 95\% CI [$-2.6$, $-0.4$], $p=0.010$ uncorrected; Table~\ref{tab:sg-paired}). Reciprocal review therefore adds no value over either aggregation baseline --- and on the harder benchmark it subtracts a little.
 
 \paragraph{Compute matching (C9).}
-Self-review with an identical call budget reproduces FPRR almost exactly (0.839 vs 0.839 on MMLU-Pro; 0.595 vs 0.599 on SuperGPQA; C5 vs C9 diff $0.0$pp / $+0.4$pp, $p_{\mathrm{Holm}} = 0.920$ / $1.000$). Spending the review budget on self-critique is exactly as good --- and as limited --- as spending it on peer review, so the null is a null of \emph{routing}, not of budget.
+Self-review with an identical call budget reproduces FPRR almost exactly (0.839 vs 0.839 on MMLU-Pro; 0.595 vs 0.599 on SuperGPQA; C5 vs C9 diff $0.0$pp / $+0.4$pp, $p_{\mathrm{Holm}} = 0.920$ / $1.000$). Spending the review budget on self-critique is exactly as good --- and as limited --- as spending it on peer review: the budget is held fixed, so the null attaches to \emph{routing}.
 
 \paragraph{Distance metric (D1--D4) and pilot $\lambda$.}
 Per the pre-registration, $\lambda$ for the hybrid distance D3 was fixed at $0.5$ before the full runs, as the pilot-best value on the higher-headroom benchmark and midpoint otherwise (pilot distance ablation under C5, 100 questions per benchmark, seed 0; pilot data are used for tuning only and are not reported as evidence). Table~\ref{tab:dist-ablation} reports the full 200-question distance ablation (C5 under D2/D3/D4, seed 0; within each benchmark D3/D4 reuse the D2 cached initial responses, so cross-metric paired comparisons isolate the topology induced by each metric). This analysis is \emph{exploratory} (pre-registration Amendment 8: mechanistic, outside the Holm-corrected primary family).
@@ -548,7 +548,7 @@ A polarizer/half-wave-plate stack (gold: J). Agents 0 and 1 fail to produce pars
 A pipe-flow power question (gold: D). Three agents answer D; the outlier agent 2 answers A. Farthest pairing (C5, and identically C6) wires the outlier to correct agent 0. The outlier declares agent 0 \texttt{PEER INCORRECT} and keeps A; meanwhile agent 3, reviewing agent 1's correct D, switches to H. Faced with a disrupted review record, the synthesizer outputs A for C5 (and C3) --- a correct majority destroyed --- while C4 and C6 remain D. We present this as an instance of the \emph{destabilization} mechanism of \S\ref{sec:rev} --- a distant peer manufacturing opposition to correct answers --- not as evidence that farthest pairing systematically selects wrong partners: at the aggregate level it does not (max-distance edge endpoints err at the base rate).
 
 \paragraph{Shared misconception (qid 10012).}
-An energy-conservation projectile question (gold: I). All four agents independently answer A, with pairwise distances $0.099$--$0.243$ arising purely from differently worded justifications of the same wrong derivation. All C5 reviews return \texttt{PEER CORRECT}, and every condition --- C0 through C9 --- outputs A. Embedding distance separates phrasings, not misconceptions; when the error is shared, disassortative review certifies it.
+An energy-conservation projectile question (gold: I). All four agents independently answer A, with pairwise distances $0.099$--$0.243$ arising purely from differently worded justifications of the same wrong derivation. All C5 reviews return \texttt{PEER CORRECT}, and every condition --- C0 through C9 --- outputs A. Embedding distance separates phrasings; the misconception is shared, so disassortative review ends up certifying it.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -560,10 +560,10 @@ Under identical initial responses, identical prompts, and identical compute, the
 FPRR was designed on the premise that sampled answers form correlated reasoning clusters and that pairing across clusters maximizes diagnostic contrast. The premise holds, but the clusters are too small to route around. On MMLU-Pro, $85.1\%$ of observations are unanimous ($77.1\%$ unanimously correct, $8.0\%$ unanimously wrong), the mean number of unique answers among four samples is $1.166$, and the mean pairwise cosine distance is $0.087$; SuperGPQA is more contested but still low-diversity ($62.3\%$ unanimous, $1.355$ unique answers, mean distance $0.095$). When three agents out of four say the same thing, every matching rule produces nearly the same set of edges up to one pair --- which is exactly what the accuracy tables show. Disassortative routing presupposes exploitable disagreement mass; at temperature $0.8$ with a strong model on saturated benchmarks, that mass is minimal.
 
 \paragraph{Exposure is not resolution, and neither is free.}
-The mechanistic results separate two quantities that the debate literature often conflates. Semantic distance robustly increases error \emph{exposure}: reviewers flag wrong peers up to an order of magnitude more often in the top distance decile than in the bottom one. But propagation of that exposure into repair and adoption is regime-dependent --- flat on MMLU-Pro, significant at all three stages on SuperGPQA --- and a reverse chain scales with the same distance everywhere: false opposition (up to $0.10$ in the top decile) and destabilization of correct reviewers ($4\%$ of questions under C5 vs $2\%$ under C3 on MMLU-Pro). Notably, the reverse chain is not explained by farthest pairing selecting bad partners: max-distance edge endpoints err at the base rate. The binding constraint on review-based pipelines in this regime is therefore \emph{epistemic credit assignment}: the reviewer and synthesizer cannot distinguish corrective disagreement from false opposition, because both arrive as distant, confidently-argued answers --- and without asymmetric validation, every unit of exposure the topology buys is paid back in destabilization.
+The mechanistic results separate two quantities that the debate literature often conflates. Semantic distance robustly increases error \emph{exposure}: reviewers flag wrong peers up to an order of magnitude more often in the top distance decile than in the bottom one. But propagation of that exposure into repair and adoption is regime-dependent --- flat on MMLU-Pro, significant at all three stages on SuperGPQA --- and a reverse chain scales with the same distance everywhere: false opposition (up to $0.10$ in the top decile) and destabilization of correct reviewers ($4\%$ of questions under C5 vs $2\%$ under C3 on MMLU-Pro). Notably, the reverse chain is not explained by farthest pairing selecting bad partners: max-distance edge endpoints err at the base rate. What binds review-based pipelines in this regime is \emph{epistemic credit assignment}: a distant, confidently-argued answer looks the same to reviewer and synthesizer whether it corrects an error or invents an objection, so without asymmetric validation each unit of exposure the topology buys is repaid in destabilization.
 
 \paragraph{System-level gains are not intrinsic gains.}
-Where multi-sample conditions do beat the single baseline --- most clearly on SuperGPQA, ${\approx}+4$pp for all $N{=}4$ conditions over C0 --- the gain is captured equally by voting and no-review synthesis; in fact, on SuperGPQA no-review synthesis \emph{significantly} exceeds peer review (C2 vs C5: $+1.5$pp, $p=0.010$ uncorrected), so review is a net cost there, not merely a null. Nothing in our results suggests that reciprocal review changes what the model \emph{knows}; it reweights answers the model already produces, and on these benchmarks voting reweights them just as well at one fifth of the token cost. Reports of review- or debate-based gains should be read against a compute-matched self-review control and a voting floor; in our data, both fully account for the effect.
+Where multi-sample conditions do beat the single baseline --- most clearly on SuperGPQA, ${\approx}+4$pp for all $N{=}4$ conditions over C0 --- the gain is captured equally by voting and no-review synthesis; in fact, on SuperGPQA no-review synthesis \emph{significantly} exceeds peer review (C2 vs C5: $+1.5$pp, $p=0.010$ uncorrected), so on the harder benchmark review is measurably worse than no review. Nothing in our results suggests that reciprocal review changes what the model \emph{knows}; it reweights answers the model already produces, and on these benchmarks voting reweights them just as well at one fifth of the token cost. Reports of review- or debate-based gains should be read against a compute-matched self-review control and a voting floor; in our data, both fully account for the effect.
 
 \section{Limitations}
 \label{sec:limitations}
@@ -591,7 +591,7 @@ Under the pre-registered decision criteria, this study lands in \textbf{Result c
 
 The mechanistic analysis is, we believe, the durable contribution. Semantic distance reliably increases error \emph{exposure} across both benchmarks and all pairing rules, but whether exposure propagates to repair and adoption is regime-dependent --- and the reverse chain of false opposition and destabilization scales with the same distance at every stage, so the net gain is zero or worse. Review is neither redundant nor bounded by the initial answer set: it flips questions in both directions (BTR $0.54$ / $0.383$) and generates novel correct answers on $0$--$4\%$ of all-wrong questions, yet end-to-end delivery of that new information is $\le 1.5\%$. Peer review among homogeneous agents fails not because reviewers cannot see disagreement, and not because nothing new can be said --- but because the system cannot assign credit: without asymmetric validation, corrective disagreement and false opposition are indistinguishable.
 
-Three directions follow. First, retest disassortative routing where disagreement mass is real: higher-temperature or heterogeneous-model pools, less saturated tasks, and larger $N$. Second, stabilize before routing: guard correct answers against distance-induced false opposition (e.g., verdict-conditioned synthesis or asymmetric validation of challenges), targeting the destabilization chain directly. Third, treat epistemic credit assignment itself as the object of study --- reviewer calibration, proposal-to-adoption delivery, and adjudication under conflicting reviews --- since our funnels and stage-wise regressions identify it, not routing, as the binding constraint on review-based test-time scaling.
+Three directions follow. First, retest disassortative routing where disagreement mass is real: higher-temperature or heterogeneous-model pools, less saturated tasks, and larger $N$. Second, stabilize before routing: guard correct answers against distance-induced false opposition (e.g., verdict-conditioned synthesis or asymmetric validation of challenges), targeting the destabilization chain directly. Third, treat epistemic credit assignment itself as the object of study --- reviewer calibration, proposal-to-adoption delivery, and adjudication under conflicting reviews --- since our funnels and stage-wise regressions identify credit assignment, rather than routing, as the binding constraint on review-based test-time scaling.
 
 
 \section*{Declarations}
@@ -603,16 +603,13 @@ Cached raw records (JSONL: full prompts, raw outputs, parsed fields, token usage
 The full experimental pipeline and analysis scripts (seeded pairing, deterministic parsing, paired bootstrap statistics) are available in the project repository.
 
 \subsection*{Author contributions}
-Conceptualization: [X]; Methodology: [X]; Software: [X]; Validation: [X]; Formal analysis: [X]; Investigation: [X]; Data curation: [X]; Writing -- original draft: [X]; Writing -- review \& editing: [X]; Visualization: [X]; Supervision: [X]; Project administration: [X]; Funding acquisition: [X].
+All authors contributed to study conception and design, experiment execution, data analysis, and manuscript preparation, and approved the final version.
 
 \subsection*{Funding}
-[Funding placeholder]. API inference costs were self-funded by the researchers; no external grant covered the compute reported in this study.
+This work was conducted and funded by Gi (Beijing) Tech Design Ltd.; no external funding was received.
 
 \subsection*{Competing interests}
-The authors declare no competing interests.
-
-\subsection*{Acknowledgements}
-[Acknowledgements placeholder].
+All authors are employees of Gi (Beijing) Tech Design Ltd.
 
 \subsection*{Ethics approval}
 Not applicable; this study involves no human participants, animals, or personally identifiable data.

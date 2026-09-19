@@ -15,8 +15,9 @@ BENCHMARK_FILES = {
     "math500": os.path.join(BENCH_DIR, "math500_test.jsonl"),
 }
 
-# API key file (read-only, outside the project; has a UTF-8 BOM).
-ENV_KEY_FILE = r"D:/pc-project/Jinshang_LLM/new_implementation/.env.local"
+# API key file: set FPRR_KEY_FILE to a dotenv-style file containing the key,
+# or export the key directly as an environment variable. Never commit keys.
+ENV_KEY_FILE = os.environ.get("FPRR_KEY_FILE", ".env.local")
 ENV_KEY_NAME = os.environ.get("FPRR_KEY_NAME", "DEEPSEEK_API_KEY")
 
 API_BASE = os.environ.get(

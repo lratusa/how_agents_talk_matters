@@ -16,14 +16,28 @@ import numpy as np
 from . import config
 
 
-def load_api_key(path=config.ENV_KEY_FILE, name=config.ENV_KEY_NAME):
-    """Read `name=value` from a dotenv file with a UTF-8 BOM."""
-    with open(path, encoding="utf-8-sig") as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith(name + "="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
-    raise RuntimeError("%s not found in %s" % (name, path))
+def load_api_key(path=None, name=None):
+    """Resolve the API key: environment variable first, then a dotenv file.
+
+    Lookup order: (1) the environment variable `name`; (2) `name=value` in
+    `path` (a dotenv file, UTF-8 BOM tolerated). Raises with setup
+    instructions if neither yields a key.
+    """
+    name = name or config.ENV_KEY_NAME
+    path = path or config.ENV_KEY_FILE
+    env_val = os.environ.get(name)
+    if env_val:
+        return env_val
+    if os.path.exists(path):
+        with open(path, encoding="utf-8-sig") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(name + "="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+    raise RuntimeError(
+        "API key not found. Either export {n}=<your-key> or set "
+        "FPRR_KEY_FILE to a dotenv file containing {n}=<your-key> "
+        "(looked in: {p})".format(n=name, p=path))
 
 
 class ChatClient:

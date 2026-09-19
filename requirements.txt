@@ -1,0 +1,12 @@
+# Core pipeline (API client, embeddings, matching, evaluation, analysis)
+httpx>=0.27
+numpy>=1.26
+pandas>=2.0
+pyarrow>=14.0        # parquet benchmark files
+scipy>=1.11
+matplotlib>=3.8      # figures
+
+# Optional — only needed for the D4 NLI-contradiction distance ablation
+# (src/nli.py, roberta-large-mnli on CPU):
+# torch>=2.2
+# transformers>=4.40

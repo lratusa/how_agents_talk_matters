@@ -1,0 +1,68 @@
+cff-version: 1.2.0
+title: "Who Should Review Whom? Response-Conditioned Disassortative Peer Review for Test-Time LLM Reasoning"
+message: "If you use this code, data, or paper in your research, please cite it as below."
+type: software
+authors:
+  - family-names: "Li"
+    given-names: "Rui"
+    affiliation: "Gi (Beijing) Tech Design Ltd."
+  - family-names: "Sun"
+    given-names: "Chenglong"
+    affiliation: "Gi (Beijing) Tech Design Ltd."
+  - family-names: "Zheng"
+    given-names: "Xueyan"
+    affiliation: "Gi (Beijing) Tech Design Ltd."
+  - family-names: "Liu"
+    given-names: "Dan"
+    affiliation: "Gi (Beijing) Tech Design Ltd."
+date-released: "2026-09-18"
+version: "1.0.0"
+identifiers:
+  - description: "Frozen paper-1 snapshot (git tag)"
+    type: other
+    value: "fprr-paper-v1.0"
+  # After archiving on Zenodo, add the DOI here:
+  # - type: doi
+  #   value: "10.5281/zenodo.XXXXXXX"
+abstract: >-
+  Does pairing semantically dissimilar solutions for reciprocal peer
+  review improve test-time reasoning of homogeneous LLM agents? In a
+  controlled study (MMLU-Pro, 3 seeds, n=1500; SuperGPQA, 4 seeds,
+  n=2000; one frozen model, shared cached initial answers across all
+  pairing conditions), farthest-pair reciprocal review (FPRR) did not
+  outperform random pairing, nearest pairing, maximum-weight matching,
+  majority voting, or compute-matched self-review. Mechanistic analysis
+  shows semantic distance monotonically increases error detection but
+  not end-to-end correction: false opposition and destabilization of
+  valid alternatives rise together with useful disagreement, making
+  peer review active but net-zero. An exploratory ablation suggests
+  NLI-contradiction distance is a more informative routing signal than
+  cosine distance.
+keywords:
+  - large language models
+  - multi-agent systems
+  - test-time scaling
+  - peer review
+  - semantic diversity
+  - negative results
+license: Apache-2.0
+repository-code: "https://github.com/lratusa/how_agents_talk_matters"
+preferred-citation:
+  type: unpublished
+  title: "Who Should Review Whom? Response-Conditioned Disassortative Peer Review for Test-Time LLM Reasoning"
+  authors:
+    - family-names: "Li"
+      given-names: "Rui"
+      affiliation: "Gi (Beijing) Tech Design Ltd."
+    - family-names: "Sun"
+      given-names: "Chenglong"
+      affiliation: "Gi (Beijing) Tech Design Ltd."
+    - family-names: "Zheng"
+      given-names: "Xueyan"
+      affiliation: "Gi (Beijing) Tech Design Ltd."
+    - family-names: "Liu"
+      given-names: "Dan"
+      affiliation: "Gi (Beijing) Tech Design Ltd."
+  year: 2026
+  month: 9
+  notes: "Manuscript and reproduction package. LaTeX source in paper/ (main_en.tex, main_zh.tex)."
